@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
 import { cleanText, isPlainRecord, isValidOptionalMediaRef, readRequestBytes, validMediaRef } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
+import { DEVELOPER_DEFAULTS } from '../../../data/developer-defaults';
+import { DEVELOPER_LEGACY_STORIES, DEVELOPER_LEGACY_TIMELINE } from '../../../data/developer-legacy-stories';
 
 export const prerender = false;
 const ALLOWED_SLUGS = new Set(['/', '/anggota', '/galeri', '/struktur', '/keahlian', '/tkj', '/pengembang']);
@@ -12,7 +14,31 @@ export const GET: APIRoute = async ({ request }) => {
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_pages').select('*').order('slug');
   if (error) return Response.json({ error: 'Metadata halaman gagal dibaca. Pastikan migration CMS sudah dijalankan.' }, { status: 500 });
-  return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
+  const pages = [...(data || [])];
+  const existingIndex = pages.findIndex((page) => page.slug === '/pengembang');
+  const fallbackDeveloper = {
+    ...DEVELOPER_DEFAULTS,
+    stories: DEVELOPER_LEGACY_STORIES,
+    legacyTimeline: DEVELOPER_LEGACY_TIMELINE,
+  };
+  if (existingIndex >= 0) {
+    const current = pages[existingIndex];
+    const currentContent = isPlainRecord(current.content) ? current.content : {};
+    const currentDeveloper = isPlainRecord(currentContent.developer) ? currentContent.developer : {};
+    const currentProfile = isPlainRecord(currentDeveloper.profile) ? currentDeveloper.profile : {};
+    const currentTheme = isPlainRecord(currentDeveloper.theme) ? currentDeveloper.theme : {};
+    const currentThemeColors = isPlainRecord(currentTheme.colors) ? currentTheme.colors : {};
+    const mergedDeveloper = { ...fallbackDeveloper, ...currentDeveloper,
+      profile: { ...DEVELOPER_DEFAULTS.profile, ...currentProfile },
+      theme: { ...DEVELOPER_DEFAULTS.theme, ...currentTheme, colors: { ...DEVELOPER_DEFAULTS.theme.colors, ...currentThemeColors } },
+      stories: Array.isArray(currentDeveloper.stories) && currentDeveloper.stories.length ? currentDeveloper.stories : DEVELOPER_LEGACY_STORIES,
+      legacyTimeline: Array.isArray(currentDeveloper.legacyTimeline) && currentDeveloper.legacyTimeline.length ? currentDeveloper.legacyTimeline : DEVELOPER_LEGACY_TIMELINE,
+    };
+    pages[existingIndex] = { ...current, content: { ...currentContent, developer: mergedDeveloper } };
+  } else {
+    pages.push({ slug: '/pengembang', title: 'Portofolio Pengembang — Alfredo Pratama', description: 'Profil, karya, perjalanan belajar, prinsip, dan catatan pengembang.', og_image: null, noindex: false, content: { developer: fallbackDeveloper } });
+  }
+  return Response.json({ data: pages }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
 export const PUT: APIRoute = async ({ request }) => {

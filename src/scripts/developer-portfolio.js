@@ -13,6 +13,7 @@
   const overlay = $('#overlay');
   const menuButton = $('[data-action="menu"]');
   let previousFocus = null;
+  if (drawer) drawer.inert = true;
   let quoteIndex = 0;
   let quoteTimer = null;
   let typingTimer = null;
@@ -42,9 +43,12 @@
   const showSound = () => {
     if (reducedMotion.matches) return;
     const words = [
-      ['POW!', '#ff0044', '#fff'], ['BAM!', '#ffd700', '#000'],
-      ['WHAM!', '#00ffdd', '#000'], ['ZAP!', '#00ff88', '#000'],
-      ['BOOM!', '#ff6600', '#fff'], ['NICE!', '#00ffdd', '#000'],
+      ['POW!', 'var(--dev-highlight, #D90B46)', 'var(--dev-surface, #FFFDF8)'],
+      ['BAM!', 'var(--dev-primary, #F5CD32)', 'var(--dev-text, #111111)'],
+      ['WHAM!', 'var(--dev-secondary, #32CFC2)', 'var(--dev-text, #111111)'],
+      ['ZAP!', 'var(--dev-primary, #F5CD32)', 'var(--dev-text, #111111)'],
+      ['BOOM!', 'var(--dev-highlight, #D90B46)', 'var(--dev-surface, #FFFDF8)'],
+      ['NICE!', 'var(--dev-secondary, #32CFC2)', 'var(--dev-text, #111111)'],
     ];
     const [label, background, color] = words[Math.floor(Math.random() * words.length)];
     const element = document.createElement('div');
@@ -71,6 +75,7 @@
   const openDrawer = () => {
     if (!drawer || !overlay) return;
     previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    drawer.inert = false;
     drawer.classList.add('open');
     overlay.classList.add('on');
     drawer.setAttribute('aria-hidden', 'false');
@@ -83,6 +88,7 @@
     if (!drawer || !overlay) return;
     drawer.classList.remove('open');
     overlay.classList.remove('on');
+    drawer.inert = true;
     drawer.setAttribute('aria-hidden', 'true');
     overlay.setAttribute('aria-hidden', 'true');
     menuButton?.setAttribute('aria-expanded', 'false');
@@ -397,7 +403,7 @@
       const selected = candidates[Math.floor(Math.random() * candidates.length)];
       selected.classList.add('glitching');
       window.setTimeout(() => selected.classList.remove('glitching'), 420);
-    }, 7600);
+    }, 14000);
   }
 
   reducedMotion.addEventListener?.('change', (event) => {

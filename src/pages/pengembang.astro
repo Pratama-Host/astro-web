@@ -1,12 +1,11 @@
 ---
 import DeveloperLayout from '../layouts/DeveloperLayout.astro';
 import { DEVELOPER_DEFAULTS } from '../data/developer-defaults';
-import { getAnggota, getGaleri, getPageContent, getPageSEO, getSections, getSettings } from '../lib/data';
+import { DEVELOPER_LEGACY_STORIES, DEVELOPER_LEGACY_TIMELINE } from '../data/developer-legacy-stories';
+import { getPageContent, getPageSEO, getSections, getSiteData } from '../lib/data';
 
-const [G, members, gallery, pageSEO, pageContent, sectionConfig] = await Promise.all([
-  getSettings(),
-  getAnggota(),
-  getGaleri(),
+const [G, pageSEO, pageContent, sectionConfig] = await Promise.all([
+  getSiteData(),
   getPageSEO('/pengembang', Astro.request),
   getPageContent('/pengembang', Astro.request),
   getSections('/pengembang'),
@@ -15,6 +14,23 @@ const [G, members, gallery, pageSEO, pageContent, sectionConfig] = await Promise
 const asRecord = (value: unknown): Record<string, any> =>
   value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
 const devContent = asRecord(pageContent.developer);
+const defaultThemeColors = DEVELOPER_DEFAULTS.theme.colors;
+const validHex = (value: unknown, fallback: string): string =>
+  typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value.trim()) ? value.trim() : fallback;
+const savedTheme = asRecord(devContent.theme);
+const savedThemeColors = asRecord(savedTheme.colors);
+const developerTheme = {
+  frame: validHex(savedThemeColors.frame, defaultThemeColors.frame),
+  background: validHex(savedThemeColors.background, defaultThemeColors.background),
+  surface: validHex(savedThemeColors.surface, defaultThemeColors.surface),
+  text: validHex(savedThemeColors.text, defaultThemeColors.text),
+  muted: validHex(savedThemeColors.muted, defaultThemeColors.muted),
+  border: validHex(savedThemeColors.border, defaultThemeColors.border),
+  primary: validHex(savedThemeColors.primary, defaultThemeColors.primary),
+  secondary: validHex(savedThemeColors.secondary, defaultThemeColors.secondary),
+  highlight: validHex(savedThemeColors.highlight, defaultThemeColors.highlight),
+};
+const developerThemeStyle = Object.entries(developerTheme).map(([key, value]) => `--dev-${key}:${value}`).join(';');
 const devProfile = asRecord(devContent.profile);
 const textValue = (value: unknown, fallback: string, max = 1200): string =>
   typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : fallback;
@@ -73,6 +89,8 @@ const normalizeObjects = (
   });
 };
 
+const members = Array.isArray(G.namaSiswa) ? G.namaSiswa : [];
+const gallery = Array.isArray(G.galeri) ? G.galeri : [];
 const alfredoMember = members.find((member: any) => typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo')) || null;
 const alfredoOrganization = Array.isArray(G.strukturOrg)
   ? G.strukturOrg.find((member: any) => typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo')) || null
@@ -90,7 +108,7 @@ const profilePhoto = safeImage(devProfile.photo) || safeImage(alfredo?.foto) || 
 const cmsEyebrow = textValue(pageContent.eyebrow, 'DEVELOPER / PROFILE', 100);
 const cmsHeadline = textValue(pageContent.headline, 'Perjalanan Developer', 180);
 const cmsIntro = textValue(pageContent.intro, G.deskripsi || '', 2500);
-const cmsStory = textValue(pageContent.devIntroText, 'Cerita perjalanan belajar, membangun, dan memahami teknologi melalui eksperimen, proyek, serta proses pemecahan masalah.', 4000);
+const cmsStory = textValue(pageContent.devIntroText, 'Cerita nyata tentang perjalanan dari kebingungan hingga pemahaman. Dari WhatsApp Bot Baileys, filosofi belajar AI, tantangan imposter syndrome, hingga aspirasi menjadi developer profesional di tingkat internasional.', 4000);
 const developerQuote = textValue(pageContent.quote, 'Kode yang baik bukan hanya yang bekerja, tetapi juga bisa dibaca dan dipahami orang lain setahun kemudian.', 1000);
 
 const cmsTaglines = Array.isArray(pageContent.taglines)
@@ -101,17 +119,10 @@ const customTyping = Array.isArray(devContent.typing)
   : [];
 const typingTaglines = Array.from(new Set([...cmsTaglines, ...customTyping, ...DEVELOPER_DEFAULTS.typing]));
 const focusCards = normalizeObjects(devContent.focusCards, DEVELOPER_DEFAULTS.focusCards, ['title', 'description', 'icon'], 12);
-const hardSkills = normalizeObjects(devContent.hardSkills, DEVELOPER_DEFAULTS.hardSkills, ['name', 'percent'], 20);
-const softSkills = normalizeObjects(devContent.softSkills, DEVELOPER_DEFAULTS.softSkills, ['name', 'percent'], 20);
+const hardSkills = normalizeObjects(devContent.hardSkills, DEVELOPER_DEFAULTS.hardSkills, ['name', 'description', 'evidence'], 20);
+const softSkills = normalizeObjects(devContent.softSkills, DEVELOPER_DEFAULTS.softSkills, ['name', 'description'], 20);
 const draftProjects = normalizeObjects(devContent.projects, DEVELOPER_DEFAULTS.projects, ['title', 'description', 'icon', 'tag', 'status', 'href'], 30);
-const projects = [
-  ...draftProjects,
-  {
-    icon: '🌐', tag: 'Astro · Supabase', title: 'Website Kelas TKJ XII-9',
-    description: 'Website kelas yang menyatukan informasi, profil anggota, struktur organisasi, galeri, dan halaman kompetensi dalam satu pengalaman responsif. Proyek ini menggunakan Astro dengan integrasi data situs dan penyimpanan yang dikonfigurasi.',
-    status: 'PROJECT / WEBSITE', href: '/',
-  },
-];
+const projects = draftProjects;
 const motivations = normalizeObjects(devContent.motivation, DEVELOPER_DEFAULTS.motivation, ['title', 'description'], 30);
 const journeys = normalizeObjects(devContent.journey, DEVELOPER_DEFAULTS.journey, ['title', 'description'], 30);
 const principles = normalizeObjects(devContent.principles, DEVELOPER_DEFAULTS.principles, ['title', 'description', 'icon'], 20);
@@ -122,10 +133,34 @@ const noteCards = normalizeObjects(devContent.notes, DEVELOPER_DEFAULTS.notes, [
 const contactMethods = normalizeObjects(devContent.contacts, DEVELOPER_DEFAULTS.contacts, ['label', 'value', 'icon', 'href', 'copy'], 12)
   .map((item) => ({ ...item, href: safeHref(item.href), copy: typeof item.copy === 'string' ? item.copy : item.value }));
 
+const storySource = Array.isArray(devContent.stories) && devContent.stories.length
+  ? devContent.stories : DEVELOPER_LEGACY_STORIES;
+const legacyStories = storySource.slice(0, 12).flatMap((entry: any) => {
+  const item = asRecord(entry);
+  if (typeof item.title !== 'string' || !item.title.trim() || !Array.isArray(item.blocks)) return [];
+  const blocks = item.blocks.slice(0, 80).flatMap((block: any) => {
+    const part = asRecord(block);
+    if (!['heading', 'paragraph', 'list'].includes(String(part.type)) || typeof part.text !== 'string' || !part.text.trim()) return [];
+    return [{ type: part.type, text: part.text.trim().slice(0, 6000) }];
+  });
+  return [{ key: String(item.key || 'story').toLowerCase().replace(/[^a-z0-9_-]/g, '-').slice(0, 80), title: item.title.trim().slice(0, 180), subtitle: typeof item.subtitle === 'string' ? item.subtitle.slice(0, 500) : '', blocks, codeTitle: typeof item.codeTitle === 'string' ? item.codeTitle.slice(0, 160) : '', codeLanguage: typeof item.codeLanguage === 'string' ? item.codeLanguage.slice(0, 40) : 'text', code: typeof item.code === 'string' ? item.code.slice(0, 12000) : '', quote: typeof item.quote === 'string' ? item.quote.slice(0, 1200) : '' }];
+});
+const timelineSource = Array.isArray(devContent.legacyTimeline) && devContent.legacyTimeline.length
+  ? devContent.legacyTimeline : DEVELOPER_LEGACY_TIMELINE;
+const legacyTimeline = timelineSource.slice(0, 20).flatMap((entry: any) => {
+  const item = asRecord(entry);
+  return typeof item.title === 'string' && typeof item.description === 'string'
+    ? [{ title: item.title.slice(0, 180), label: typeof item.label === 'string' ? item.label.slice(0, 80) : '', description: item.description.slice(0, 5000) }]
+    : [];
+});
+
+const databaseSkillNotes = Array.isArray(G.skills) ? G.skills.flatMap((item: any) => typeof item?.nama === 'string' && item.nama.trim() ? [{ name: item.nama.trim(), description: typeof item.desc === 'string' ? item.desc.trim() : '' }] : []).slice(0, 30) : [];
 const personalSkills = Array.isArray(alfredoMember?.skills)
   ? alfredoMember.skills.map((skill: any) => typeof skill === 'string' ? skill : skill?.nama || skill?.name || skill?.label)
       .filter((skill: unknown) => typeof skill === 'string' && skill.trim()).slice(0, 30)
-  : [];
+  : typeof alfredoMember?.skills === 'string'
+    ? alfredoMember.skills.split(',').map((skill: string) => skill.trim()).filter(Boolean).slice(0, 30)
+    : [];
 const websiteStack = ['Astro', 'Supabase', 'Cloudflare', 'JavaScript', 'CSS'];
 const marqueeSkills = Array.from(new Set(['JavaScript', 'Node.js', 'HTML', 'CSS', 'Baileys', 'React', 'Python', 'Linux', ...websiteStack]));
 const experienceEntries = normalizeObjects(pageContent.experiences, [], ['title', 'period', 'date', 'organization', 'description'], 30);
@@ -153,6 +188,7 @@ const isSectionEnabled = (key: string) => {
 };
 const pageDefinitions: Array<{ id: string; label: string; icon: string; key: string }> = [
   { id: 'about', label: 'Tentang', icon: '◐', key: 'profile' },
+  { id: 'story', label: 'Cerita', icon: '✎', key: 'story' },
   { id: 'skills', label: 'Skill', icon: '◇', key: 'skills' },
   { id: 'work', label: 'Karya', icon: '▤', key: 'work' },
   { id: 'motivasi', label: 'Motiv', icon: '✦', key: 'motivation' },
@@ -172,7 +208,7 @@ const visiblePages = pageDefinitions
   .filter((page) => isSectionEnabled(page.key))
   .sort((a, b) => a._order - b._order)
   .map(({ _order: _ignored, ...page }) => page);
-const mainNavIds = ['about', 'skills', 'work', 'motivasi', 'contact'];
+const mainNavIds = ['about', 'story', 'skills', 'work', 'contact'];
 const mainNav = visiblePages.filter((page) => mainNavIds.includes(page.id));
 const extraNav = visiblePages.filter((page) => !mainNavIds.includes(page.id));
 const hasVisiblePages = visiblePages.length > 0;
@@ -186,11 +222,12 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
   description="Profil, karya, perjalanan belajar, prinsip, dan catatan pengembang website kelas TKJ XII-9."
   settings={G}
   seo={pageSEO}
+  theme={developerTheme}
   profileName={profileName}
   profileRole={profileRole}
 >
   <div class="wrap">
-    <div class="card" id="developer-card" data-taglines={JSON.stringify(typingTaglines)}>
+    <div class="card" id="developer-card" data-taglines={JSON.stringify(typingTaglines)} style={developerThemeStyle}>
       <div class="halftone" aria-hidden="true"></div>
       <div id="scroll-progress" aria-hidden="true"></div>
       <div class="intro-burst" aria-hidden="true">BAM!</div>
@@ -273,43 +310,51 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
           </section>
         )}
 
+        {isSectionEnabled('story') && (
+          <section class:list={['page', { active: initialPage === 'story' }]} id="page-story" aria-label="Cerita perjalanan pengembang" hidden={initialPage !== 'story'}>
+            <section class="section story-section">
+              <div class="sec-title" data-kicker="ORIGIN / LEARNING / REFLECTION">Cerita pengembang</div>
+              <p class="stack-note">Catatan perjalanan dari source pengembang terdahulu. Naskah lengkap dipertahankan; pembaruan dapat dilakukan melalui CMS.</p>
+              <nav class="story-index" aria-label="Daftar bab cerita">
+                {legacyStories.map((story, index) => <a href={`#legacy-story-${story.key}`}><span>{String(index + 1).padStart(2, '0')}</span>{story.title}</a>)}
+                {legacyTimeline.length > 0 && <a href="#legacy-journey"><span>07</span>Perjalanan & Filosofi</a>}
+              </nav>
+              {legacyStories.map((story, index) => (
+                <article class="legacy-story" id={`legacy-story-${story.key}`} data-reveal>
+                  <div class="story-chapter-label">CHAPTER {String(index + 1).padStart(2, '0')}</div>
+                  <h2>{story.title}</h2>
+                  {story.key === 'origin' && <figure class="legacy-story-photo">{profilePhoto && <img src={profilePhoto} alt={`Potret ${profileName} saat proses belajar kode`} loading="lazy"/>}<figcaption>Momen ketika kode mulai bermakna — dari teks acak menjadi bahasa yang hidup.</figcaption></figure>}
+                  {story.subtitle && <p class="story-subtitle">{story.subtitle}</p>}
+                  <div class="legacy-story-body">
+                    {story.blocks.map((block) => block.type === 'heading'
+                      ? <h3>{block.text}</h3>
+                      : block.type === 'list'
+                        ? <ul><li>{block.text}</li></ul>
+                        : <p>{block.text}</p>)}
+                  </div>
+                  {story.code && <div class="legacy-code"><div class="legacy-code-head"><span>{story.codeTitle || 'Contoh kode'}</span><span>{story.codeLanguage}</span></div><pre><code>{story.code}</code></pre></div>}
+                  {story.quote && <blockquote class="legacy-quote">{story.quote}</blockquote>}
+                </article>
+              ))}
+              {legacyTimeline.length > 0 && <section class="legacy-journey" id="legacy-journey"><div class="sec-title" data-kicker="SIX CHAPTERS">Perjalanan & filosofi</div><p class="story-subtitle">Enam babak nyata: dari kebingungan menuju pemahaman.</p><div class="timeline journey-timeline">{legacyTimeline.map((item, index) => <article class="timeline-item" data-reveal><div class="timeline-dot"></div><span class="timeline-number">{item.label || `BABAK ${String(index + 1).padStart(2, '0')}`}</span><h3 class="timeline-heading">{item.title}</h3><div class="timeline-body">{item.description}</div></article>)}</div></section>}
+            </section>
+          </section>
+        )}
+
         {isSectionEnabled('skills') && (
           <section class:list={['page', { active: initialPage === 'skills' }]} id="page-skills" aria-label="Keahlian" hidden={initialPage !== 'skills'}>
             <section class="section">
               <div class="sec-title" data-kicker="Chapter II">Teknologi & kompetensi</div>
               <p class="stack-note">Teknologi yang teridentifikasi pada implementasi website ini.</p>
               <div class="sub-title">Hard Skills</div>
-              <div class="skills-radial-grid">
-                {hardSkills.map((skill) => (
-                  <div class="skill-radial" data-reveal>
-                    <div class="skill-radial-ring">
-                      <svg viewBox="0 0 100 100" aria-hidden="true">
-                        <circle class="sr-track" cx="50" cy="50" r="42" />
-                        <circle class="sr-progress" cx="50" cy="50" r="42" style={`--pct:${skill.percent ?? 0}`} data-countup={skill.percent ?? 0} />
-                      </svg>
-                      <div class="sr-center"><span class="sr-val">0</span><span class="sr-pct">%</span></div>
-                    </div>
-                    <div class="sr-name">{skill.name}</div>
-                  </div>
-                ))}
+              <div class="competency-list">
+                {hardSkills.map((skill) => <article class="competency-item" data-reveal><span class="competency-mark" aria-hidden="true">◆</span><div><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</div></article>)}
               </div>
-              <div class="sub-title">Soft Skills</div>
-              <div class="skills-radial-grid">
-                {softSkills.map((skill) => (
-                  <div class="skill-radial" data-reveal>
-                    <div class="skill-radial-ring">
-                      <svg viewBox="0 0 100 100" aria-hidden="true">
-                        <circle class="sr-track" cx="50" cy="50" r="42" />
-                        <circle class="sr-progress" cx="50" cy="50" r="42" style={`--pct:${skill.percent ?? 0}`} data-countup={skill.percent ?? 0} />
-                      </svg>
-                      <div class="sr-center"><span class="sr-val">0</span><span class="sr-pct">%</span></div>
-                    </div>
-                    <div class="sr-name">{skill.name}</div>
-                  </div>
-                ))}
-              </div>
-              <p class="skill-disclaimer">Angka persentase adalah penilaian reflektif pada draft portofolio, bukan hasil uji kompetensi atau sertifikasi.</p>
+              <div class="sub-title">Soft Skills & refleksi personal</div>
+              <div class="soft-skill-tags">{softSkills.map((skill) => <span>{skill.name}</span>)}</div>
+              <p class="skill-disclaimer">Nama kompetensi dan karakter ditampilkan sebagai catatan reflektif, bukan persentase atau hasil pengukuran kemampuan.</p>
               {personalSkills.length > 0 && <><div class="sub-title">Keahlian dari data anggota CMS</div><div class="skill-chips">{personalSkills.map((skill) => <span>{skill}</span>)}</div></>}
+              {databaseSkillNotes.length > 0 && <section class="database-skill-notes"><div class="sub-title">Catatan skill dari CMS kelas</div><p class="stack-note">Entri berikut berasal dari tabel keahlian kelas. Deskripsi bernuansa humor dipertahankan sebagai catatan, bukan penilaian kompetensi profesional. Angka level tidak ditampilkan.</p><div class="database-skill-grid">{databaseSkillNotes.map((skill) => <article class="database-skill-item" data-reveal><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</article>)}</div></section>}
               <div class="sub-title">Stack website kelas</div>
               <p class="stack-note">Teknologi di bawah berasal dari implementasi website kelas, bukan klaim tingkat kemahiran pribadi.</p>
               <div class="skill-chips">{websiteStack.map((technology) => <span>{technology}</span>)}</div>
@@ -448,7 +493,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
 
       <footer class="footer">
         <div id="clock" aria-label="Waktu Indonesia Barat"></div>
-        <div class="footer-meta">{profileName} · {G.namaKelas || 'TKJ XII-9'} · BRUTALIST EDITION</div>
+        <div class="footer-meta">{profileName} · {G.namaKelas || 'TKJ XII-9'} · PLAYFUL EDITION</div>
         <p class="footer-school">{currentPageName}</p>
       </footer>
 
@@ -456,12 +501,18 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
       <aside class="drawer" id="drawer" aria-label="Menu tambahan" aria-hidden="true">
         <div class="dr-hdr"><div class="dr-title">Menu</div><button class="dr-close" type="button" data-action="close-menu" aria-label="Tutup menu">×</button></div>
         <div class="dr-section">
-          <div class="dr-label">Halaman tambahan</div>
+          <div class="dr-label">Navigasi utama</div>
+          <div class="dr-grid extra">
+            {mainNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id}><span>{page.icon}</span>{page.label}</button>)}
+          </div>
+        </div>
+        <div class="dr-section">
+          <div class="dr-label">Bab tambahan</div>
           <div class="dr-grid extra">
             {extraNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id}><span>{page.icon}</span>{page.label}</button>)}
           </div>
         </div>
-        <div class="dr-section"><div class="dr-label">Tema</div><div class="locked-theme"><span class="lock">🔒</span>BRUTALIST LOCKED</div></div>
+        <div class="dr-section"><div class="dr-label">Motion language</div><div class="locked-theme"><span class="lock">✦</span>COMIC · PLAYFUL · SUBTLE</div></div>
       </aside>
       <div class="toast" id="toast" role="status" aria-live="polite">COPIED!</div>
     </div>

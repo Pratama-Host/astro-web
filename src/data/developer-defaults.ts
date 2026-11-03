@@ -1,7 +1,19 @@
 export const DEVELOPER_DEFAULTS = {
+  theme: {
+    preset: 'brutalist-yellow',
+    colors: { frame: '#0A0A0A', background: '#F4F1E8', surface: '#FFFDF8', text: '#111111', muted: '#686868', border: '#111111', primary: '#F5CD32', secondary: '#32CFC2', highlight: '#D90B46' },
+  },
+  // Metrik dari halaman lama disimpan sebagai arsip CMS, bukan ditampilkan
+  // sebagai fakta sampai jumlah dan metode pengukurannya dapat diverifikasi.
+  legacyStats: [
+    { label: 'Proyek', value: '30+', verified: false },
+    { label: 'Semangat', value: '∞', verified: false },
+    { label: 'Tech Stack', value: '6+', verified: false },
+    { label: 'Dedikasi', value: '100%', verified: false },
+  ],
   profile: {
     name: 'Alfredo Pratama',
-    role: 'Ich möchte nach Deutschland fliegen',
+    role: 'Wakil Ketua',
     location: 'Belitang City',
     status: 'DE 🇩🇪',
     languages: 'ID, EN, DE',
@@ -12,6 +24,7 @@ export const DEVELOPER_DEFAULTS = {
   typing: [
     'Discipline over motivation ⚡',
     'Ich lerne Deutsch 🇩🇪',
+    'Ich möchte nach Deutschland fliegen 🇩🇪',
     'Silent grind. Loud results.',
   ],
   focusCards: [
@@ -34,6 +47,7 @@ export const DEVELOPER_DEFAULTS = {
     { icon: '🤖', tag: 'Node.js', title: 'WhatsApp MD Bot', description: 'Bot dengan fitur lengkap, performa tinggi, arsitektur modular.', status: 'PROJECT / AUTOMATION' },
     { icon: '💻', tag: 'Vanilla JS', title: 'Interactive Portfolio', description: 'Mini-SPA dalam WhatsApp menggunakan HTML Card.', status: 'PROJECT / FRONTEND' },
     { icon: '🌐', tag: 'Backend', title: 'API Service', description: 'REST API kustom untuk bot & automasi.', status: 'PROJECT / BACKEND' },
+    { icon: '🖥️', tag: 'Astro · Supabase', title: 'Website Kelas TKJ XII-9', description: 'Website kelas yang menyatukan informasi, profil anggota, struktur organisasi, galeri, dan halaman kompetensi. Proyek menggunakan Astro, Supabase, dan Cloudflare Workers.', status: 'PROJECT / WEBSITE', href: '/' },
   ],
   motivation: [
     { title: 'Melampaui Rasa Sakit', description: 'Rasa sakit itu tak terhindarkan, tetapi penderitaan adalah pilihan. Batu permata tidak bisa dipoles tanpa gesekan.' },
@@ -80,6 +94,6 @@ export const DEVELOPER_DEFAULTS = {
   contacts: [
     { icon: '💬', label: 'WhatsApp', value: '6287881316151', href: 'https://wa.me/6287881316151', copy: '6287881316151' },
     { icon: '📧', label: 'Email', value: 'mabarpropesonal234@gmail.com', href: 'mailto:mabarpropesonal234@gmail.com', copy: 'mabarpropesonal234@gmail.com' },
-    { icon: '🌐', label: 'Website', value: 'xi9-mubela.vercel.app', href: 'https://xi9-mubela.vercel.app', copy: 'xi9-mubela.vercel.app' },
+    { icon: '🌐', label: 'Website', value: 'personal234.workers.dev', href: 'https://personal234.workers.dev', copy: 'personal234.workers.dev' },
   ],
 } as const;

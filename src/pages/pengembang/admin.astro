@@ -42,7 +42,7 @@ import '../../styles/admin.css';
       <div class="nav-group">Pengaturan website</div>
       <button class="nav-btn" data-view="appearance"><span class="ic">◐</span> Tampilan & media</button>
       <button class="nav-btn" data-view="navigation"><span class="ic">☷</span> Navigasi</button>
-      <button class="nav-btn" data-view="seo"><span class="ic">⌕</span> SEO</button>
+      <button class="nav-btn" data-view="seo"><span class="ic">✎</span> Pengembang & SEO</button>
       <button class="nav-btn" data-view="media"><span class="ic">▣</span> Media library</button>
       <button class="nav-btn" data-view="system"><span class="ic">⚙</span> Sistem & backup</button>
       <div class="sidebar-bottom"><button id="logout-button" class="btn ghost" style="width:100%">Keluar dari admin</button><a href="/" class="muted small" style="display:block;margin:14px 4px 0">↗ Lihat website publik</a></div>
@@ -106,12 +106,34 @@ import '../../styles/admin.css';
       </section>
 
       <section id="view-appearance" class="view">
-        <div class="view-intro"><h2>Tampilan dan media global</h2><p>Atur aset brand, tema, warna, latar belakang, dan audio. Media upload akan masuk ke bucket <code>astro</code>.</p></div>
+        <div class="view-intro"><h2>Tampilan global dan Theme Studio pengembang</h2><p>Atur aset website kelas secara terpisah dari tema warna khusus halaman <code>/pengembang</code>. Media upload tetap menggunakan bucket <code>astro</code>.</p></div>
         <form id="appearance-form" class="grid">
           <div class="panel"><h2>Aset website</h2><div class="grid two" style="margin-top:14px"><div class="field"><label for="a-logo">Logo utama URL</label><input id="a-logo" type="url"/><img id="preview-logo" class="preview-img hidden" alt="Preview logo"/></div><div class="field"><label for="a-logo-alt">Logo alternatif URL</label><input id="a-logo-alt" type="url"/><img id="preview-logo-alt" class="preview-img hidden" alt="Preview logo alternatif"/></div><div class="field"><label for="a-favicon">Favicon URL</label><input id="a-favicon" type="url"/><img id="preview-favicon" class="preview-img hidden" alt="Preview favicon"/></div><div class="field"><label for="a-background">Background image URL</label><input id="a-background" type="url"/><img id="preview-background" class="preview-img hidden" alt="Preview background"/></div><div class="field"><label for="a-og">Open Graph image URL</label><input id="a-og" type="url"/><img id="preview-og" class="preview-img hidden" alt="Preview OG"/></div><div class="field"><label for="a-audio">Audio latar URL</label><input id="a-audio" type="url"/></div></div></div>
           <div class="panel"><h2>Tema dan warna</h2><div class="grid three" style="margin-top:14px"><div class="field"><label for="a-theme">Tema default</label><select id="a-theme"><option value="dark">Dark</option><option value="light">Light</option><option value="blue">Blue</option></select></div><div class="field"><label for="a-accent">Warna aksen</label><input id="a-accent" type="color" value="#dc2626"/></div><div class="field"><label for="a-background-color">Warna latar</label><input id="a-background-color" type="color" value="#0a0505"/></div><div class="field"><label for="a-audio-volume">Volume default audio (0–100%)</label><input id="a-audio-volume" type="number" min="0" max="100" value="80"/></div></div><div class="notice" style="margin-top:14px">Warna yang diedit hanya berlaku untuk tema yang dipilih. Dark, Light, dan Blue menyimpan palet masing-masing.</div></div>
           <div class="form-actions"><button class="btn" type="submit" id="save-appearance">Simpan tampilan</button></div><p id="appearance-status" class="status"></p>
         </form>
+        <section class="panel developer-theme-studio" aria-labelledby="developer-theme-title">
+          <div class="panel-head"><div><h2 id="developer-theme-title">Theme Studio · Halaman Pengembang</h2><p class="muted small">Warna ini hanya berlaku untuk /pengembang. Simpan sebagai draft, periksa preview, lalu publikasikan setelah workflow database siap.</p></div><span class="badge">Developer only</span></div>
+          <div class="grid two">
+            <div class="field"><label for="developer-theme-preset">Preset tema</label><select id="developer-theme-preset"><option value="brutalist-yellow">Brutalist Yellow</option><option value="monochrome">Monochrome</option><option value="electric-pop">Electric Pop</option><option value="custom">Custom</option></select></div>
+            <div class="field"><label>Preview langsung</label><div id="developer-theme-preview" class="developer-theme-preview" aria-live="polite"><strong>ALFREDO PRATAMA</strong><span>PLAYFUL NEO-BRUTALIST</span><button type="button" tabindex="-1">BAM! ↗</button></div></div>
+          </div>
+          <div class="grid three developer-theme-colors">
+            <div class="field"><label for="developer-theme-frame">Canvas luar</label><input id="developer-theme-frame" type="color" value="#0A0A0A"/></div>
+            <div class="field"><label for="developer-theme-background">Background halaman</label><input id="developer-theme-background" type="color" value="#F4F1E8"/></div>
+            <div class="field"><label for="developer-theme-surface">Surface</label><input id="developer-theme-surface" type="color" value="#FFFDF8"/></div>
+            <div class="field"><label for="developer-theme-text">Teks utama</label><input id="developer-theme-text" type="color" value="#111111"/></div>
+            <div class="field"><label for="developer-theme-muted">Teks sekunder</label><input id="developer-theme-muted" type="color" value="#686868"/></div>
+            <div class="field"><label for="developer-theme-border">Border</label><input id="developer-theme-border" type="color" value="#111111"/></div>
+            <div class="field"><label for="developer-theme-primary">Primary accent</label><input id="developer-theme-primary" type="color" value="#F5CD32"/></div>
+            <div class="field"><label for="developer-theme-secondary">Secondary accent</label><input id="developer-theme-secondary" type="color" value="#32CFC2"/></div>
+            <div class="field"><label for="developer-theme-highlight">Highlight / CTA</label><input id="developer-theme-highlight" type="color" value="#D90B46"/></div>
+          </div>
+          <p id="developer-theme-contrast" class="status" role="status"></p>
+          <div class="notice">Theme Studio mengatur canvas luar dan seluruh warna halaman pengembang. Kontras teks diperiksa sebelum disimpan. Pengaturan ini tidak mengubah tema global website kelas.</div>
+          <div class="form-actions"><button class="btn" type="button" id="save-developer-theme">Simpan tema sebagai draft</button><button class="btn ghost" type="button" id="preview-developer-theme">Buka preview halaman</button><button class="btn ghost" type="button" id="publish-developer-theme">Publikasikan tema</button><button class="btn ghost" type="button" id="reset-developer-theme">Kembalikan preset awal</button></div>
+          <p id="developer-theme-status" class="status" role="status"></p>
+        </section>
         <div class="panel"><h2>Upload aset global</h2><form id="global-upload-form" class="grid"><div class="grid two"><div class="field"><label for="global-kind">Jenis aset</label><select id="global-kind"><option value="logo">Logo utama</option><option value="alternate_logo">Logo alternatif</option><option value="favicon">Favicon</option><option value="background">Background</option><option value="og">Open Graph image</option><option value="audio">Audio latar</option></select></div><div class="field"><label for="global-file">Pilih file</label><input id="global-file" type="file" required /></div></div><button class="btn" id="global-upload-button">Upload dan terapkan</button><p id="global-upload-status" class="status"></p></form></div>
       </section>
 
@@ -121,12 +143,32 @@ import '../../styles/admin.css';
       </section>
 
       <section id="view-seo" class="view">
-        <div class="view-intro"><h2>Pengelola SEO</h2><p>Metadata dan konten tiap halaman mendukung draft, pratinjau privat dengan sesi admin, dan publikasi terpisah.</p></div>
+        <div class="view-intro"><h2>Konten Pengembang & SEO</h2><p>Editor cerita mengelola enam naskah lama tanpa menghapus substansinya. Konten lainnya tetap tersedia melalui editor JSON, dengan draft, pratinjau privat, dan publikasi terpisah.</p></div>
+        <section class="panel developer-story-editor" aria-labelledby="developer-story-editor-title">
+          <div class="panel-head"><div><h2 id="developer-story-editor-title">Editor cerita pengembang</h2><p class="muted small">Edit bab lama tanpa membuka file Astro. Format naskah: baris biasa untuk paragraf, <code>## Judul subbab</code> untuk heading, dan <code>- item</code> untuk daftar.</p></div><span class="badge">/pengembang</span></div>
+          <div class="grid two">
+            <div class="field"><label for="developer-story-select">Pilih bab</label><select id="developer-story-select"></select></div>
+            <div class="form-actions" style="align-self:end;margin:0"><button class="btn ghost small-btn" type="button" id="developer-story-add">+ Tambah bab</button><button class="btn danger small-btn" type="button" id="developer-story-remove">Hapus bab</button></div>
+          </div>
+          <div class="field"><label for="developer-story-title">Judul bab</label><input id="developer-story-title" maxlength="180"/></div>
+          <div class="field"><label for="developer-story-subtitle">Pengantar bab</label><input id="developer-story-subtitle" maxlength="500"/></div>
+          <div class="field"><label for="developer-story-body">Isi dan subbab</label><textarea id="developer-story-body" class="json-editor" style="min-height:300px" spellcheck="true" placeholder="Paragraf pertama…
+
+## Subbab
+Paragraf berikutnya…
+
+- Poin pertama"></textarea></div>
+          <div class="grid two"><div class="field"><label for="developer-story-code-title">Judul blok kode (opsional)</label><input id="developer-story-code-title" maxlength="160"/></div><div class="field"><label for="developer-story-code-language">Bahasa kode</label><input id="developer-story-code-language" maxlength="40" value="JavaScript"/></div></div>
+          <div class="field"><label for="developer-story-code">Contoh kode (opsional)</label><textarea id="developer-story-code" class="json-editor" style="min-height:180px" spellcheck="false"></textarea></div>
+          <div class="field"><label for="developer-story-quote">Kutipan penutup (opsional)</label><textarea id="developer-story-quote" maxlength="1200"></textarea></div>
+          <div class="form-actions"><button class="btn" type="button" id="save-developer-story">Simpan bab sebagai draft</button><button class="btn ghost" type="button" id="preview-developer-story">Preview halaman</button></div>
+          <p id="developer-story-status" class="status" role="status"></p>
+        </section>
         <div class="panel"><form id="seo-form" class="grid"><div class="field"><label for="seo-page">Halaman</label><select id="seo-page"><option value="/">Beranda (/)</option><option value="/anggota">Anggota</option><option value="/galeri">Galeri</option><option value="/struktur">Struktur</option><option value="/keahlian">Keahlian</option><option value="/tkj">TKJ</option><option value="/pengembang">Pengembang</option></select></div><div class="field"><label for="seo-title">Meta title</label><input id="seo-title" maxlength="180"/></div><div class="field"><label for="seo-description">Meta description</label><textarea id="seo-description" maxlength="320"></textarea></div><div class="field"><label for="seo-og">Open Graph image URL</label><input id="seo-og" type="url"/></div><div class="field"><label for="seo-content">Konten halaman (JSON object)</label><textarea id="seo-content" class="json-editor" style="min-height:180px" spellcheck="false" placeholder='{"headline":"Judul halaman","intro":"Deskripsi pembuka"}'></textarea><small class="muted">Kunci umum: eyebrow, headline, intro, featuredEyebrow, featuredTitle, collectionEyebrow, collectionTitle, footerNote, subjectsTitle, curriculumTitle, careersTitle, teachersEyebrow, teachersTitle, devIntroText, role, taglines[], experiences[], quote. Khusus /pengembang, gunakan developer.profile, typing[], focusCards[], hardSkills[], softSkills[], projects[], motivation[], journey[], principles[], quotes[], education[], notes[], dan contacts[]. Struktur lengkap ada di docs/CMS-IMPLEMENTATION.md.</small></div><label class="checkline"><input id="seo-noindex" type="checkbox"/> Jangan indeks halaman ini (noindex)</label><div class="notice">Perubahan halaman disimpan sebagai draft terlebih dahulu. Gunakan pratinjau untuk melihat halaman dengan sesi admin, lalu publikasikan setelah diperiksa.</div><div class="form-actions"><button class="btn" type="submit" id="save-page-draft">Simpan draft</button><button class="btn" type="button" id="publish-page-draft">Publikasikan draft</button><button class="btn ghost" type="button" id="preview-page-draft">Pratinjau draft</button><button class="btn danger" type="button" id="discard-page-draft">Buang draft</button><button class="btn ghost" type="button" id="reload-seo">Muat ulang</button></div><p id="seo-status" class="status"></p></form></div><div class="panel"><h2>Ringkasan metadata</h2><div id="seo-list" class="item-list"></div></div>
       </section>
 
       <section id="view-sections" class="view">
-        <div class="view-intro"><h2>Pengelola section halaman</h2><p>Status tampil/sembunyi dan urutan berlaku per section. Halaman Pengembang kini memiliki kontrol terpisah untuk profil, keahlian, karya, motivasi/perjalanan, kontak, filosofi, pengalaman, kutipan, edukasi, dan catatan.</p></div>
+        <div class="view-intro"><h2>Pengelola section halaman</h2><p>Status tampil/sembunyi dan urutan berlaku per section. Halaman Pengembang kini memiliki kontrol terpisah untuk profil, keahlian, karya, motivasi/perjalanan, kontak, cerita, filosofi, pengalaman, kutipan, edukasi, dan catatan.</p></div>
         <div class="panel"><div id="sections-list" class="item-list"><div class="empty">Memuat section…</div></div><div class="form-actions"><button class="btn" id="save-sections">Simpan pengaturan section</button><button class="btn ghost" id="reload-sections">Muat ulang</button></div><p id="sections-status" class="status"></p></div>
       </section>
 

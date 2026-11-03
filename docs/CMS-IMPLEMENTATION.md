@@ -24,7 +24,7 @@ Tabel lama tidak dihapus. Seed navigasi dan section memakai route yang benar-ben
 | Galeri | tabel `galeri`, `/api/admin/gallery` | `/galeri` |
 | Konten & profil | `site_settings.value`, `/api/admin/content` | Beranda, header, footer, struktur, TKJ, developer |
 | Guru & keahlian | tabel `guru` dan `skills`, `/api/admin/collections` | Beranda dan halaman keahlian |
-| Section | `site_sections`, `/api/admin/sections` | Visibilitas/urutan section yang sudah dipetakan di Astro, termasuk 10 bagian halaman Pengembang |
+| Section | `site_sections`, `/api/admin/sections` | Visibilitas/urutan section yang sudah dipetakan di Astro, termasuk 11 bagian halaman Pengembang |
 | Tampilan & media | `site_settings.media` dan `.appearance`, `/api/admin/content`, `/api/admin/media` | Logo, favicon, background, tema, aksen, warna latar, OG dan audio |
 | Navigasi | `site_navigation`, `/api/admin/navigation` | `HamburgerMenu.astro` |
 | SEO | `site_pages`, `/api/admin/pages` | `Layout.astro` membaca title, description, OG image dan robots |
@@ -79,18 +79,28 @@ Untuk halaman `/pengembang`, field lama tetap didukung: `role`, `eyebrow`, `head
     "quotes": [{"text": "Kutipan", "author": "Penulis"}],
     "education": [{"category": "Teknologi", "title": "Artikel", "paragraphs": ["Paragraf"]}],
     "notes": [{"category": "Notes", "title": "Catatan", "description": "Isi"}],
-    "contacts": [{"icon": "✉️", "label": "Email", "value": "alamat", "href": "mailto:alamat", "copy": "alamat"}]
+    "contacts": [{"icon": "✉️", "label": "Email", "value": "alamat", "href": "mailto:alamat", "copy": "alamat"}],
+    "theme": {
+      "preset": "brutalist-yellow",
+      "colors": {
+        "background": "#F4F1E8", "surface": "#FFFDF8", "text": "#111111",
+        "muted": "#686868", "border": "#111111", "primary": "#F5CD32",
+        "secondary": "#32CFC2", "highlight": "#D90B46"
+      }
+    },
+    "stories": [{"key":"origin","title":"Asal Saya","subtitle":"...","blocks":[{"type":"paragraph","text":"..."},{"type":"heading","text":"..."},{"type":"list","text":"..."}],"codeTitle":"...","codeLanguage":"JavaScript","code":"...","quote":"..."}],
+    "legacyTimeline": [{"title":"Awal yang Mengejutkan","label":"Babak 01","description":"..."}]
   }
 }
 ```
 
-Field di atas dibaca sebagai JSON object dan dinormalisasi lagi di halaman sebelum dirender. Array yang valid menggantikan array default terkait; array yang tidak dikirim memakai konten draft bawaan. `profile.name`/`profile.role` dapat mengganti nama/peran dari data anggota; `profile.photo` menerima URL HTTPS atau referensi media yang sudah di-resolve. `contacts[].href` dibatasi ke HTTPS, `mailto:`, `tel:`, atau path internal. Persentase skill dibatasi 0–100 saat dirender, tetapi tetap merupakan penilaian reflektif, bukan bukti kompetensi.
+Field di atas dibaca sebagai JSON object dan dinormalisasi lagi di halaman sebelum dirender. Array yang valid menggantikan array default terkait; array yang tidak dikirim memakai konten draft bawaan. `profile.name`/`profile.role` dapat mengganti nama/peran dari data anggota; `profile.photo` menerima URL HTTPS atau referensi media yang sudah di-resolve. `contacts[].href` dibatasi ke HTTPS, `mailto:`, `tel:`, atau path internal. Persentase skill lama tetap dapat tersimpan pada konten historis untuk kompatibilitas, tetapi tidak lagi ditampilkan sebagai skor kemampuan pada halaman publik. Palet warna khusus halaman Pengembang dikelola melalui Theme Studio dan disimpan di `developer.theme.colors`, terpisah dari tema global website kelas. Cerita lama disimpan pada `developer.stories` sebagai blok terstruktur: `heading`, `paragraph`, dan `list`; blok kode dan kutipan opsional juga didukung. `developer.legacyTimeline` menyimpan enam narasi timeline lama. `developer.theme.colors` memakai sembilan token: `frame`, `background`, `surface`, `text`, `muted`, `border`, `primary`, `secondary`, dan `highlight`. `frame` mengatur canvas luar, sementara token lainnya mengatur warna halaman dan komponen. Palet ini tidak mengubah tema global website kelas.
 
 Konten profil anggota dan media sosial kelas yang sebelumnya ditarik dari tabel `anggota`/`site_settings` tetap digabungkan dengan konten `site_pages`. Stack teknologi proyek website kelas juga ditampilkan sebagai stack proyek, bukan skor kemampuan pribadi.
 
 ### Section
 
-Section hanya dapat diatur jika sudah dipetakan di markup Astro. Halaman `/pengembang` memiliki sepuluh sakelar terpisah. Kunci lama `story` hanya dipakai sebagai fallback untuk `profile`; ia tidak lagi menyembunyikan seluruh halaman. CMS tetap tidak dapat membuat komponen visual baru secara dinamis. Penambahan struktur/desain baru tetap memerlukan perubahan source code.
+Section hanya dapat diatur jika sudah dipetakan di markup Astro. Halaman `/pengembang` memiliki sebelas sakelar terpisah, termasuk section `story` untuk mengembalikan seluruh materi narasi halaman lama. Kunci `story` merupakan section tersendiri untuk narasi lama dan tidak lagi menjadi alias `profile`. CMS tetap tidak dapat membuat komponen visual baru secara dinamis. Penambahan struktur/desain baru tetap memerlukan perubahan source code.
 
 ## Media dan Storage
 
@@ -112,7 +122,7 @@ Backup JSON berisi baris database/metadata CMS, bukan binary object Storage. Imp
 
 - Form ganti password admin mandiri. Password tetap diubah melalui mekanisme environment `ADMIN_PASSWORD` yang sudah ada.
 - Kuota total bucket Storage. Dashboard menghitung file yang ditemukan melalui listing Storage dan metadata yang terindeks, tetapi tidak menampilkan batas kuota akun Supabase. Listing dibatasi dan dapat memberi peringatan jika pemindaian tidak lengkap.
-- Editor visual khusus (form per field/array) untuk seluruh konten; halaman Pengembang sudah membaca `developer.*`, tetapi object dan array masih diedit melalui JSON textarea pada modul SEO.
+- Editor visual khusus untuk seluruh array konten belum lengkap. CMS kini menyediakan editor cerita per bab serta Theme Studio khusus `/pengembang`; konten lain tetap bisa diedit lewat JSON textarea pada modul Pengembang & SEO. Semua perubahan halaman disimpan sebagai draft, dan publikasi memerlukan RPC Stage 3 Hardening.
 - Workflow draft/publish saat ini mencakup konten dan SEO `site_pages`; perubahan global, anggota, galeri, koleksi, navigasi, section, dan metadata media tetap disimpan langsung.
 
 ## Pengujian sesudah penerapan

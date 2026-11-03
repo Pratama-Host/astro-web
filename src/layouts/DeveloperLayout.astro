@@ -9,6 +9,7 @@ interface Props {
   seo?: Record<string, any>;
   profileName?: string;
   profileRole?: string;
+  theme?: Record<string, string>;
 }
 
 const {
@@ -18,7 +19,9 @@ const {
   seo = {},
   profileName = 'Pengembang website',
   profileRole = 'Web Developer',
+  theme = {},
 } = Astro.props;
+const frameColor = typeof theme.frame === 'string' && /^#[0-9a-f]{6}$/i.test(theme.frame) ? theme.frame : '#0A0A0A';
 
 const previewRequested = Astro.url.searchParams.get('previewDraft') === '1';
 const draftPreview = previewRequested && seo.draft_preview === true;
@@ -67,7 +70,7 @@ const jsonLd = JSON.stringify({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="theme-color" content={frameColor} />
     <meta name="color-scheme" content="light" />
     <title>{finalTitle}</title>
     <meta name="description" content={finalDescription} />
@@ -87,7 +90,7 @@ const jsonLd = JSON.stringify({
     {ogImage && <meta name="twitter:image" content={ogImage} />}
     <script type="application/ld+json" set:html={jsonLd}></script>
   </head>
-  <body>
+  <body style={`--dev-frame:${frameColor}`}>
     {draftPreview && <div class="draft-preview" role="status">PRATINJAU DRAFT · Hanya terlihat oleh admin · <a href={Astro.url.pathname}>Kembali ke halaman publik</a></div>}
     <a class="skip-to-main" href="#portfolio-main">Lewati ke konten utama</a>
     <slot />
@@ -115,7 +118,7 @@ const jsonLd = JSON.stringify({
     position: relative;
     z-index: 300;
     margin: 0 auto 14px;
-    width: min(calc(100% - 24px), 500px);
+    width: min(calc(100% - 24px), 900px);
     padding: 10px;
     border: 3px solid #000;
     background: #ffd700;

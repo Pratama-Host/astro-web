@@ -1,7 +1,7 @@
     const $ = (id) => document.getElementById(id);
-    const state = { members: [], gallery: [], content: {}, teachers: [], skills: [], navigation: [], navigationOriginal: [], pages: [], sections: [], media: [], dashboard: null };
+    const state = { members: [], gallery: [], content: {}, teachers: [], skills: [], navigation: [], navigationOriginal: [], pages: [], sections: [], media: [], dashboard: null, developerThemeSource: null };
     const pageNames = { '/':'Beranda', '/anggota':'Anggota', '/galeri':'Galeri', '/struktur':'Struktur', '/keahlian':'Keahlian', '/tkj':'TKJ', '/pengembang':'Pengembang' };
-    const viewTitles = { dashboard:['Dashboard','Ringkasan kondisi website TKJ XII-9.'], members:['Anggota','Kelola data anggota dan struktur organisasi.'], gallery:['Galeri','Kelola dokumentasi dan foto kelas.'], content:['Konten & profil','Identitas, hero, visi-misi, wali kelas, developer, dan konten TKJ.'], collections:['Guru & keahlian','Kelola daftar pengajar dan kompetensi kelas.'], sections:['Section halaman','Atur section yang ditampilkan di halaman publik.'], appearance:['Tampilan & media','Kelola identitas visual, tema, warna, logo, dan audio.'], navigation:['Navigasi','Kelola menu website publik.'], seo:['SEO','Atur metadata halaman.'], media:['Media library','Kelola semua aset yang diunggah ke Storage.'], system:['Sistem & backup','Ekspor, impor, dan pulihkan riwayat versi konten.'] };
+    const viewTitles = { dashboard:['Dashboard','Ringkasan kondisi website TKJ XII-9.'], members:['Anggota','Kelola data anggota dan struktur organisasi.'], gallery:['Galeri','Kelola dokumentasi dan foto kelas.'], content:['Konten & profil','Identitas, hero, visi-misi, wali kelas, developer, dan konten TKJ.'], collections:['Guru & keahlian','Kelola daftar pengajar dan kompetensi kelas.'], sections:['Section halaman','Atur section yang ditampilkan di halaman publik.'], appearance:['Tampilan, media & Theme Studio','Kelola tema global dan palet warna khusus halaman pengembang.'], navigation:['Navigasi','Kelola menu website publik.'], seo:['Pengembang & SEO','Kelola narasi pengembang, draft halaman, dan metadata SEO.'], media:['Media library','Kelola semua aset yang diunggah ke Storage.'], system:['Sistem & backup','Ekspor, impor, dan pulihkan riwayat versi konten.'] };
     let currentView = 'dashboard';
 
     async function api(url, options = {}) {
@@ -20,7 +20,7 @@
       document.querySelectorAll('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
       $('view-title').textContent = viewTitles[name][0]; $('view-subtitle').textContent = viewTitles[name][1];
       $('sidebar').classList.remove('open');
-      const loaders = { members: loadMembers, gallery: loadGallery, content: loadContent, collections: loadCollections, sections: loadSections, appearance: loadAppearance, navigation: loadNavigation, seo: loadPages, media: loadMedia };
+      const loaders = { members: loadMembers, gallery: loadGallery, content: loadContent, collections: loadCollections, sections: loadSections, appearance: loadAppearance, navigation: loadNavigation, seo: async () => { await loadPages(); await loadDeveloperStories(); }, media: loadMedia };
       if (loaders[name]) loaders[name]().catch((e) => console.error(e));
     }
     document.querySelectorAll('.nav-btn').forEach((button) => button.addEventListener('click', () => showView(button.dataset.view)));
@@ -126,6 +126,8 @@
       writeIf('a-theme',app.theme||'dark');syncAppearancePalette();
       writeIf('a-audio-volume',Math.round(Number(media.audio_volume??0.8)*100));
       for(const [field,preview] of [['a-logo','preview-logo'],['a-logo-alt','preview-logo-alt'],['a-favicon','preview-favicon'],['a-background','preview-background'],['a-og','preview-og']])updatePreview(field,preview);
+      await loadDeveloperTheme();
+      await loadDeveloperStories();
     }
     $('a-theme').addEventListener('change',syncAppearancePalette);
     function updatePreview(field,preview){const img=$(preview),url=$(field).value.trim();if(url){img.src=url;img.classList.remove('hidden');}else{img.removeAttribute('src');img.classList.add('hidden');}}
@@ -139,6 +141,146 @@
       try{await api('/api/admin/content',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});setStatus('appearance-status','Pengaturan tampilan berhasil disimpan.',true);await loadContent();await loadAppearance();}
       catch(e){setStatus('appearance-status',e.message);}finally{$('save-appearance').disabled=false;}
     });
+    const developerThemeDefaults = {
+      preset: 'brutalist-yellow',
+      colors: { frame:'#0A0A0A',background:'#F4F1E8',surface:'#FFFDF8',text:'#111111',muted:'#686868',border:'#111111',primary:'#F5CD32',secondary:'#32CFC2',highlight:'#D90B46' }
+    };
+    const developerThemeFields = ['frame','background','surface','text','muted','border','primary','secondary','highlight'];
+    const developerThemePresets = {
+      'brutalist-yellow': { frame:'#0A0A0A',background:'#F4F1E8',surface:'#FFFDF8',text:'#111111',muted:'#686868',border:'#111111',primary:'#F5CD32',secondary:'#32CFC2',highlight:'#D90B46' },
+      monochrome: { frame:'#171717',background:'#ECECEC',surface:'#FFFFFF',text:'#111111',muted:'#555555',border:'#111111',primary:'#D5D5D5',secondary:'#8A8A8A',highlight:'#222222' },
+      'electric-pop': { frame:'#241B35',background:'#F8F4FF',surface:'#FFFFFF',text:'#17112B',muted:'#5B5470',border:'#17112B',primary:'#B7F34A',secondary:'#45D7E8',highlight:'#D90B46' }
+    };
+    function setDeveloperThemeInputs(colors){
+      for(const key of developerThemeFields){const input=$(`developer-theme-${key}`);if(input)input.value=/^#[0-9a-f]{6}$/i.test(String(colors?.[key]||''))?colors[key]:developerThemeDefaults.colors[key];}
+      updateDeveloperThemePreview();
+    }
+    function readDeveloperThemeInputs(){const colors={};for(const key of developerThemeFields){const value=$(`developer-theme-${key}`)?.value||'';if(!/^#[0-9a-f]{6}$/i.test(value))throw Error(`Warna ${key} tidak valid.`);colors[key]=value.toUpperCase();}const issues=getDeveloperThemeContrastIssues(colors);if(issues.length)throw Error(`Warna tidak disimpan karena kontras belum cukup (target 4.5:1): ${issues.join(' · ')}`);return colors;}
+    function contrastRatio(first,second){
+      const luminance=(hex)=>{const rgb=hex.replace('#','').match(/.{2}/g).map(value=>parseInt(value,16)/255).map(value=>value<=.04045?value/12.92:Math.pow((value+.055)/1.055,2.4));return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];};
+      const a=luminance(first),b=luminance(second);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+    }
+    function getDeveloperThemeContrastIssues(colors){
+      const pairs=[['Teks / background',colors.text,colors.background,4.5],['Teks / surface',colors.text,colors.surface,4.5],['Teks sekunder / background',colors.muted,colors.background,4.5],['Teks sekunder / surface',colors.muted,colors.surface,4.5],['Teks / primary',colors.text,colors.primary,4.5],['Teks / secondary',colors.text,colors.secondary,4.5],['Tombol highlight','#FFFFFF',colors.highlight,4.5],['Border / background',colors.border,colors.background,3],['Border / surface',colors.border,colors.surface,3]];
+      return pairs.filter(([,foreground,background,target])=>contrastRatio(foreground,background)<target).map(([label,foreground,background,target])=>`${label}: ${contrastRatio(foreground,background).toFixed(2)}:1 (minimum ${target}:1)`);
+    }
+    function updateDeveloperThemePreview(){
+      const preview=$('developer-theme-preview');if(!preview)return;
+      const colors={};for(const key of developerThemeFields)colors[key]=$(`developer-theme-${key}`)?.value||developerThemeDefaults.colors[key];
+      preview.style.setProperty('--preview-frame',colors.frame);preview.style.setProperty('--preview-bg',colors.background);preview.style.setProperty('--preview-surface',colors.surface);preview.style.setProperty('--preview-text',colors.text);preview.style.setProperty('--preview-muted',colors.muted);preview.style.setProperty('--preview-border',colors.border);preview.style.setProperty('--preview-primary',colors.primary);preview.style.setProperty('--preview-secondary',colors.secondary);preview.style.setProperty('--preview-highlight',colors.highlight);
+      const issues=getDeveloperThemeContrastIssues(colors);setStatus('developer-theme-contrast',issues.length?`Kontras perlu diperbaiki (target 4.5:1): ${issues.join(' · ')}`:'Kontras dasar teks: lulus pemeriksaan 4.5:1.',issues.length===0);
+    }
+    async function getDeveloperThemeSource(){
+      const pages=await api('/api/admin/pages');state.pages=pages.data||[];
+      const page=state.pages.find((item)=>item.slug==='/pengembang')||{};
+      let draft=null;try{draft=(await api('/api/admin/drafts?slug=%2Fpengembang')).data;}catch(error){setStatus('developer-theme-status',`Draft belum dapat dibaca: ${error.message}`);}
+      if(!draft){state.developerThemeSource=page;return page;}
+      // Overlay partial draft fields on the published/fallback page so saving
+      // a theme never drops older content or metadata that was not in the draft.
+      const publishedContent=page.content&&typeof page.content==='object'?page.content:{};
+      const draftContent=draft.content&&typeof draft.content==='object'?draft.content:{};
+      const publishedDeveloper=publishedContent.developer&&typeof publishedContent.developer==='object'?publishedContent.developer:{};
+      const draftDeveloper=draftContent.developer&&typeof draftContent.developer==='object'?draftContent.developer:{};
+      const publishedTheme=publishedDeveloper.theme&&typeof publishedDeveloper.theme==='object'?publishedDeveloper.theme:{};
+      const draftTheme=draftDeveloper.theme&&typeof draftDeveloper.theme==='object'?draftDeveloper.theme:{};
+      const mergedDeveloper={...publishedDeveloper,...draftDeveloper,
+        profile:{...(publishedDeveloper.profile||{}),...(draftDeveloper.profile||{})},
+        theme:{...publishedTheme,...draftTheme,colors:{...(publishedTheme.colors||{}),...(draftTheme.colors||{})}},
+        stories:Array.isArray(draftDeveloper.stories)&&draftDeveloper.stories.length?draftDeveloper.stories:(publishedDeveloper.stories||[]),
+        legacyTimeline:Array.isArray(draftDeveloper.legacyTimeline)&&draftDeveloper.legacyTimeline.length?draftDeveloper.legacyTimeline:(publishedDeveloper.legacyTimeline||[])
+      };
+      state.developerThemeSource={...page,...draft,content:{...publishedContent,...draftContent,developer:mergedDeveloper}};
+      return state.developerThemeSource;
+    }
+    async function saveDeveloperPageDraft(nextDeveloper, statusId, message){
+      const source=state.developerThemeSource||await getDeveloperThemeSource();
+      const content=source?.content&&typeof source.content==='object'?JSON.parse(JSON.stringify(source.content)):{};
+      content.developer=content.developer&&typeof content.developer==='object'?content.developer:{};
+      Object.assign(content.developer,nextDeveloper);
+      const body={slug:'/pengembang',title:source?.title||'Portofolio Pengembang — Alfredo Pratama',description:source?.description||'Profil, karya, perjalanan belajar, prinsip, dan catatan pengembang.',og_image:source?.og_image||null,noindex:source?.noindex===true,content};
+      const result=await api('/api/admin/drafts',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      state.developerThemeSource=result.data;
+      setStatus(statusId,message,true);
+      return result.data;
+    }
+    async function loadDeveloperTheme(){
+      const source=await getDeveloperThemeSource();const content=source?.content&&typeof source.content==='object'?source.content:{};const developer=content.developer&&typeof content.developer==='object'?content.developer:{};const theme=developer.theme&&typeof developer.theme==='object'?developer.theme:{};
+      const preset=['brutalist-yellow','monochrome','electric-pop','custom'].includes(theme.preset)?theme.preset:'brutalist-yellow';
+      $('developer-theme-preset').value=preset;setDeveloperThemeInputs({...developerThemeDefaults.colors,...(theme.colors||{})});
+      setStatus('developer-theme-status',source?.updated_at?`Memuat konfigurasi draft terakhir: ${new Date(source.updated_at).toLocaleString('id-ID')}.`:'Memuat fallback awal. Belum ada tema pengembang yang tersimpan.',true);
+    }
+    $('developer-theme-preset').addEventListener('change',()=>{const preset=$('developer-theme-preset').value;if(developerThemePresets[preset])setDeveloperThemeInputs(developerThemePresets[preset]);else updateDeveloperThemePreview();});
+    for(const key of developerThemeFields)$(`developer-theme-${key}`).addEventListener('input',()=>{$('developer-theme-preset').value='custom';updateDeveloperThemePreview();});
+    $('reset-developer-theme').addEventListener('click',()=>{$('developer-theme-preset').value='brutalist-yellow';setDeveloperThemeInputs(developerThemeDefaults.colors);setStatus('developer-theme-status','Preset awal dipulihkan di preview. Simpan sebagai draft untuk menyimpan perubahan.',true);});
+    $('save-developer-theme').addEventListener('click',async()=>{
+      const button=$('save-developer-theme');button.disabled=true;
+      try{
+        const colors=readDeveloperThemeInputs();
+        await saveDeveloperPageDraft({theme:{preset:$('developer-theme-preset').value,colors}},'developer-theme-status','Tema tersimpan sebagai draft. Halaman publik belum berubah; buka preview untuk memeriksanya.');
+      }catch(error){setStatus('developer-theme-status',error.message);}finally{button.disabled=false;}
+    });
+    $('preview-developer-theme').addEventListener('click',()=>window.open('/pengembang?previewDraft=1','_blank','noopener,noreferrer'));
+    $('publish-developer-theme').addEventListener('click',async()=>{
+      if(!confirm('Publikasikan draft tema Pengembang? Perubahan akan terlihat pada halaman publik.'))return;
+      const button=$('publish-developer-theme');button.disabled=true;
+      try{const result=await api('/api/admin/drafts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:'/pengembang',action:'publish'})});setStatus('developer-theme-status',result.message||'Tema dipublikasikan.',true);await loadDeveloperTheme();}
+      catch(error){setStatus('developer-theme-status',`Publikasi belum tersedia: ${error.message}. Periksa migration Stage 3 Hardening pada database Preview terlebih dahulu.`);}
+      finally{button.disabled=false;}
+    });
+
+    let developerStories=[];let selectedDeveloperStory=0;
+    const storyTextToBlocks=(value)=>{
+      const blocks=[];let paragraph=[];
+      const flush=()=>{if(paragraph.length){blocks.push({type:'paragraph',text:paragraph.join(' ').trim()});paragraph=[];}};
+      for(const raw of String(value||'').split(/\r?\n/)){
+        const line=raw.trim();
+        if(!line){flush();continue;}
+        if(line.startsWith('## ')){flush();blocks.push({type:'heading',text:line.slice(3).trim()});}
+        else if(line.startsWith('- ')){flush();blocks.push({type:'list',text:line.slice(2).trim()});}
+        else paragraph.push(line);
+      }
+      flush();return blocks;
+    };
+    const storyBlocksToText=(blocks)=> (blocks||[]).map((block)=>block.type==='heading'?`## ${block.text}`:block.type==='list'?`- ${block.text}`:block.text).join('\n\n');
+    function renderDeveloperStorySelect(){
+      const select=$('developer-story-select');select.replaceChildren();
+      developerStories.forEach((story,index)=>{const option=document.createElement('option');option.value=String(index);option.textContent=story.title||`Bab ${index+1}`;select.append(option);});
+      if(!developerStories.length){const option=document.createElement('option');option.value='';option.textContent='Belum ada bab';select.append(option);}
+      select.value=String(Math.min(selectedDeveloperStory,Math.max(0,developerStories.length-1)));fillDeveloperStoryForm();
+    }
+    function fillDeveloperStoryForm(){
+      const story=developerStories[selectedDeveloperStory]||{};
+      writeIf('developer-story-title',story.title||'');writeIf('developer-story-subtitle',story.subtitle||'');writeIf('developer-story-body',storyBlocksToText(story.blocks));
+      writeIf('developer-story-code-title',story.codeTitle||'');writeIf('developer-story-code-language',story.codeLanguage||'JavaScript');writeIf('developer-story-code',story.code||'');writeIf('developer-story-quote',story.quote||'');
+      $('developer-story-remove').disabled=developerStories.length===0;
+    }
+    async function loadDeveloperStories(){
+      await getDeveloperThemeSource();const content=state.developerThemeSource?.content||{};const developer=content.developer||{};
+      developerStories=Array.isArray(developer.stories)&&developer.stories.length?JSON.parse(JSON.stringify(developer.stories)):[];selectedDeveloperStory=0;renderDeveloperStorySelect();
+      setStatus('developer-story-status',developerStories.length?`${developerStories.length} bab siap diedit. Naskah sumber lama disertakan sebagai fallback.`:'Belum ada bab yang dapat diedit. Muat ulang halaman.',true);
+    }
+    $('developer-story-select').addEventListener('change',()=>{selectedDeveloperStory=Number($('developer-story-select').value)||0;fillDeveloperStoryForm();});
+    $('developer-story-add').addEventListener('click',()=>{
+      developerStories.push({key:`chapter-${developerStories.length+1}`,title:'Bab baru',subtitle:'',blocks:[]});selectedDeveloperStory=developerStories.length-1;renderDeveloperStorySelect();$('developer-story-title').focus();
+    });
+    $('developer-story-remove').addEventListener('click',()=>{
+      if(!developerStories.length)return;
+      if(!confirm('Hapus bab ini dari draft Pengembang?'))return;
+      developerStories.splice(selectedDeveloperStory,1);selectedDeveloperStory=Math.max(0,selectedDeveloperStory-1);renderDeveloperStorySelect();
+    });
+    $('save-developer-story').addEventListener('click',async()=>{
+      const button=$('save-developer-story');button.disabled=true;
+      try{
+        if(!developerStories.length)throw Error('Tambahkan minimal satu bab terlebih dahulu.');
+        const title=$('developer-story-title').value.trim();if(!title)throw Error('Judul bab wajib diisi.');
+        const current=developerStories[selectedDeveloperStory]||{};
+        developerStories[selectedDeveloperStory]={...current,title,subtitle:$('developer-story-subtitle').value.trim(),blocks:storyTextToBlocks($('developer-story-body').value),codeTitle:$('developer-story-code-title').value.trim(),codeLanguage:$('developer-story-code-language').value.trim()||'text',code:$('developer-story-code').value,quote:$('developer-story-quote').value.trim()};
+        await saveDeveloperPageDraft({stories:developerStories},'developer-story-status','Bab tersimpan sebagai draft. Naskah publik belum berubah.');
+        renderDeveloperStorySelect();
+      }catch(error){setStatus('developer-story-status',error.message);}finally{button.disabled=false;}
+    });
+    $('preview-developer-story').addEventListener('click',()=>window.open('/pengembang?previewDraft=1','_blank','noopener,noreferrer'));
+
     async function appendImageThumbnail(form,file){
       if(!file?.type?.startsWith('image/')||['image/svg+xml','image/gif'].includes(file.type))return;
       if(typeof createImageBitmap!=='function')return;

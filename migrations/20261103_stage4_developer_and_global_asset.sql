@@ -5,15 +5,16 @@ begin;
 insert into public.site_sections (id, page_slug, section_key, label, sort_order, enabled)
 values
   ('pengembang.profile', '/pengembang', 'profile', 'Profil dan tentang', 0, true),
-  ('pengembang.skills', '/pengembang', 'skills', 'Keahlian', 1, true),
-  ('pengembang.work', '/pengembang', 'work', 'Karya dan proyek', 2, true),
-  ('pengembang.motivation', '/pengembang', 'motivation', 'Motivasi dan perjalanan', 3, true),
-  ('pengembang.contact', '/pengembang', 'contact', 'Kontak', 4, true),
-  ('pengembang.philosophy', '/pengembang', 'philosophy', 'Filosofi dan prinsip', 5, true),
-  ('pengembang.experience', '/pengembang', 'experience', 'Pengalaman', 6, true),
-  ('pengembang.quotes', '/pengembang', 'quotes', 'Kutipan', 7, true),
-  ('pengembang.education', '/pengembang', 'education', 'Edukasi', 8, true),
-  ('pengembang.notes', '/pengembang', 'notes', 'Catatan', 9, true)
+  ('pengembang.story', '/pengembang', 'story', 'Cerita dan perjalanan lama', 1, true),
+  ('pengembang.skills', '/pengembang', 'skills', 'Keahlian', 2, true),
+  ('pengembang.work', '/pengembang', 'work', 'Karya dan proyek', 3, true),
+  ('pengembang.motivation', '/pengembang', 'motivation', 'Motivasi dan perjalanan', 4, true),
+  ('pengembang.contact', '/pengembang', 'contact', 'Kontak', 5, true),
+  ('pengembang.philosophy', '/pengembang', 'philosophy', 'Filosofi dan prinsip', 6, true),
+  ('pengembang.experience', '/pengembang', 'experience', 'Pengalaman', 7, true),
+  ('pengembang.quotes', '/pengembang', 'quotes', 'Kutipan', 8, true),
+  ('pengembang.education', '/pengembang', 'education', 'Edukasi', 9, true),
+  ('pengembang.notes', '/pengembang', 'notes', 'Catatan', 10, true)
 on conflict (id) do nothing;
 
 create or replace function public.set_tkj_cms_global_asset(
