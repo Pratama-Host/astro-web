@@ -1,0 +1,85 @@
+export const DEVELOPER_DEFAULTS = {
+  profile: {
+    name: 'Alfredo Pratama',
+    role: 'Ich möchte nach Deutschland fliegen',
+    location: 'Belitang City',
+    status: 'DE 🇩🇪',
+    languages: 'ID, EN, DE',
+    focus: 'Web & Bot',
+    fuel: 'Coffee',
+    bio: 'Lingkaran setan akan terus mengurungmu hingga kamu menjadi setannya. Kecuali anda benar-benar memiliki tekad dan ambisi untuk merubah kehidupan secara sadar.',
+  },
+  typing: [
+    'Discipline over motivation ⚡',
+    'Ich lerne Deutsch 🇩🇪',
+    'Silent grind. Loud results.',
+  ],
+  focusCards: [
+    { icon: '🇩🇪', title: 'Learning German', description: 'A1 → B2. Persiapan hidup di Jerman.' },
+    { icon: '🌅', title: 'Bangun 6 Pagi', description: 'Melatih kedisiplinan harian.' },
+    { icon: '🤖', title: 'Bot Baileys', description: 'Ekosistem bot cepat & efisien.' },
+  ],
+  hardSkills: [
+    { name: 'Fusion Splicing', percent: 89 },
+    { name: 'Web Dev', percent: 85 },
+    { name: 'Node & Baileys', percent: 80 },
+  ],
+  softSkills: [
+    { name: 'Penyabar', percent: 100 },
+    { name: 'Grudge', percent: 98 },
+    { name: 'Ambisius', percent: 93 },
+    { name: 'Retorika', percent: 79 },
+  ],
+  projects: [
+    { icon: '🤖', tag: 'Node.js', title: 'WhatsApp MD Bot', description: 'Bot dengan fitur lengkap, performa tinggi, arsitektur modular.', status: 'PROJECT / AUTOMATION' },
+    { icon: '💻', tag: 'Vanilla JS', title: 'Interactive Portfolio', description: 'Mini-SPA dalam WhatsApp menggunakan HTML Card.', status: 'PROJECT / FRONTEND' },
+    { icon: '🌐', tag: 'Backend', title: 'API Service', description: 'REST API kustom untuk bot & automasi.', status: 'PROJECT / BACKEND' },
+  ],
+  motivation: [
+    { title: 'Melampaui Rasa Sakit', description: 'Rasa sakit itu tak terhindarkan, tetapi penderitaan adalah pilihan. Batu permata tidak bisa dipoles tanpa gesekan.' },
+    { title: 'Disiplin vs Motivasi', description: 'Motivasi itu murah dan cepat menguap. Disiplin adalah bahan bakar sejati. Bangun jam 6 pagi setiap hari.' },
+    { title: 'Visi Jerman', description: 'Bukan sekadar negara, tapi simbol standar baru, efisiensi, dan pendidikan. 10.000 mil dimulai dari langkah pertama.' },
+    { title: 'Keluar dari Lingkaran Setan', description: 'Lingkungan stagnan akan menyeretmu ke bawah. Abaikan mereka. Fokus pada tujuanmu.' },
+  ],
+  journey: [
+    { title: 'Awal yang mengejutkan', description: 'Kode pernah terlihat seperti teks acak. Ketertarikan mulai tumbuh ketika berkenalan dengan WhatsApp Bot Baileys dan mencoba memahami logika di balik sebuah perintah.' },
+    { title: 'Belajar dengan membongkar', description: 'Proses belajar dimulai dengan membaca proyek yang sudah ada, memahami struktur file, mengenali modularitas, lalu mencoba mengembangkan bagian-bagiannya.' },
+    { title: 'AI sebagai cermin', description: 'AI mulai digunakan bukan hanya untuk menghasilkan kode, tetapi untuk meminta penjelasan, menguji asumsi, dan membandingkan pendekatan yang berbeda.' },
+    { title: 'Logika sebelum tampilan', description: 'Struktur aplikasi dan alur data menjadi perhatian utama. Tampilan yang baik perlu ditopang fondasi yang jelas dan mudah dipelihara.' },
+    { title: 'Memberi jarak pada masalah', description: 'Saat menemui jalan buntu, mengambil jeda dapat membantu melihat masalah dari sudut pandang yang lebih tenang sebelum kembali mengerjakannya.' },
+    { title: 'Konsistensi sebagai proses', description: 'Perkembangan tidak hanya ditentukan oleh satu hari yang produktif. Belajar, mengevaluasi, dan memperbaiki secara berulang menjadi bagian dari perjalanan.' },
+  ],
+  principles: [
+    { icon: '🧠', title: 'Pahami, jangan sekadar salin', description: 'Gunakan alat bantu untuk memperluas pemahaman. Keputusan dan hasil akhir tetap perlu diperiksa secara kritis.' },
+    { icon: '🧩', title: 'Struktur adalah fondasi', description: 'Arsitektur yang jelas membuat fitur lebih mudah dikembangkan, diuji, dan dirawat ketika proyek bertambah besar.' },
+    { icon: '📖', title: 'Readability matters', description: 'Kode perlu dapat dipahami, bukan hanya berhasil dieksekusi. Keterbacaan membantu kerja sama dan pemeliharaan.' },
+  ],
+  quotes: [
+    { text: 'We suffer more often in imagination than in reality.', author: 'Seneca' },
+    { text: 'Man cannot remake himself without suffering, for he is both the marble and the sculptor.', author: 'Alexis Carrel' },
+    { text: 'Event loop pada Node.js mengajarkan kita: jangan biarkan satu thread penderitaan memblokir seluruh eksekusi hidupmu.', author: 'Alfredo Pratama' },
+  ],
+  education: [
+    { category: 'Filsafat', title: 'Absurdisme: Berdamai dengan Kekosongan', paragraphs: [
+      "Albert Camus memperkenalkan konsep Absurdisme. Manusia memiliki hasrat bawaan untuk mencari makna, namun alam semesta bisu dan tidak peduli. Pertemuan antara hasrat akan makna dengan keheningan alam semesta inilah yang disebut sebagai 'Yang Absurd'.",
+      'Camus menawarkan jalan ketiga: Pemberontakan. Kita mengakui hidup tidak punya makna bawaan, namun kita tetap memilih untuk hidup dan menciptakan makna sendiri. Seperti Sisyphus yang mendorong batu ke puncak gunung, kita harus membayangkan Sisyphus bahagia.',
+    ] },
+    { category: 'Sains', title: 'Hukum Entropi & Keteraturan Hidup', paragraphs: [
+      'Hukum Termodinamika Kedua: dalam sistem tertutup, entropi selalu meningkat. Bangunan akan runtuh, besi berkarat, energi terdisipasi. Namun di tengah kekacauan ini, kehidupan muncul sebagai anomali menakjubkan.',
+      'Manusia adalah pulau kecil keteraturan yang terus melawan arus entropi. Ketika kamu bangun pagi dan menyusun rencana, secara harfiah kamu sedang melawan hukum dasar alam semesta.',
+    ] },
+    { category: 'Teknologi', title: 'Event Loop & Kehidupan', paragraphs: [
+      'Dalam Node.js: Non-blocking I/O dan Event Loop. Tugas berat didelegasikan ke background, sistem lanjut eksekusi baris berikutnya. Saat selesai, callback dipanggil kembali.',
+      "Manusia sering terjebak eksekusi 'synchronous'. Saat masalah datang, kita blokir seluruh alur hidup. Jika mengadopsi pola pikir asynchronous, kita belajar mendelegasikan penderitaan ke background process, sementara kesadaran utama tetap melangkah maju.",
+    ] },
+  ],
+  notes: [
+    { category: 'Notes', title: '📝 Tentang Lingkaran Setan', description: 'Lingkaran setan hanyalah ilusi bagi mereka yang menolak berubah. Jika kau sadar kau di dalamnya, saat itulah kau punya kunci untuk keluar.' },
+    { category: 'Notes', title: '📝 Fusion Splicing & Kehidupan', description: 'Menyambung serat optik butuh ketenangan, presisi, dan alat yang tepat. Sama seperti merapikan hidup: butuh ketelitian dan visi yang jelas.' },
+  ],
+  contacts: [
+    { icon: '💬', label: 'WhatsApp', value: '6287881316151', href: 'https://wa.me/6287881316151', copy: '6287881316151' },
+    { icon: '📧', label: 'Email', value: 'mabarpropesonal234@gmail.com', href: 'mailto:mabarpropesonal234@gmail.com', copy: 'mabarpropesonal234@gmail.com' },
+    { icon: '🌐', label: 'Website', value: 'xi9-mubela.vercel.app', href: 'https://xi9-mubela.vercel.app', copy: 'xi9-mubela.vercel.app' },
+  ],
+} as const;

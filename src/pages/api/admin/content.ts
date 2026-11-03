@@ -95,7 +95,12 @@ export const PUT: APIRoute = async ({ request }) => {
   }
 
   if (JSON.stringify(next).length > 100_000) return Response.json({ error: 'Pengaturan situs melebihi batas 100 KB.' }, { status: 413 });
-  const { data: saved, error } = await db.rpc('save_tkj_cms_site_settings', { p_value: next });
-  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Pastikan migration hardening sudah dijalankan.', detail: error.message }, { status: 500 });
-  return Response.json({ ok: true, data: next, updated_at: saved?.updated_at || new Date().toISOString(), revision_version: saved?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
+  // Kirim hanya field yang diminta browser. Penggabungan dengan nilai terbaru
+  // dilakukan di PostgreSQL di bawah advisory lock, bukan memakai snapshot GET lama.
+  if (Object.keys(touched).length === 0) {
+    return Response.json({ ok: true, data: current, updated_at: currentRow?.updated_at || null, unchanged: true }, { headers: { 'Cache-Control': 'no-store' } });
+  }
+  const { data: saved, error } = await db.rpc('patch_tkj_cms_site_settings', { p_patch: touched });
+  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Pastikan migration 20261103_stage4_developer_and_global_asset.sql sudah dijalankan.', detail: error.message }, { status: 500 });
+  return Response.json({ ok: true, data: saved?.data || touched, updated_at: saved?.updated_at || new Date().toISOString(), revision_version: saved?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
 };

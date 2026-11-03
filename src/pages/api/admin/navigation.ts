@@ -24,6 +24,7 @@ export const PUT: APIRoute = async ({ request }) => {
   const body = parsedBody.data as any;
   if (!Array.isArray(body?.items) || body.items.length > 15) return Response.json({ error: 'Daftar menu tidak valid (maksimal 15).' }, { status: 400 });
   const items: any[] = [];
+  const seenIds = new Set<string>();
   for (let i = 0; i < body.items.length; i++) {
     const item = body.items[i];
     if (!isPlainRecord(item) || (item.enabled !== undefined && typeof item.enabled !== 'boolean')) return Response.json({ error: `Data menu urutan ${i + 1} tidak valid.` }, { status: 400 });
@@ -31,6 +32,8 @@ export const PUT: APIRoute = async ({ request }) => {
     const href = validInternalHref(item.href);
     const label = cleanText(item.label, 60);
     if (!/^[a-z0-9-]{1,50}$/.test(id) || !href || !label) return Response.json({ error: `Data menu urutan ${i + 1} tidak valid.` }, { status: 400 });
+    if (seenIds.has(id)) return Response.json({ error: `ID menu '${id}' muncul lebih dari sekali.` }, { status: 400 });
+    seenIds.add(id);
     items.push({ id, label, href, icon: cleanText(item.icon, 50), sort_order: i, enabled: item.enabled ?? true, updated_at: new Date().toISOString() });
   }
   const { data: existing, error: existingError } = await db.from('site_navigation').select('id');
@@ -42,7 +45,12 @@ export const PUT: APIRoute = async ({ request }) => {
   }
   const { error } = items.length ? await db.from('site_navigation').upsert(items, { onConflict: 'id' }) : { error: null };
   if (error) return Response.json({ error: 'Navigasi gagal disimpan.' }, { status: 500 });
-  for (const row of existing || []) if (!keep.has(row.id)) await db.from('site_navigation').delete().eq('id', row.id);
+  for (const row of existing || []) {
+    if (!keep.has(row.id)) {
+      const { error: deleteError } = await db.from('site_navigation').delete().eq('id', row.id);
+      if (deleteError) return Response.json({ error: `Navigasi tersimpan, tetapi penghapusan menu '${row.id}' gagal. Muat ulang data sebelum mencoba lagi.` }, { status: 500 });
+    }
+  }
   await logCmsAction(db, 'update', 'site_navigation', null, `${items.length} item navigasi disimpan`);
   return Response.json({ ok: true, data: items });
 };

@@ -221,22 +221,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   if (category === 'assets-global' && !replacePath) {
-    const { data: settingsRow, error: settingsReadError } = await db.from('site_settings').select('value').eq('key', 'site').maybeSingle();
-    if (settingsReadError) {
-      await storage.remove([objectPath, ...(thumbnailPath ? [thumbnailPath] : [])]);
-      return Response.json({ error: 'File diunggah, tetapi pengaturan global tidak dapat dibaca. Upload dibatalkan.' }, { status: 500 });
-    }
-    const current = (settingsRow?.value || {}) as Record<string, any>;
-    const media = { ...(current.media || {}) };
-    const appearance = { ...(current.appearance || {}) };
-    if (effectiveGlobalType === 'background') appearance.background_image_url = publicUrl;
-    else if (effectiveGlobalType === 'og') current.ogImage = publicUrl;
-    else media[`${effectiveGlobalType}_url`] = publicUrl;
-    const now = new Date().toISOString();
-    const { error } = await db.from('site_settings').upsert({ key: 'site', value: { ...current, media, appearance, updated_at: now }, updated_at: now }, { onConflict: 'key' });
+    const { error } = await db.rpc('set_tkj_cms_global_asset', {
+      p_asset_type: effectiveGlobalType,
+      p_public_url: publicUrl,
+    });
     if (error) {
       await storage.remove([objectPath, ...(thumbnailPath ? [thumbnailPath] : [])]);
-      return Response.json({ error: 'Pengaturan global gagal diperbarui; file baru dibersihkan dari Storage.' }, { status: 500 });
+      return Response.json({ error: 'Aset terunggah, tetapi pengaturan global gagal diperbarui secara transaksional. Pastikan migration 20261103_stage4_developer_and_global_asset.sql sudah dijalankan.' }, { status: 500 });
     }
   }
 

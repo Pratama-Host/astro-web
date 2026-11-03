@@ -26,6 +26,7 @@ describe('media references', () => {
 describe('social and internal links', () => {
   it('only accepts known social platforms with http(s) URLs', () => {
     expect(isValidSocialLinks({ instagram: 'https://instagram.com/example' })).toBe(true);
+    expect(isValidSocialLinks({ website: 'https://example.com' })).toBe(true);
     expect(isValidSocialLinks({ unknown: 'https://example.com' })).toBe(false);
     expect(isValidSocialLinks({ instagram: 'javascript:alert(1)' })).toBe(false);
   });

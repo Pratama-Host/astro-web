@@ -8,9 +8,11 @@ export async function logCmsAction(
   summary: string,
 ) {
   try {
-    await client.from('admin_audit_logs').insert({ action, entity, entity_id: entityId, summary });
-  } catch {
-    // Audit logging must not turn a successful content write into a failed request.
+    const { error } = await client.from('admin_audit_logs').insert({ action, entity, entity_id: entityId, summary });
+    if (error) console.error('[CMS audit] Log tidak tersimpan:', error.message);
+  } catch (error) {
+    // Audit logging stays best-effort, but a failure must remain visible in server logs.
+    console.error('[CMS audit] Log tidak tersimpan:', error instanceof Error ? error.message : 'unknown error');
   }
 }
 
@@ -145,7 +147,7 @@ export function isValidOptionalMediaRef(value: unknown): boolean {
  * "storage://" tidak diperbolehkan untuk tautan akun.
  * "#" dipertahankan sebagai penanda tautan yang belum diisi.
  */
-const SOCIAL_KEYS = new Set(['instagram', 'youtube', 'tiktok', 'facebook', 'twitter', 'x', 'github', 'linkedin', 'whatsapp']);
+const SOCIAL_KEYS = new Set(['instagram', 'youtube', 'tiktok', 'facebook', 'twitter', 'x', 'github', 'linkedin', 'whatsapp', 'website']);
 
 export function isValidSocialLinks(value: unknown): boolean {
   if (value === undefined || value === null) return true;

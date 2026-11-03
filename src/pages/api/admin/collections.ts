@@ -41,6 +41,8 @@ export const PUT: APIRoute = async ({ request, url }) => {
     deskripsi: cleanText(item.deskripsi ?? item.desc, 1000), urutan: index, updated_at: new Date().toISOString(),
   }));
   if (normalized.some((item: any) => !item.nama)) return Response.json({ error: 'Setiap item wajib memiliki nama.' }, { status: 400 });
+  const uniqueNames = new Set(normalized.map((item: any) => item.nama));
+  if (uniqueNames.size !== normalized.length) return Response.json({ error: 'Nama item koleksi tidak boleh duplikat.' }, { status: 400 });
   const { data: existing, error: existingError } = await db.from(tableFor(kind)).select('nama');
   if (existingError) return Response.json({ error: 'Data koleksi sebelumnya gagal dibaca.' }, { status: 500 });
   const keep = new Set(normalized.map((item: any) => item.nama));
@@ -52,7 +54,12 @@ export const PUT: APIRoute = async ({ request, url }) => {
     const { error } = await db.from(tableFor(kind)).upsert(normalized, { onConflict: 'nama' });
     if (error) return Response.json({ error: 'Koleksi gagal disimpan.' }, { status: 500 });
   }
-  for (const row of existing || []) if (!keep.has(row.nama)) await db.from(tableFor(kind)).delete().eq('nama', row.nama);
+  for (const row of existing || []) {
+    if (!keep.has(row.nama)) {
+      const { error: deleteError } = await db.from(tableFor(kind)).delete().eq('nama', row.nama);
+      if (deleteError) return Response.json({ error: `Data ${kind} tersimpan, tetapi penghapusan '${row.nama}' gagal. Muat ulang data sebelum mencoba lagi.` }, { status: 500 });
+    }
+  }
   await logCmsAction(db, 'replace', kind, null, `${normalized.length} item ${kind} disimpan`);
   return Response.json({ ok: true, data: normalized });
 };

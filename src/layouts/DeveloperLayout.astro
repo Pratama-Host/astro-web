@@ -1,0 +1,127 @@
+---
+import '../styles/developer-portfolio.css';
+import { getSiteOrigin } from '../lib/site-url';
+
+interface Props {
+  title?: string;
+  description?: string;
+  settings?: Record<string, any>;
+  seo?: Record<string, any>;
+  profileName?: string;
+  profileRole?: string;
+}
+
+const {
+  title = 'Portofolio Pengembang',
+  description = 'Profil, karya, proses belajar, dan catatan pengembang website kelas.',
+  settings = {},
+  seo = {},
+  profileName = 'Pengembang website',
+  profileRole = 'Web Developer',
+} = Astro.props;
+
+const previewRequested = Astro.url.searchParams.get('previewDraft') === '1';
+const draftPreview = previewRequested && seo.draft_preview === true;
+if (previewRequested) {
+  Astro.response.headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate');
+  Astro.response.headers.set('CDN-Cache-Control', 'no-store');
+  Astro.response.headers.set('Cloudflare-CDN-Cache-Control', 'no-store');
+  Astro.response.headers.set('Surrogate-Control', 'no-store');
+  Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  Astro.response.headers.set('Vary', 'Cookie');
+}
+
+const siteName = `${settings.namaKelas || 'TKJ XII-9'} ${settings.jurusan || 'Teknik Komputer dan Jaringan'} — ${settings.namaSekolah || 'SMK Muhammadiyah Belitang'}`;
+const siteOrigin = getSiteOrigin(Astro.url.origin);
+const canonicalURL = new URL(Astro.url.pathname, siteOrigin);
+const finalTitle = typeof seo.title === 'string' && seo.title.trim() ? seo.title : title;
+const finalDescription = typeof seo.description === 'string' && seo.description.trim() ? seo.description : description;
+const robotsContent = draftPreview || seo.noindex === true ? 'noindex, nofollow' : 'index, follow';
+const safeImage = (value: unknown) => {
+  if (typeof value !== 'string' || !value.trim()) return '';
+  try {
+    const url = new URL(value, siteOrigin);
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return '';
+    return url.href;
+  } catch {
+    return '';
+  }
+};
+const ogImage = safeImage(seo.og_image || settings.ogImage || settings.media?.og_url || settings.media?.logo_url);
+const faviconUrl = safeImage(settings.media?.favicon_url || settings.media?.logo_url);
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: finalTitle,
+  description: finalDescription,
+  url: canonicalURL.href,
+  mainEntity: {
+    '@type': 'Person',
+    name: profileName,
+    jobTitle: profileRole,
+  },
+}).replace(/</g, '\\u003c').replace(/[\u2028\u2029]/g, (character) => character === '\u2028' ? '\\u2028' : '\\u2029');
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="light" />
+    <title>{finalTitle}</title>
+    <meta name="description" content={finalDescription} />
+    <meta name="robots" content={robotsContent} />
+    <link rel="canonical" href={canonicalURL} />
+    {faviconUrl && <link rel="icon" href={faviconUrl} />}
+    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={finalTitle} />
+    <meta property="og:description" content={finalDescription} />
+    <meta property="og:url" content={canonicalURL} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta property="og:locale" content="id_ID" />
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={finalTitle} />
+    <meta name="twitter:description" content={finalDescription} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <script type="application/ld+json" set:html={jsonLd}></script>
+  </head>
+  <body>
+    {draftPreview && <div class="draft-preview" role="status">PRATINJAU DRAFT · Hanya terlihat oleh admin · <a href={Astro.url.pathname}>Kembali ke halaman publik</a></div>}
+    <a class="skip-to-main" href="#portfolio-main">Lewati ke konten utama</a>
+    <slot />
+    <script>
+      import '../scripts/developer-portfolio.js';
+    </script>
+  </body>
+</html>
+
+<style>
+  .skip-to-main {
+    position: fixed;
+    z-index: 1000;
+    top: 8px;
+    left: 8px;
+    transform: translateY(-160%);
+    padding: 10px 14px;
+    color: #fff;
+    background: #000;
+    border: 3px solid #fff;
+    font: 700 12px/1.3 'Courier New', monospace;
+  }
+  .skip-to-main:focus { transform: translateY(0); }
+  .draft-preview {
+    position: relative;
+    z-index: 300;
+    margin: 0 auto 14px;
+    width: min(calc(100% - 24px), 500px);
+    padding: 10px;
+    border: 3px solid #000;
+    background: #ffd700;
+    color: #000;
+    font: 900 11px/1.5 'Courier New', monospace;
+    text-align: center;
+  }
+  .draft-preview a { color: #000; text-decoration: underline; }
+</style>

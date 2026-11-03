@@ -1,47 +1,44 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { getPageContext } from '../lib/data';
+import DeveloperLayout from '../layouts/DeveloperLayout.astro';
+import { DEVELOPER_DEFAULTS } from '../data/developer-defaults';
+import { getAnggota, getGaleri, getPageContent, getPageSEO, getSections, getSettings } from '../lib/data';
 
-const { site: G, sections: sectionConfig, content: pageContent } = await getPageContext('/pengembang', Astro.request);
-const storyVisible = sectionConfig.find((item) => item.section_key === 'story')?.enabled !== false;
+const [G, members, gallery, pageSEO, pageContent, sectionConfig] = await Promise.all([
+  getSettings(),
+  getAnggota(),
+  getGaleri(),
+  getPageSEO('/pengembang', Astro.request),
+  getPageContent('/pengembang', Astro.request),
+  getSections('/pengembang'),
+]);
 
-const alfredoMember = (G.namaSiswa || []).find((member) =>
-  typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo'),
-);
-const alfredoOrganization = (G.strukturOrg || []).find((member) =>
-  typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo'),
-);
-const alfredo = alfredoOrganization || alfredoMember || null;
-const profileName = alfredo?.nama || alfredoMember?.nama || 'Pengembang TKJ XII-9';
-const profileRole = alfredo?.jabatan || alfredoMember?.jabatan || pageContent.role || 'Pengembang Website';
-const profilePhotoCandidate = alfredo?.foto || alfredoMember?.foto ||
-  (G.galeri || []).find((item) => String(item?.caption || item?.title || '').toLowerCase().includes('alfredo'))?.src;
-const profilePhoto = typeof profilePhotoCandidate === 'string' &&
-  (profilePhotoCandidate.startsWith('https://') || (profilePhotoCandidate.startsWith('/') && !profilePhotoCandidate.startsWith('//')))
-  ? profilePhotoCandidate
-  : null;
-const initials = profileName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'TK';
-
-const cmsDeveloperEyebrow = pageContent.eyebrow || 'DEVELOPER PROFILE';
-const cmsDeveloperHeadline = pageContent.headline || 'Perjalanan Developer';
-const cmsDeveloperIntro = pageContent.intro || G.deskripsi || '';
-const cmsDeveloperStory = pageContent.devIntroText || 'Cerita perjalanan belajar, membangun, dan memahami teknologi melalui eksperimen, proyek, serta proses pemecahan masalah.';
-const taglineValues = Array.isArray(pageContent.taglines)
-  ? pageContent.taglines.filter((value) => typeof value === 'string' && value.trim()).slice(0, 5)
-  : [];
-const taglines = taglineValues.length ? taglineValues : [cmsDeveloperHeadline];
-
-const personalSkills = Array.isArray(alfredoMember?.skills)
-  ? alfredoMember.skills.map((skill) => typeof skill === 'string' ? skill : skill?.nama || skill?.name || skill?.label).filter((skill) => typeof skill === 'string' && skill.trim())
-  : [];
-
-// Stack di bawah berasal dari dependensi dan implementasi proyek website ini,
-// bukan klaim level kemampuan pribadi.
-const websiteStack = ['Astro', 'Supabase', 'Cloudflare', 'JavaScript', 'CSS'];
-
-const safeExternalUrl = (value: unknown) => {
+const asRecord = (value: unknown): Record<string, any> =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, any> : {};
+const devContent = asRecord(pageContent.developer);
+const devProfile = asRecord(devContent.profile);
+const textValue = (value: unknown, fallback: string, max = 1200): string =>
+  typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : fallback;
+const safeImage = (value: unknown): string | null => {
+  if (typeof value !== 'string' || value.length > 2048) return null;
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+const safeHref = (value: unknown): string | null => {
+  if (typeof value !== 'string' || value.length > 2048) return null;
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  try {
+    const url = new URL(value);
+    return ['https:', 'mailto:', 'tel:'].includes(url.protocol) && !url.username && !url.password ? url.href : null;
+  } catch {
+    return null;
+  }
+};
+const safeExternalUrl = (value: unknown): string | null => {
   if (typeof value !== 'string' || value.length > 2048) return null;
   try {
     const url = new URL(value);
@@ -50,14 +47,95 @@ const safeExternalUrl = (value: unknown) => {
     return null;
   }
 };
+const normalizeObjects = (
+  value: unknown,
+  fallback: readonly any[],
+  fields: string[],
+  limit = 40,
+): any[] => {
+  if (!Array.isArray(value)) return fallback.map((item) => ({ ...item }));
+  return value.slice(0, limit).flatMap((entry) => {
+    const item = asRecord(entry);
+    if (!fields.some((field) => typeof item[field] === 'string' && item[field].trim())) return [];
+    const clean: Record<string, any> = {};
+    for (const field of fields) {
+      if (typeof item[field] === 'string') clean[field] = item[field].trim().slice(0, 6000);
+    }
+    if (typeof item.percent === 'number' || (typeof item.percent === 'string' && item.percent.trim())) {
+      const percent = Number(item.percent);
+      if (Number.isFinite(percent)) clean.percent = Math.min(100, Math.max(0, Math.round(percent)));
+    }
+    if (Array.isArray(item.paragraphs)) clean.paragraphs = item.paragraphs.filter((part: unknown) => typeof part === 'string').slice(0, 8).map((part: string) => part.slice(0, 5000));
+    if (Array.isArray(item.tags)) clean.tags = item.tags.filter((tag: unknown) => typeof tag === 'string').slice(0, 10).map((tag: string) => tag.slice(0, 80));
+    if (typeof item.href === 'string') clean.href = item.href.slice(0, 2048);
+    if (typeof item.copy === 'string') clean.copy = item.copy.slice(0, 500);
+    return [clean];
+  });
+};
 
+const alfredoMember = members.find((member: any) => typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo')) || null;
+const alfredoOrganization = Array.isArray(G.strukturOrg)
+  ? G.strukturOrg.find((member: any) => typeof member?.nama === 'string' && member.nama.toLowerCase().includes('alfredo')) || null
+  : null;
+const alfredo = alfredoOrganization || alfredoMember;
+const profileName = textValue(devProfile.name, alfredo?.nama || 'Alfredo Pratama', 100);
+const profileRole = textValue(devProfile.role, alfredo?.jabatan || pageContent.role || 'Web Developer', 160);
+const profileLocation = textValue(devProfile.location, DEVELOPER_DEFAULTS.profile.location, 100);
+const profileStatus = textValue(devProfile.status, DEVELOPER_DEFAULTS.profile.status, 100);
+const initials = profileName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'AP';
+const profilePhoto = safeImage(devProfile.photo) || safeImage(alfredo?.foto) || safeImage(
+  gallery.find((item: any) => String(item?.caption || item?.title || '').toLowerCase().includes('alfredo'))?.src,
+);
+
+const cmsEyebrow = textValue(pageContent.eyebrow, 'DEVELOPER / PROFILE', 100);
+const cmsHeadline = textValue(pageContent.headline, 'Perjalanan Developer', 180);
+const cmsIntro = textValue(pageContent.intro, G.deskripsi || '', 2500);
+const cmsStory = textValue(pageContent.devIntroText, 'Cerita perjalanan belajar, membangun, dan memahami teknologi melalui eksperimen, proyek, serta proses pemecahan masalah.', 4000);
+const developerQuote = textValue(pageContent.quote, 'Kode yang baik bukan hanya yang bekerja, tetapi juga bisa dibaca dan dipahami orang lain setahun kemudian.', 1000);
+
+const cmsTaglines = Array.isArray(pageContent.taglines)
+  ? pageContent.taglines.filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 8).map((item) => item.trim())
+  : [];
+const customTyping = Array.isArray(devContent.typing)
+  ? devContent.typing.filter((item: unknown): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 12)
+  : [];
+const typingTaglines = Array.from(new Set([...cmsTaglines, ...customTyping, ...DEVELOPER_DEFAULTS.typing]));
+const focusCards = normalizeObjects(devContent.focusCards, DEVELOPER_DEFAULTS.focusCards, ['title', 'description', 'icon'], 12);
+const hardSkills = normalizeObjects(devContent.hardSkills, DEVELOPER_DEFAULTS.hardSkills, ['name', 'percent'], 20);
+const softSkills = normalizeObjects(devContent.softSkills, DEVELOPER_DEFAULTS.softSkills, ['name', 'percent'], 20);
+const draftProjects = normalizeObjects(devContent.projects, DEVELOPER_DEFAULTS.projects, ['title', 'description', 'icon', 'tag', 'status', 'href'], 30);
+const projects = [
+  ...draftProjects,
+  {
+    icon: '🌐', tag: 'Astro · Supabase', title: 'Website Kelas TKJ XII-9',
+    description: 'Website kelas yang menyatukan informasi, profil anggota, struktur organisasi, galeri, dan halaman kompetensi dalam satu pengalaman responsif. Proyek ini menggunakan Astro dengan integrasi data situs dan penyimpanan yang dikonfigurasi.',
+    status: 'PROJECT / WEBSITE', href: '/',
+  },
+];
+const motivations = normalizeObjects(devContent.motivation, DEVELOPER_DEFAULTS.motivation, ['title', 'description'], 30);
+const journeys = normalizeObjects(devContent.journey, DEVELOPER_DEFAULTS.journey, ['title', 'description'], 30);
+const principles = normalizeObjects(devContent.principles, DEVELOPER_DEFAULTS.principles, ['title', 'description', 'icon'], 20);
+const quoteCards = normalizeObjects(devContent.quotes, DEVELOPER_DEFAULTS.quotes, ['text', 'author'], 20);
+quoteCards.push({ text: developerQuote, author: 'Catatan pengembang' });
+const educationCards = normalizeObjects(devContent.education, DEVELOPER_DEFAULTS.education, ['title', 'category'], 20);
+const noteCards = normalizeObjects(devContent.notes, DEVELOPER_DEFAULTS.notes, ['title', 'description', 'category'], 20);
+const contactMethods = normalizeObjects(devContent.contacts, DEVELOPER_DEFAULTS.contacts, ['label', 'value', 'icon', 'href', 'copy'], 12)
+  .map((item) => ({ ...item, href: safeHref(item.href), copy: typeof item.copy === 'string' ? item.copy : item.value }));
+
+const personalSkills = Array.isArray(alfredoMember?.skills)
+  ? alfredoMember.skills.map((skill: any) => typeof skill === 'string' ? skill : skill?.nama || skill?.name || skill?.label)
+      .filter((skill: unknown) => typeof skill === 'string' && skill.trim()).slice(0, 30)
+  : [];
+const websiteStack = ['Astro', 'Supabase', 'Cloudflare', 'JavaScript', 'CSS'];
+const marqueeSkills = Array.from(new Set(['JavaScript', 'Node.js', 'HTML', 'CSS', 'Baileys', 'React', 'Python', 'Linux', ...websiteStack]));
+const experienceEntries = normalizeObjects(pageContent.experiences, [], ['title', 'period', 'date', 'organization', 'description'], 30);
 const socialPlatforms = [
-  { key: 'instagram', label: 'Instagram', icon: 'fa-brands fa-instagram' },
-  { key: 'youtube', label: 'YouTube', icon: 'fa-brands fa-youtube' },
-  { key: 'tiktok', label: 'TikTok', icon: 'fa-brands fa-tiktok' },
-  { key: 'github', label: 'GitHub', icon: 'fa-brands fa-github' },
-  { key: 'linkedin', label: 'LinkedIn', icon: 'fa-brands fa-linkedin' },
-  { key: 'website', label: 'Website', icon: 'fa-solid fa-globe' },
+  { key: 'instagram', label: 'Instagram', icon: '📷' },
+  { key: 'youtube', label: 'YouTube', icon: '▶️' },
+  { key: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { key: 'github', label: 'GitHub', icon: '⌘' },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'in' },
+  { key: 'website', label: 'Website', icon: '🌐' },
 ];
 const classSocialLinks = socialPlatforms.flatMap((platform) => {
   const href = safeExternalUrl(G.sosmed?.[platform.key]);
@@ -67,864 +145,325 @@ const personalSocialLinks = socialPlatforms.flatMap((platform) => {
   const href = safeExternalUrl(alfredoMember?.social?.[platform.key]);
   return href ? [{ ...platform, href }] : [];
 });
-const experienceEntries = Array.isArray(pageContent.experiences)
-  ? pageContent.experiences.filter((item) => item && typeof item.title === 'string' && item.title.trim())
-  : [];
-const tabs = [
-  { id: 'about', label: 'Tentang', icon: 'fa-user' },
-  { id: 'technology', label: 'Teknologi', icon: 'fa-layer-group' },
-  { id: 'projects', label: 'Karya', icon: 'fa-code' },
-  { id: 'journey', label: 'Perjalanan', icon: 'fa-route' },
-  { id: 'philosophy', label: 'Filosofi', icon: 'fa-lightbulb' },
-  ...(experienceEntries.length ? [{ id: 'experience', label: 'Pengalaman', icon: 'fa-briefcase' }] : []),
-  ...((classSocialLinks.length || personalSocialLinks.length) ? [{ id: 'contact', label: 'Kontak', icon: 'fa-paper-plane' }] : []),
+
+const isSectionEnabled = (key: string) => {
+  const aliases = key === 'about' || key === 'profile' ? ['profile', 'story'] : [key];
+  const rows = aliases.map((alias) => sectionConfig.find((section: any) => section.section_key === alias)).filter(Boolean);
+  return rows.length ? rows[0].enabled !== false : true;
+};
+const pageDefinitions: Array<{ id: string; label: string; icon: string; key: string }> = [
+  { id: 'about', label: 'Tentang', icon: '◐', key: 'profile' },
+  { id: 'skills', label: 'Skill', icon: '◇', key: 'skills' },
+  { id: 'work', label: 'Karya', icon: '▤', key: 'work' },
+  { id: 'motivasi', label: 'Motiv', icon: '✦', key: 'motivation' },
+  { id: 'contact', label: 'Kontak', icon: '✉', key: 'contact' },
+  { id: 'philosophy', label: 'Filosofi', icon: '⌁', key: 'philosophy' },
+  { id: 'pengalaman', label: 'Pengalaman', icon: '🎖️', key: 'experience' },
+  { id: 'quotes', label: 'Kutipan', icon: '❝', key: 'quotes' },
+  { id: 'edukasi', label: 'Edukasi', icon: '▧', key: 'education' },
+  { id: 'notes', label: 'Catatan', icon: '✎', key: 'notes' },
 ];
-const developerQuote = typeof pageContent.quote === 'string' && pageContent.quote.trim()
-  ? pageContent.quote
-  : 'Kode yang baik bukan hanya yang bekerja — tapi yang bisa dibaca dan dipahami orang lain setahun kemudian.';
+const getSectionOrder = (key: string, fallback: number) => {
+  const row = sectionConfig.find((section: any) => section.section_key === key) || (key === 'profile' ? sectionConfig.find((section: any) => section.section_key === 'story') : null);
+  return row ? Number(row.sort_order) || 0 : fallback;
+};
+const visiblePages = pageDefinitions
+  .map((page, index) => ({ ...page, _order: getSectionOrder(page.key, index) }))
+  .filter((page) => isSectionEnabled(page.key))
+  .sort((a, b) => a._order - b._order)
+  .map(({ _order: _ignored, ...page }) => page);
+const mainNavIds = ['about', 'skills', 'work', 'motivasi', 'contact'];
+const mainNav = visiblePages.filter((page) => mainNavIds.includes(page.id));
+const extraNav = visiblePages.filter((page) => !mainNavIds.includes(page.id));
+const hasVisiblePages = visiblePages.length > 0;
+const initialPage = visiblePages[0]?.id || 'about';
+const homePageId = mainNav[0]?.id || initialPage;
+const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SMK Muhammadiyah Belitang'}`;
 ---
 
-<Layout
-  title="Pengembang Website — TKJ XII-9 SMK Muhammadiyah Belitang"
-  description="Profil pengembang dan perjalanan pembuatan website resmi kelas TKJ XII-9 SMK Muhammadiyah Belitang."
+<DeveloperLayout
+  title="Portofolio Pengembang — TKJ XII-9"
+  description="Profil, karya, perjalanan belajar, prinsip, dan catatan pengembang website kelas TKJ XII-9."
+  settings={G}
+  seo={pageSEO}
+  profileName={profileName}
+  profileRole={profileRole}
 >
-  <Header />
-  <main id="main-content" class="developer-main" style={`display:${storyVisible ? '' : 'none'}`}>
-    <div class="developer-portfolio" data-theme="dark" data-taglines={JSON.stringify(taglines)}>
-      <canvas class="dp-particles" aria-hidden="true"></canvas>
-      <div class="dp-grid-overlay" aria-hidden="true"></div>
-      <div class="dp-glow dp-glow-one" aria-hidden="true"></div>
-      <div class="dp-glow dp-glow-two" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="card" id="developer-card" data-taglines={JSON.stringify(typingTaglines)}>
+      <div class="halftone" aria-hidden="true"></div>
+      <div id="scroll-progress" aria-hidden="true"></div>
+      <div class="intro-burst" aria-hidden="true">BAM!</div>
 
-      <div class="dp-inner">
-        <section class="dp-hero" aria-labelledby="developer-name">
-          <div class="dp-hero-copy">
-            <span class="dp-eyebrow"><span class="dp-eyebrow-dot"></span>{cmsDeveloperEyebrow}</span>
-            <div class="dp-avatar-wrap">
-              <span class="dp-avatar-pulse" aria-hidden="true"></span>
-              <span class="dp-avatar-orbit" aria-hidden="true"></span>
-              <span class="dp-avatar-ring" aria-hidden="true"></span>
-              <div class="dp-avatar">
-                {profilePhoto ? (
-                  <img src={profilePhoto} alt={`Foto profil ${profileName}`} loading="eager" decoding="async" />
-                ) : (
-                  <span aria-hidden="true">{initials}</span>
-                )}
-              </div>
-              <span class="dp-avatar-status" aria-hidden="true"></span>
-            </div>
-            <p class="dp-role">{profileRole} <span aria-hidden="true">·</span> TKJ XII-9</p>
-            <h1 id="developer-name" class="dp-name">{profileName}</h1>
-            <p class="dp-headline">{cmsDeveloperHeadline}</p>
-            <p class="dp-tagline"><span id="dp-typewriter">{taglines[0]}</span><span class="dp-caret" aria-hidden="true"></span></p>
-            <div class="dp-hero-actions">
-              <button class="dp-button dp-button-primary" type="button" data-open-tab="projects">
-                <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                Lihat karya
-              </button>
-              {tabs.some((tab) => tab.id === 'contact') && (
-                <button class="dp-button dp-button-quiet" type="button" data-open-tab="contact">
-                  <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
-                  Media sosial
-                </button>
-              )}
-            </div>
-            <div class="dp-hero-meta">
-              <span><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i>{G.namaSekolah || 'SMK Muhammadiyah Belitang'}</span>
-              {G.tahunAjaran && <span><i class="fa-regular fa-calendar" aria-hidden="true"></i>{G.tahunAjaran}</span>}
-            </div>
-          </div>
-          <div class="dp-hero-side" aria-hidden="true">
-            <div class="dp-orbit-art">
-              <span class="dp-orbit-line dp-orbit-line-a"></span>
-              <span class="dp-orbit-line dp-orbit-line-b"></span>
-              <span class="dp-orbit-core"><i class="fa-solid fa-code"></i></span>
-              <span class="dp-orbit-node dp-node-a"></span>
-              <span class="dp-orbit-node dp-node-b"></span>
-              <span class="dp-orbit-node dp-node-c"></span>
-            </div>
-            <span class="dp-side-caption">BUILD · LEARN · UNDERSTAND</span>
-          </div>
-        </section>
-
-        <nav class="dp-navigation" aria-label="Navigasi portofolio">
-          <div class="dp-tabs" role="tablist" aria-label="Bagian portofolio">
-            {tabs.map((tab, index) => (
-              <button
-                class:list={["dp-tab", { active: index === 0 }]}
-                id={`dp-tab-${tab.id}`}
-                type="button"
-                role="tab"
-                aria-selected={index === 0 ? 'true' : 'false'}
-                aria-controls={`dp-panel-${tab.id}`}
-                tabindex={index === 0 ? 0 : -1}
-                data-tab={tab.id}
-              >
-                <i class={`fa-solid ${tab.icon}`} aria-hidden="true"></i>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-          <div class="dp-theme-picker" role="group" aria-label="Pilih tema portofolio">
-            <button class="dp-theme-button active" type="button" data-portfolio-theme="dark" aria-pressed="true" aria-label="Tema Dark">
-              <i class="fa-solid fa-moon" aria-hidden="true"></i><span>Dark</span>
+      <header class="navbar">
+        <nav class="nav-links" aria-label="Navigasi portofolio">
+          {mainNav.map((page) => (
+            <button class:list={['nav-item', { on: page.id === initialPage }]} type="button" data-page={page.id} data-nav={page.id} aria-current={page.id === initialPage ? 'page' : 'false'}>
+              <span class="nav-ico" aria-hidden="true">{page.icon}</span>{page.label}
             </button>
-            <button class="dp-theme-button" type="button" data-portfolio-theme="light" aria-pressed="false" aria-label="Tema Light">
-              <i class="fa-solid fa-sun" aria-hidden="true"></i><span>Light</span>
-            </button>
-            <button class="dp-theme-button" type="button" data-portfolio-theme="ghost" aria-pressed="false" aria-label="Tema Ghost">
-              <i class="fa-solid fa-ghost" aria-hidden="true"></i><span>Ghost</span>
-            </button>
-          </div>
+          ))}
         </nav>
+        <button class="menu-btn" type="button" data-action="menu" aria-label="Buka menu halaman" aria-controls="drawer" aria-expanded="false">☰</button>
+      </header>
 
-        <div class="dp-panels">
-          <section class="dp-panel active" id="dp-panel-about" role="tabpanel" aria-labelledby="dp-tab-about" data-panel="about">
-            <div class="dp-panel-heading">
-              <span class="dp-section-index">01 / PROFILE</span>
-              <h2>Tentang pengembang</h2>
-              <p>Berkenalan dengan orang di balik proses pengembangan website ini.</p>
-            </div>
-            <div class="dp-about-grid">
-              <article class="dp-card dp-about-main">
-                <div class="dp-card-icon"><i class="fa-regular fa-user" aria-hidden="true"></i></div>
-                <h3>Gambaran singkat</h3>
-                <p>{cmsDeveloperIntro}</p>
-                <div class="dp-card-divider"></div>
-                <h3>Catatan perjalanan</h3>
-                <p>{cmsDeveloperStory}</p>
-              </article>
-              <aside class="dp-card dp-about-aside">
-                <span class="dp-card-kicker">THE APPROACH</span>
-                <h3>Memahami sebelum mengembangkan.</h3>
-                <p>Proses belajar tidak berhenti pada membuat sesuatu berjalan. Memahami alasan di balik struktur, alur, dan keputusan teknis adalah bagian dari proses pengembangan itu sendiri.</p>
-                <div class="dp-aside-mark"><i class="fa-solid fa-terminal" aria-hidden="true"></i><span>const nextStep = learn();</span></div>
-              </aside>
-            </div>
-          </section>
-
-          <section class="dp-panel" id="dp-panel-technology" role="tabpanel" aria-labelledby="dp-tab-technology" data-panel="technology" hidden>
-            <div class="dp-panel-heading">
-              <span class="dp-section-index">02 / TECHNOLOGY</span>
-              <h2>Teknologi & kompetensi</h2>
-              <p>Teknologi yang teridentifikasi pada implementasi website ini.</p>
-            </div>
-            <article class="dp-card dp-tech-card">
-              <div class="dp-card-topline">
-                <div>
-                  <span class="dp-card-kicker">PROJECT STACK</span>
-                  <h3>Fondasi website TKJ XII-9</h3>
+      <main class="content" id="portfolio-main">
+        {!hasVisiblePages && <div class="empty-state" role="status"><div class="empty-icon">◌</div><div class="empty-text">Halaman sedang disusun ulang oleh pengelola.</div></div>}
+        {isSectionEnabled('profile') && (
+          <section class:list={['page', { active: initialPage === 'about' }]} id="page-about" aria-label="Tentang pengembang" hidden={initialPage !== 'about'}>
+            <div class="hero-bento">
+              <div class="bento-tile bento-avatar">
+                <div class="av-wrap">
+                  <div class="av-ring" aria-hidden="true"></div>
+                  <div class="av">
+                    {profilePhoto ? <img src={profilePhoto} alt={`Foto profil ${profileName}`} loading="eager" decoding="async" /> : <span>{initials}</span>}
+                  </div>
+                  <div class="status-dot" aria-label="Profil pengembang"></div>
                 </div>
-                <span class="dp-card-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
               </div>
-              <p class="dp-card-intro">Daftar ini merujuk pada dependensi dan lapisan teknologi yang digunakan proyek, bukan penilaian tingkat kemahiran pribadi.</p>
-              <div class="dp-tech-list">
-                {websiteStack.map((technology, index) => (
-                  <span class="dp-tech-chip"><span class="dp-tech-number">0{index + 1}</span>{technology}</span>
+              <div class="bento-tile bento-name">
+                <div class="name" id="nameEl">{profileName}</div>
+                <div class="role">{profileRole}</div>
+              </div>
+              <div class="bento-tile bento-loc"><span aria-hidden="true">📍</span><span>{profileLocation}</span></div>
+              <div class="bento-tile bento-status"><span class="dot" aria-hidden="true"></span><span>{profileStatus}</span></div>
+              <div class="bento-tile bento-typing"><div class="typing" id="typing" aria-label="Semboyan pengembang">{typingTaglines[0] || 'Keep learning.'}</div></div>
+              <div class="bento-tile bento-actions">
+                {visiblePages.some((page) => page.id === 'contact') && <button class="btn btn-primary" type="button" data-page="contact" data-nav="contact" data-shake data-sound>💬 Hubungi</button>}
+                {visiblePages.some((page) => page.id === 'work') && <button class="btn btn-outline" type="button" data-page="work" data-nav="work" data-sound>💼 Karya</button>}
+              </div>
+            </div>
+
+            <section class="section" aria-labelledby="about-heading">
+              <div class="cms-page-intro" data-reveal>
+                <div class="cms-page-kicker">{cmsEyebrow}</div>
+                <h1 class="cms-page-headline" id="about-heading">{cmsHeadline}</h1>
+              </div>
+              <div class="sec-title" data-kicker="Chapter I">Tentang pengembang</div>
+              <p class="bio-extra" data-reveal>Berkenalan dengan orang di balik proses pengembangan website ini.</p>
+              <div class="bio" data-reveal>{textValue(devProfile.bio, DEVELOPER_DEFAULTS.profile.bio, 3000)}</div>
+              {cmsIntro && <p class="bio-extra" data-reveal>{cmsIntro}</p>}
+              <div class="facts-grid">
+                <div class="fact" data-reveal><div class="f-icon">📍</div><div class="f-info"><span class="f-label">Location</span><span class="f-val">{profileLocation}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon">🗣️</div><div class="f-info"><span class="f-label">Languages</span><span class="f-val">{textValue(devProfile.languages, DEVELOPER_DEFAULTS.profile.languages, 80)}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon">🎯</div><div class="f-info"><span class="f-label">Focus</span><span class="f-val">{textValue(devProfile.focus, DEVELOPER_DEFAULTS.profile.focus, 100)}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon">☕</div><div class="f-info"><span class="f-label">Fuel</span><span class="f-val">{textValue(devProfile.fuel, DEVELOPER_DEFAULTS.profile.fuel, 80)}</span></div></div>
+              </div>
+              <div class="marquee-wrap" aria-label="Teknologi yang menjadi perhatian"><div class="marquee">
+                {[...marqueeSkills, ...marqueeSkills].map((skill) => <span>{skill}</span>)}
+              </div></div>
+              <div class="sub-title">Focus</div>
+              {focusCards.map((item) => (
+                <article class="focus-card" data-reveal data-glitch={item.title === 'Learning German' ? '' : undefined}>
+                  <div class="focus-icon">{item.icon || '✦'}</div>
+                  <div class="focus-info"><div class="focus-title">{item.title}</div><div class="focus-desc">{item.description}</div></div>
+                </article>
+              ))}
+              <div class="sub-title">Cerita pengembangan</div>
+              <p class="story-copy" data-reveal>{cmsStory}</p>
+              <div class="sub-title">THE APPROACH</div>
+              <article class="focus-card approach-card" data-reveal>
+                <div class="focus-icon">⌘</div>
+                <div class="focus-info"><div class="focus-title">Memahami sebelum mengembangkan.</div><div class="focus-desc">Proses belajar tidak berhenti pada membuat sesuatu berjalan. Memahami alasan di balik struktur, alur, dan keputusan teknis adalah bagian dari proses pengembangan itu sendiri.</div><code>const nextStep = learn();</code></div>
+              </article>
+              <div class="profile-meta">
+                <span>🏫 {G.namaSekolah || 'SMK Muhammadiyah Belitang'}</span>
+                {G.tahunAjaran && <span>📅 {G.tahunAjaran}</span>}
+              </div>
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('skills') && (
+          <section class:list={['page', { active: initialPage === 'skills' }]} id="page-skills" aria-label="Keahlian" hidden={initialPage !== 'skills'}>
+            <section class="section">
+              <div class="sec-title" data-kicker="Chapter II">Teknologi & kompetensi</div>
+              <p class="stack-note">Teknologi yang teridentifikasi pada implementasi website ini.</p>
+              <div class="sub-title">Hard Skills</div>
+              <div class="skills-radial-grid">
+                {hardSkills.map((skill) => (
+                  <div class="skill-radial" data-reveal>
+                    <div class="skill-radial-ring">
+                      <svg viewBox="0 0 100 100" aria-hidden="true">
+                        <circle class="sr-track" cx="50" cy="50" r="42" />
+                        <circle class="sr-progress" cx="50" cy="50" r="42" style={`--pct:${skill.percent ?? 0}`} data-countup={skill.percent ?? 0} />
+                      </svg>
+                      <div class="sr-center"><span class="sr-val">0</span><span class="sr-pct">%</span></div>
+                    </div>
+                    <div class="sr-name">{skill.name}</div>
+                  </div>
                 ))}
               </div>
-            </article>
-            {personalSkills.length > 0 && (
-              <article class="dp-card dp-personal-skills">
-                <span class="dp-card-kicker">PROFILE DATA</span>
-                <h3>Keahlian yang tercatat pada profil anggota</h3>
-                <div class="dp-tech-list">
-                  {personalSkills.map((skill) => <span class="dp-tech-chip">{skill}</span>)}
-                </div>
-              </article>
-            )}
-          </section>
-
-          <section class="dp-panel" id="dp-panel-projects" role="tabpanel" aria-labelledby="dp-tab-projects" data-panel="projects" hidden>
-            <div class="dp-panel-heading">
-              <span class="dp-section-index">03 / SELECTED WORK</span>
-              <h2>Karya & proyek</h2>
-              <p>Proyek yang sedang menjadi rumah bagi halaman portofolio ini.</p>
-            </div>
-            <article class="dp-project-card">
-              <div class="dp-project-visual" aria-hidden="true">
-                <div class="dp-project-window">
-                  <div class="dp-window-bar"><span></span><span></span><span></span><small>tkj-xii-9 / web</small></div>
-                  <div class="dp-window-content">
-                    <div class="dp-window-sidebar"><i class="fa-solid fa-shapes"></i><i class="fa-solid fa-users"></i><i class="fa-solid fa-images"></i><i class="fa-solid fa-code"></i></div>
-                    <div class="dp-window-main"><span class="dp-window-label">CLASS WEBSITE</span><b>TKJ XII-9</b><i></i><i></i><div class="dp-window-cards"><span></span><span></span><span></span></div></div>
+              <div class="sub-title">Soft Skills</div>
+              <div class="skills-radial-grid">
+                {softSkills.map((skill) => (
+                  <div class="skill-radial" data-reveal>
+                    <div class="skill-radial-ring">
+                      <svg viewBox="0 0 100 100" aria-hidden="true">
+                        <circle class="sr-track" cx="50" cy="50" r="42" />
+                        <circle class="sr-progress" cx="50" cy="50" r="42" style={`--pct:${skill.percent ?? 0}`} data-countup={skill.percent ?? 0} />
+                      </svg>
+                      <div class="sr-center"><span class="sr-val">0</span><span class="sr-pct">%</span></div>
+                    </div>
+                    <div class="sr-name">{skill.name}</div>
                   </div>
-                </div>
+                ))}
               </div>
-              <div class="dp-project-copy">
-                <span class="dp-project-status"><span></span> PROJECT WEBSITE</span>
-                <h3>Website Kelas TKJ XII-9</h3>
-                <p>Website kelas yang menyatukan informasi, profil anggota, struktur organisasi, galeri, dan halaman kompetensi dalam satu pengalaman yang responsif. Proyek ini menggunakan Astro dengan integrasi data situs dan layanan penyimpanan yang telah dikonfigurasi.</p>
-                <div class="dp-project-tags">
-                  {websiteStack.map((technology) => <span>{technology}</span>)}
-                </div>
-                <a class="dp-project-link" href="/" aria-label="Kunjungi website TKJ XII-9">
-                  Jelajahi website <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
-                </a>
-              </div>
-            </article>
+              <p class="skill-disclaimer">Angka persentase adalah penilaian reflektif pada draft portofolio, bukan hasil uji kompetensi atau sertifikasi.</p>
+              {personalSkills.length > 0 && <><div class="sub-title">Keahlian dari data anggota CMS</div><div class="skill-chips">{personalSkills.map((skill) => <span>{skill}</span>)}</div></>}
+              <div class="sub-title">Stack website kelas</div>
+              <p class="stack-note">Teknologi di bawah berasal dari implementasi website kelas, bukan klaim tingkat kemahiran pribadi.</p>
+              <div class="skill-chips">{websiteStack.map((technology) => <span>{technology}</span>)}</div>
+            </section>
           </section>
+        )}
 
-          <section class="dp-panel" id="dp-panel-journey" role="tabpanel" aria-labelledby="dp-tab-journey" data-panel="journey" hidden>
-            <div class="dp-panel-heading">
-              <span class="dp-section-index">04 / THE JOURNEY</span>
-              <h2>Perjalanan belajar</h2>
-              <p>Potongan proses yang membentuk cara pandang terhadap teknologi dan pengembangan.</p>
-            </div>
-            <div class="dp-timeline">
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">01</span>
-                <div><h3>Awal yang mengejutkan</h3><p>Kode pernah terlihat seperti teks acak. Ketertarikan mulai tumbuh ketika berkenalan dengan WhatsApp Bot Baileys dan mencoba memahami logika di balik sebuah perintah.</p></div>
-              </article>
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">02</span>
-                <div><h3>Belajar dengan membongkar</h3><p>Proses belajar dimulai dengan membaca proyek yang sudah ada, memahami struktur file, mengenali modularitas, lalu mencoba mengembangkan bagian-bagiannya.</p></div>
-              </article>
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">03</span>
-                <div><h3>AI sebagai cermin</h3><p>AI mulai digunakan bukan hanya untuk menghasilkan kode, tetapi untuk meminta penjelasan, menguji asumsi, dan membandingkan pendekatan yang berbeda.</p></div>
-              </article>
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">04</span>
-                <div><h3>Logika sebelum tampilan</h3><p>Struktur aplikasi dan alur data menjadi perhatian utama. Tampilan yang baik perlu ditopang fondasi yang jelas dan mudah dipelihara.</p></div>
-              </article>
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">05</span>
-                <div><h3>Memberi jarak pada masalah</h3><p>Saat menemui jalan buntu, mengambil jeda dapat membantu melihat masalah dari sudut pandang yang lebih tenang sebelum kembali mengerjakannya.</p></div>
-              </article>
-              <article class="dp-timeline-item">
-                <span class="dp-timeline-number">06</span>
-                <div><h3>Konsistensi sebagai proses</h3><p>Perkembangan tidak hanya ditentukan oleh satu hari yang produktif. Belajar, mengevaluasi, dan memperbaiki secara berulang menjadi bagian dari perjalanan.</p></div>
-              </article>
-            </div>
-          </section>
-
-          <section class="dp-panel" id="dp-panel-philosophy" role="tabpanel" aria-labelledby="dp-tab-philosophy" data-panel="philosophy" hidden>
-            <div class="dp-panel-heading">
-              <span class="dp-section-index">05 / PRINCIPLES</span>
-              <h2>Filosofi & catatan</h2>
-              <p>Prinsip yang tercermin dalam cerita pengembangan di halaman ini.</p>
-            </div>
-            <blockquote class="dp-quote-card">
-              <span class="dp-quote-mark" aria-hidden="true">“</span>
-              <p>{developerQuote}</p>
-              <footer>— Catatan pengembang</footer>
-            </blockquote>
-            <div class="dp-principles-grid">
-              <article class="dp-card dp-principle-card"><span class="dp-principle-icon"><i class="fa-solid fa-brain" aria-hidden="true"></i></span><h3>Pahami, jangan sekadar salin</h3><p>Gunakan alat bantu untuk memperluas pemahaman. Keputusan dan hasil akhir tetap perlu diperiksa secara kritis.</p></article>
-              <article class="dp-card dp-principle-card"><span class="dp-principle-icon"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></span><h3>Struktur adalah fondasi</h3><p>Arsitektur yang jelas membuat fitur lebih mudah dikembangkan, diuji, dan dirawat ketika proyek bertambah besar.</p></article>
-              <article class="dp-card dp-principle-card"><span class="dp-principle-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></span><h3>Readability matters</h3><p>Kode perlu dapat dipahami, bukan hanya berhasil dieksekusi. Keterbacaan membantu kerja sama dan pemeliharaan.</p></article>
-            </div>
-          </section>
-
-          {experienceEntries.length > 0 && (
-            <section class="dp-panel" id="dp-panel-experience" role="tabpanel" aria-labelledby="dp-tab-experience" data-panel="experience" hidden>
-              <div class="dp-panel-heading"><span class="dp-section-index">06 / EXPERIENCE</span><h2>Pengalaman</h2><p>Catatan yang tersimpan pada konten halaman.</p></div>
-              <div class="dp-experience-list">
-                {experienceEntries.map((entry) => (
-                  <article class="dp-card dp-experience-item">
-                    <span class="dp-card-kicker">{entry.period || entry.date || 'PENGALAMAN'}</span>
-                    <h3>{entry.title}</h3>
-                    {entry.organization && <p class="dp-experience-org">{entry.organization}</p>}
-                    {entry.description && <p>{entry.description}</p>}
+        {isSectionEnabled('work') && (
+          <section class:list={['page', { active: initialPage === 'work' }]} id="page-work" aria-label="Karya dan proyek" hidden={initialPage !== 'work'}>
+            <section class="section">
+              <div class="sec-title" data-kicker="Chapter III">Karya & proyek</div>
+              <p class="stack-note">Proyek yang sedang menjadi rumah bagi halaman portofolio ini.</p>
+              <div class="projects-grid">
+                {projects.map((project, index) => (
+                  <article class="proj" data-reveal data-sound>
+                    <div class="proj-header">{project.icon || '✦'}<span class="proj-tag">{project.tag || (index === 3 ? 'Astro' : 'Project')}</span></div>
+                    <div class="proj-body">
+                      <div class="proj-status">{project.status || 'SELECTED WORK'}</div>
+                      <div class="proj-title">{project.title}</div>
+                      <div class="proj-desc">{project.description}</div>
+                      {Array.isArray(project.tags) && <div class="project-tags">{project.tags.filter((tag: unknown) => typeof tag === 'string').slice(0, 10).map((tag: string) => <span>{tag}</span>)}</div>}
+                      {project.href && safeHref(project.href) && <a class="project-link" href={safeHref(project.href) || '#'}>Lihat proyek ↗</a>}
+                      {index === 3 && <div class="project-tags">{websiteStack.map((tag) => <span>{tag}</span>)}</div>}
+                    </div>
                   </article>
                 ))}
               </div>
             </section>
-          )}
+          </section>
+        )}
 
-          {(classSocialLinks.length > 0 || personalSocialLinks.length > 0) && (
-            <section class="dp-panel" id="dp-panel-contact" role="tabpanel" aria-labelledby="dp-tab-contact" data-panel="contact" hidden>
-              <div class="dp-panel-heading">
-                <span class="dp-section-index">07 / CONNECT</span>
-                <h2>Kontak & media sosial</h2>
-                <p>Saluran publik yang tercatat pada konfigurasi website.</p>
+        {isSectionEnabled('motivation') && (
+          <section class:list={['page', { active: initialPage === 'motivasi' }]} id="page-motivasi" aria-label="Motivasi dan perjalanan" hidden={initialPage !== 'motivasi'}>
+            <section class="section">
+              <div class="sec-title" data-kicker="Chapter IV">Motivasi</div>
+              <div class="timeline">
+                {motivations.map((item) => <article class="timeline-item" data-reveal><div class="timeline-dot"></div><div class="timeline-title">{item.title}</div><div class="timeline-desc">{item.description}</div></article>)}
               </div>
-              {personalSocialLinks.length > 0 && (
-                <div class="dp-social-group">
-                  <div class="dp-social-heading"><h3>Profil pengembang</h3><span>PERSONAL</span></div>
-                  <div class="dp-social-grid">
-                    {personalSocialLinks.map((social) => (
-                      <a class="dp-social-card" href={social.href} target="_blank" rel="noopener noreferrer">
-                        <i class={social.icon} aria-hidden="true"></i><span>{social.label}</span><i class="fa-solid fa-arrow-up-right-from-square dp-social-arrow" aria-hidden="true"></i>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {classSocialLinks.length > 0 && (
-                <div class="dp-social-group">
-                  <div class="dp-social-heading"><h3>Media sosial kelas</h3><span>TKJ XII-9</span></div>
-                  <div class="dp-social-grid">
-                    {classSocialLinks.map((social) => (
-                      <a class="dp-social-card" href={social.href} target="_blank" rel="noopener noreferrer">
-                        <i class={social.icon} aria-hidden="true"></i><span>{social.label}</span><i class="fa-solid fa-arrow-up-right-from-square dp-social-arrow" aria-hidden="true"></i>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div class="sub-title journey-title">Perjalanan belajar</div>
+              <p class="journey-intro">Potongan proses yang membentuk cara pandang terhadap teknologi dan pengembangan.</p>
+              <div class="timeline journey-timeline">
+                {journeys.map((item, index) => <article class="timeline-item" data-reveal><div class="timeline-dot"></div><div class="timeline-title"><span class="journey-index">{String(index + 1).padStart(2, '0')}</span>{item.title}</div><div class="timeline-desc">{item.description}</div></article>)}
+              </div>
             </section>
-          )}
+          </section>
+        )}
+
+        {isSectionEnabled('contact') && (
+          <section class:list={['page', { active: initialPage === 'contact' }]} id="page-contact" aria-label="Kontak" hidden={initialPage !== 'contact'}>
+            <section class="section">
+              <div class="sec-title" data-kicker="Chapter V">Kontak & media sosial</div>
+              <p class="bio-extra">Saluran publik yang tercatat pada konfigurasi website.</p>
+              <div class="contacts-list">
+                {contactMethods.map((item) => (
+                  <article class="ctc" data-sound>
+                    <div class="ctc-left" data-link={item.href || undefined}>
+                      <div class="ctc-icon">{item.icon || '✉️'}</div>
+                      <div class="ctc-info"><span class="ctc-label">{item.label}</span><span class="ctc-val">{item.value}</span></div>
+                    </div>
+                    {item.copy && <button class="ctc-action" type="button" data-copy={item.copy} aria-label={`Salin ${item.label}`}>📋</button>}
+                  </article>
+                ))}
+              </div>
+              {personalSocialLinks.length > 0 && <><div class="sub-title">Profil pengembang</div><div class="socials">{personalSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label} data-sound>{item.icon}</a>)}</div></>}
+              {classSocialLinks.length > 0 && <><div class="sub-title">Media sosial kelas</div><div class="socials">{classSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`${item.label} kelas`} data-sound>{item.icon}</a>)}</div></>}
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('philosophy') && (
+          <section class:list={['page', { active: initialPage === 'philosophy' }]} id="page-philosophy" aria-label="Filosofi pengembang" hidden={initialPage !== 'philosophy'}>
+            <section class="section">
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <div class="sec-title" data-kicker="Appendix / Principles">Filosofi & catatan</div>
+              <p class="bio-extra">Prinsip yang tercermin dalam cerita pengembangan di halaman ini.</p>
+              <blockquote class="philosophy-quote" data-reveal>“{developerQuote}”</blockquote>
+              <div class="principles-grid">
+                {principles.map((item) => <article class="principle-card" data-reveal><div class="principle-icon">{item.icon || '✦'}</div><h3>{item.title}</h3><p>{item.description}</p></article>)}
+              </div>
+              <div class="sub-title">Prinsip kerja</div>
+              <p class="story-copy">Pahami masalah, periksa asumsi, lalu pilih struktur yang dapat diuji dan dipelihara. Tampilan adalah bagian dari produk, bukan pengganti fondasi.</p>
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('experience') && (
+          <section class:list={['page', { active: initialPage === 'pengalaman' }]} id="page-pengalaman" aria-label="Pengalaman" hidden={initialPage !== 'pengalaman'}>
+            <section class="section">
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <div class="sec-title" data-kicker="Appendix A">Pengalaman</div>
+              <p class="bio-extra">Catatan yang tersimpan pada konten halaman.</p>
+              {experienceEntries.length > 0 ? <div class="experience-list">{experienceEntries.map((entry) => <article class="article-card" data-reveal><div class="article-category">{entry.period || entry.date || 'PENGALAMAN'}</div><div class="article-title">{entry.title}</div>{entry.organization && <p class="experience-org">{entry.organization}</p>}{entry.description && <div class="article-body"><p>{entry.description}</p></div>}</article>)}</div> : <div class="empty-state"><div class="empty-icon">🎖️</div><div class="empty-text">Belum ada catatan.<br />Ruang ini menunggu pencapaianmu.</div></div>}
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('quotes') && (
+          <section class:list={['page', { active: initialPage === 'quotes' }]} id="page-quotes" aria-label="Kutipan" hidden={initialPage !== 'quotes'}>
+            <section class="section">
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <div class="sec-title" data-kicker="Appendix B">Kutipan</div>
+              <div class="quote-carousel" data-carousel data-auto="true">
+                <div class="quote-track">
+                  {quoteCards.map((quote) => <article class="quote-card"><div class="quote-text">{quote.text}</div><div class="quote-author">{quote.author}</div></article>)}
+                </div>
+                <div class="quote-dots">{quoteCards.map((_quote, index) => <button type="button" data-dot={index} class:list={{ on: index === 0 }} aria-label={`Kutipan ${index + 1}`} aria-pressed={index === 0 ? 'true' : 'false'}></button>)}</div>
+              </div>
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('education') && (
+          <section class:list={['page', { active: initialPage === 'edukasi' }]} id="page-edukasi" aria-label="Edukasi" hidden={initialPage !== 'edukasi'}>
+            <section class="section">
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <div class="sec-title" data-kicker="Appendix C">Edukasi</div>
+              <div class="edukasi-grid">
+                {educationCards.map((article) => <article class="article-card" data-reveal><div class="article-category">{article.category || 'Catatan'}</div><div class="article-title">{article.title}</div><div class="article-body">{(article.paragraphs || []).map((paragraph: string) => <p>{paragraph}</p>)}</div></article>)}
+              </div>
+            </section>
+          </section>
+        )}
+
+        {isSectionEnabled('notes') && (
+          <section class:list={['page', { active: initialPage === 'notes' }]} id="page-notes" aria-label="Catatan" hidden={initialPage !== 'notes'}>
+            <section class="section">
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <div class="sec-title" data-kicker="Appendix D">Catatan</div>
+              <div class="notes-grid">
+                {noteCards.map((note) => <article class="article-card" data-reveal><div class="article-category">{note.category || 'Notes'}</div><div class="article-title">{note.title}</div><div class="article-body"><p>{note.description}</p></div></article>)}
+              </div>
+            </section>
+          </section>
+        )}
+      </main>
+
+      <footer class="footer">
+        <div id="clock" aria-label="Waktu Indonesia Barat"></div>
+        <div class="footer-meta">{profileName} · {G.namaKelas || 'TKJ XII-9'} · BRUTALIST EDITION</div>
+        <p class="footer-school">{currentPageName}</p>
+      </footer>
+
+      <div class="overlay" id="overlay" aria-hidden="true"></div>
+      <aside class="drawer" id="drawer" aria-label="Menu tambahan" aria-hidden="true">
+        <div class="dr-hdr"><div class="dr-title">Menu</div><button class="dr-close" type="button" data-action="close-menu" aria-label="Tutup menu">×</button></div>
+        <div class="dr-section">
+          <div class="dr-label">Halaman tambahan</div>
+          <div class="dr-grid extra">
+            {extraNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id}><span>{page.icon}</span>{page.label}</button>)}
+          </div>
         </div>
-
-        <footer class="dp-footer">
-          <span class="dp-footer-mark"><i class="fa-solid fa-code" aria-hidden="true"></i></span>
-          <p>Bagian dari website <strong>{G.namaKelas || 'TKJ XII-9'}</strong> · {G.namaSekolah || 'SMK Muhammadiyah Belitang'}</p>
-          <span class="dp-footer-line"></span>
-        </footer>
-      </div>
+        <div class="dr-section"><div class="dr-label">Tema</div><div class="locked-theme"><span class="lock">🔒</span>BRUTALIST LOCKED</div></div>
+      </aside>
+      <div class="toast" id="toast" role="status" aria-live="polite">COPIED!</div>
     </div>
-  </main>
-  <Footer />
-</Layout>
-
-<style>
-  .developer-main {
-    padding-top: var(--top-h, 72px);
-    width: 100%;
-  }
-
-  .developer-portfolio {
-    --dp-bg: #080914;
-    --dp-bg-soft: #101225;
-    --dp-panel: rgba(255, 255, 255, 0.045);
-    --dp-panel-hover: rgba(255, 255, 255, 0.075);
-    --dp-ink: #f6f5ff;
-    --dp-ink-soft: #d4d4e5;
-    --dp-muted: #a09fb7;
-    --dp-faint: #77768f;
-    --dp-border: rgba(255, 255, 255, 0.09);
-    --dp-border-strong: rgba(255, 255, 255, 0.16);
-    --dp-purple: #9575ff;
-    --dp-cyan: #54dfff;
-    --dp-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
-    position: relative;
-    isolation: isolate;
-    overflow: clip;
-    width: min(100% - 28px, 1180px);
-    margin: 22px auto 64px;
-    padding: clamp(16px, 3.4vw, 38px);
-    border: 1px solid var(--dp-border);
-    border-radius: 30px;
-    background:
-      radial-gradient(ellipse at 18% 2%, rgba(124, 92, 255, 0.15), transparent 37%),
-      radial-gradient(ellipse at 92% 18%, rgba(0, 212, 255, 0.09), transparent 32%),
-      var(--dp-bg);
-    color: var(--dp-ink);
-    box-shadow: var(--dp-shadow);
-    font-family: var(--sys, Inter, ui-sans-serif, system-ui, sans-serif);
-    transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease;
-  }
-
-  .developer-portfolio[data-theme="light"] {
-    --dp-bg: #f7f8ff;
-    --dp-bg-soft: #ffffff;
-    --dp-panel: rgba(255, 255, 255, 0.78);
-    --dp-panel-hover: rgba(255, 255, 255, 0.96);
-    --dp-ink: #19172a;
-    --dp-ink-soft: #38364d;
-    --dp-muted: #625f76;
-    --dp-faint: #858197;
-    --dp-border: rgba(36, 31, 66, 0.11);
-    --dp-border-strong: rgba(63, 50, 117, 0.2);
-    --dp-purple: #704ce5;
-    --dp-cyan: #008eae;
-    --dp-shadow: 0 22px 60px rgba(70, 64, 115, 0.12);
-    background:
-      radial-gradient(ellipse at 15% 0%, rgba(149, 117, 255, 0.15), transparent 38%),
-      radial-gradient(ellipse at 92% 20%, rgba(84, 223, 255, 0.16), transparent 34%),
-      var(--dp-bg);
-  }
-
-  .developer-portfolio[data-theme="ghost"] {
-    --dp-bg: rgba(9, 11, 23, 0.42);
-    --dp-bg-soft: rgba(17, 20, 39, 0.42);
-    --dp-panel: rgba(255, 255, 255, 0.055);
-    --dp-panel-hover: rgba(255, 255, 255, 0.095);
-    --dp-ink: #f4f3ff;
-    --dp-ink-soft: #d9d7eb;
-    --dp-muted: #b0aec4;
-    --dp-faint: #88869f;
-    --dp-border: rgba(255, 255, 255, 0.14);
-    --dp-border-strong: rgba(255, 255, 255, 0.24);
-    --dp-purple: #b2a0ff;
-    --dp-cyan: #82eaff;
-    --dp-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
-    background:
-      radial-gradient(ellipse at 18% 2%, rgba(124, 92, 255, 0.17), transparent 40%),
-      radial-gradient(ellipse at 92% 18%, rgba(0, 212, 255, 0.1), transparent 36%),
-      rgba(10, 12, 25, 0.22);
-    -webkit-backdrop-filter: blur(22px) saturate(135%);
-    backdrop-filter: blur(22px) saturate(135%);
-  }
-
-  .developer-portfolio *,
-  .developer-portfolio *::before,
-  .developer-portfolio *::after { box-sizing: border-box; }
-
-  .developer-portfolio [hidden] { display: none !important; }
-  .developer-portfolio button,
-  .developer-portfolio a { -webkit-tap-highlight-color: transparent; }
-
-  .dp-particles,
-  .dp-grid-overlay,
-  .dp-glow { position: absolute; inset: 0; pointer-events: none; }
-  .dp-particles { z-index: -2; width: 100%; height: 100%; opacity: 0.62; }
-  .dp-grid-overlay {
-    z-index: -3;
-    opacity: 0.18;
-    background-image: linear-gradient(rgba(180, 176, 220, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(180, 176, 220, 0.15) 1px, transparent 1px);
-    background-size: 34px 34px;
-    -webkit-mask-image: radial-gradient(ellipse at center, #000 8%, transparent 78%);
-    mask-image: radial-gradient(ellipse at center, #000 8%, transparent 78%);
-  }
-  .dp-glow { z-index: -2; width: 300px; height: 300px; inset: auto; border-radius: 50%; filter: blur(75px); opacity: 0.1; }
-  .dp-glow-one { top: 270px; left: -190px; background: var(--dp-purple); }
-  .dp-glow-two { top: 760px; right: -190px; background: var(--dp-cyan); }
-  .developer-portfolio[data-theme="light"] .dp-grid-overlay { opacity: 0.12; }
-  .developer-portfolio[data-theme="ghost"] .dp-grid-overlay { opacity: 0.1; }
-
-  .dp-inner { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; }
-  .dp-hero {
-    min-height: 420px;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.68fr);
-    align-items: center;
-    gap: 24px;
-    padding: clamp(20px, 4vw, 46px) clamp(12px, 3vw, 36px) 42px;
-  }
-  .dp-hero-copy { min-width: 0; text-align: center; }
-  .dp-eyebrow,
-  .dp-card-kicker,
-  .dp-section-index {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    color: var(--dp-cyan);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  .dp-eyebrow { margin-bottom: 22px; }
-  .dp-eyebrow-dot,
-  .dp-project-status span { width: 7px; height: 7px; border-radius: 50%; background: var(--dp-cyan); box-shadow: 0 0 12px var(--dp-cyan); }
-  .dp-avatar-wrap { position: relative; width: 116px; height: 116px; margin: 0 auto 22px; }
-  .dp-avatar-pulse { position: absolute; inset: -5px; border-radius: 50%; background: var(--dp-purple); opacity: 0.22; filter: blur(6px); animation: dp-pulse 3.2s ease-out infinite; }
-  .dp-avatar-ring { position: absolute; inset: -5px; border-radius: 50%; background: conic-gradient(from 20deg, var(--dp-purple), var(--dp-cyan), var(--dp-purple)); animation: dp-spin 8s linear infinite; }
-  .dp-avatar-ring::after { content: ""; position: absolute; inset: 4px; border-radius: inherit; background: var(--dp-bg); }
-  .dp-avatar-orbit { position: absolute; inset: -14px; border: 1px dashed var(--dp-border-strong); border-radius: 50%; animation: dp-spin-reverse 16s linear infinite; }
-  .dp-avatar-orbit::after { content: ""; position: absolute; top: 8px; left: 12px; width: 7px; height: 7px; border-radius: 50%; background: var(--dp-cyan); box-shadow: 0 0 12px var(--dp-cyan); }
-  .dp-avatar { position: relative; z-index: 1; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; border: 4px solid var(--dp-bg); border-radius: 50%; background: linear-gradient(135deg, var(--dp-purple), var(--dp-cyan)); color: #fff; font-size: 2rem; font-weight: 800; letter-spacing: -0.05em; }
-  .dp-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .dp-avatar-status { position: absolute; z-index: 2; right: 3px; bottom: 5px; width: 16px; height: 16px; border: 3px solid var(--dp-bg); border-radius: 50%; background: var(--dp-cyan); box-shadow: 0 0 10px color-mix(in srgb, var(--dp-cyan) 65%, transparent); }
-  .dp-role { margin: 0 0 7px; color: var(--dp-cyan); font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em; }
-  .dp-role span { margin: 0 5px; opacity: 0.7; }
-  .dp-name { margin: 0; color: var(--dp-ink); background: linear-gradient(120deg, var(--dp-ink), var(--dp-purple) 72%, var(--dp-cyan)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: clamp(2rem, 5vw, 3.35rem); font-weight: 850; letter-spacing: -0.055em; line-height: 1.12; overflow-wrap: anywhere; }
-  .dp-headline { margin: 11px 0 0; color: var(--dp-muted); font-size: 0.96rem; font-weight: 600; }
-  .dp-tagline { min-height: 25px; margin: 12px 0 0; color: var(--dp-ink-soft); font-family: "Fira Code", ui-monospace, monospace; font-size: 0.78rem; letter-spacing: 0.01em; }
-  .dp-caret { display: inline-block; width: 6px; height: 14px; margin-left: 4px; vertical-align: -2px; border-radius: 1px; background: var(--dp-cyan); animation: dp-blink 1s steps(2, start) infinite; }
-  .dp-hero-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-  .dp-button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 43px; padding: 0 17px; border: 1px solid var(--dp-border-strong); border-radius: 12px; color: var(--dp-ink); font: inherit; font-size: 0.8rem; font-weight: 750; text-decoration: none; cursor: pointer; transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease; }
-  .dp-button-primary { border-color: transparent; background: linear-gradient(110deg, var(--dp-purple), #5d9df5 58%, var(--dp-cyan)); color: #07101a; box-shadow: 0 8px 22px rgba(100, 135, 245, 0.2); }
-  .dp-button-quiet { background: var(--dp-panel); }
-  .dp-button:hover { transform: translateY(-2px); border-color: var(--dp-cyan); }
-  .dp-button:active { transform: scale(0.97); }
-  .dp-hero-meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px 20px; margin-top: 21px; color: var(--dp-faint); font-size: 0.7rem; }
-  .dp-hero-meta span { display: inline-flex; align-items: center; gap: 7px; }
-  .dp-hero-meta i { color: var(--dp-purple); }
-
-  .dp-hero-side { display: flex; align-items: center; justify-content: center; min-width: 0; }
-  .dp-orbit-art { position: relative; width: min(100%, 290px); aspect-ratio: 1; display: grid; place-items: center; }
-  .dp-orbit-line { position: absolute; border: 1px solid var(--dp-border-strong); border-radius: 50%; transform: rotate(-30deg) scaleY(0.48); }
-  .dp-orbit-line-a { inset: 18%; border-color: rgba(149, 117, 255, 0.45); }
-  .dp-orbit-line-b { inset: 7%; transform: rotate(55deg) scaleY(0.48); border-color: rgba(84, 223, 255, 0.35); }
-  .dp-orbit-core { display: grid; place-items: center; width: 104px; height: 104px; border: 1px solid var(--dp-border-strong); border-radius: 30px; background: linear-gradient(145deg, var(--dp-panel-hover), var(--dp-panel)); color: var(--dp-cyan); font-size: 2.2rem; box-shadow: 0 0 65px rgba(110, 100, 255, 0.2), inset 0 0 25px rgba(255, 255, 255, 0.04); transform: rotate(-9deg); backdrop-filter: blur(10px); }
-  .dp-orbit-node { position: absolute; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 18px currentColor; }
-  .dp-node-a { top: 19%; left: 25%; color: var(--dp-cyan); background: currentColor; }
-  .dp-node-b { right: 12%; top: 49%; color: var(--dp-purple); background: currentColor; }
-  .dp-node-c { bottom: 13%; left: 40%; width: 7px; height: 7px; color: var(--dp-cyan); background: currentColor; }
-  .dp-side-caption { position: absolute; bottom: 6%; color: var(--dp-faint); font: 0.6rem "Fira Code", ui-monospace, monospace; letter-spacing: 0.18em; }
-
-  .dp-navigation { position: sticky; top: calc(var(--top-h, 72px) + 8px); z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 30px; padding: 8px; border: 1px solid var(--dp-border); border-radius: 17px; background: color-mix(in srgb, var(--dp-bg-soft) 84%, transparent); box-shadow: 0 8px 26px rgba(0, 0, 0, 0.1); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
-  .dp-tabs { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
-  .dp-tabs::-webkit-scrollbar { display: none; }
-  .dp-tab { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 0 14px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--dp-muted); font: inherit; font-size: 0.76rem; font-weight: 750; white-space: nowrap; cursor: pointer; transition: color 160ms ease, background 160ms ease, border-color 160ms ease; }
-  .dp-tab i { font-size: 0.8rem; color: var(--dp-faint); }
-  .dp-tab:hover { color: var(--dp-ink); background: var(--dp-panel); }
-  .dp-tab.active { border-color: var(--dp-border); background: var(--dp-panel-hover); color: var(--dp-ink); box-shadow: inset 0 1px rgba(255, 255, 255, 0.04); }
-  .dp-tab.active i { color: var(--dp-cyan); }
-  .dp-theme-picker { display: flex; flex: 0 0 auto; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--dp-border); border-radius: 12px; background: var(--dp-panel); }
-  .dp-theme-button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 9px; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--dp-muted); font: inherit; font-size: 0.68rem; font-weight: 750; cursor: pointer; }
-  .dp-theme-button i { font-size: 0.7rem; }
-  .dp-theme-button.active { border-color: var(--dp-border-strong); background: var(--dp-panel-hover); color: var(--dp-ink); }
-
-  .dp-panels { min-height: 360px; }
-  .dp-panel { animation: dp-panel-in 280ms ease both; }
-  .dp-panel-heading { margin: 0 0 22px; }
-  .dp-section-index { margin-bottom: 8px; font-size: 0.62rem; }
-  .dp-panel-heading h2 { margin: 0; color: var(--dp-ink); font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 820; letter-spacing: -0.04em; line-height: 1.2; }
-  .dp-panel-heading p { margin: 8px 0 0; color: var(--dp-muted); font-size: 0.88rem; line-height: 1.65; }
-  .dp-card { border: 1px solid var(--dp-border); border-radius: 19px; background: var(--dp-panel); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.07); }
-  .dp-card h3 { margin: 0 0 10px; color: var(--dp-ink); font-size: 1.05rem; font-weight: 780; letter-spacing: -0.02em; }
-  .dp-card p { margin: 0; color: var(--dp-ink-soft); font-size: 0.88rem; line-height: 1.85; }
-  .dp-about-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(230px, 0.8fr); gap: 16px; }
-  .dp-about-main { padding: clamp(20px, 3vw, 30px); }
-  .dp-about-main p + h3 { margin-top: 24px; }
-  .dp-card-icon { display: grid; place-items: center; width: 42px; height: 42px; margin-bottom: 17px; border: 1px solid var(--dp-border-strong); border-radius: 13px; background: linear-gradient(145deg, rgba(149, 117, 255, 0.16), rgba(84, 223, 255, 0.1)); color: var(--dp-cyan); font-size: 1rem; }
-  .dp-card-divider { height: 1px; margin: 22px 0; background: var(--dp-border); }
-  .dp-about-aside { display: flex; flex-direction: column; justify-content: space-between; min-height: 100%; padding: 25px; background: linear-gradient(145deg, rgba(149, 117, 255, 0.11), var(--dp-panel) 65%); }
-  .dp-about-aside h3 { margin: 16px 0 11px; font-size: 1.35rem; line-height: 1.32; }
-  .dp-about-aside p { font-size: 0.82rem; }
-  .dp-aside-mark { display: flex; align-items: center; gap: 10px; margin-top: 25px; padding: 12px; border: 1px solid var(--dp-border); border-radius: 11px; background: rgba(0, 0, 0, 0.1); color: var(--dp-cyan); font: 0.68rem "Fira Code", ui-monospace, monospace; overflow-wrap: anywhere; }
-  .dp-aside-mark i { color: var(--dp-purple); }
-
-  .dp-tech-card, .dp-personal-skills { padding: clamp(20px, 3vw, 30px); }
-  .dp-card-topline { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-  .dp-card-topline .dp-card-icon { flex: 0 0 auto; margin: 0; }
-  .dp-card-topline h3 { margin: 8px 0 0; font-size: 1.25rem; }
-  .dp-card-intro { max-width: 720px; margin-top: 16px !important; }
-  .dp-tech-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-  .dp-tech-chip { display: inline-flex; align-items: center; gap: 9px; padding: 10px 13px; border: 1px solid var(--dp-border); border-radius: 11px; background: var(--dp-panel-hover); color: var(--dp-ink); font-size: 0.8rem; font-weight: 750; }
-  .dp-tech-number { color: var(--dp-cyan); font: 0.62rem "Fira Code", ui-monospace, monospace; }
-  .dp-personal-skills { margin-top: 15px; }
-  .dp-personal-skills h3 { margin-top: 9px; }
-
-  .dp-project-card { display: grid; grid-template-columns: minmax(250px, 0.95fr) minmax(0, 1.05fr); overflow: hidden; border: 1px solid var(--dp-border); border-radius: 22px; background: var(--dp-panel); box-shadow: var(--dp-shadow); }
-  .dp-project-visual { display: grid; place-items: center; min-height: 310px; padding: 28px; overflow: hidden; background: radial-gradient(circle at 28% 20%, rgba(149, 117, 255, 0.28), transparent 48%), radial-gradient(circle at 85% 75%, rgba(84, 223, 255, 0.2), transparent 44%), rgba(255, 255, 255, 0.025); }
-  .dp-project-window { width: min(100%, 370px); overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 14px; background: #0d1020; box-shadow: 0 24px 55px rgba(0, 0, 0, 0.3); transform: perspective(850px) rotateY(-7deg) rotateX(3deg); }
-  .dp-window-bar { display: flex; align-items: center; gap: 5px; height: 34px; padding: 0 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: #171a2e; }
-  .dp-window-bar > span { width: 6px; height: 6px; border-radius: 50%; background: #9c8bff; }
-  .dp-window-bar > span:nth-child(2) { background: #59dff1; }
-  .dp-window-bar > span:nth-child(3) { background: #56d6a5; }
-  .dp-window-bar small { margin-left: auto; color: #8c8ba5; font: 0.52rem "Fira Code", ui-monospace, monospace; }
-  .dp-window-content { display: grid; grid-template-columns: 35px 1fr; min-height: 195px; }
-  .dp-window-sidebar { display: flex; flex-direction: column; align-items: center; gap: 17px; padding: 15px 0; border-right: 1px solid rgba(255, 255, 255, 0.07); color: #8a80d8; font-size: 0.66rem; }
-  .dp-window-main { padding: 22px 18px; }
-  .dp-window-label { display: block; color: #69d7eb; font: 0.5rem "Fira Code", ui-monospace, monospace; letter-spacing: 0.17em; }
-  .dp-window-main b { display: block; margin-top: 7px; color: #f3f0ff; font-size: 1.25rem; letter-spacing: -0.04em; }
-  .dp-window-main > i { display: block; width: 84%; height: 5px; margin-top: 12px; border-radius: 5px; background: #292d49; }
-  .dp-window-main > i + i { width: 58%; margin-top: 7px; }
-  .dp-window-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 19px; }
-  .dp-window-cards span { height: 38px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; background: linear-gradient(145deg, rgba(149, 117, 255, 0.25), rgba(84, 223, 255, 0.08)); }
-  .dp-project-copy { align-self: center; padding: clamp(22px, 4vw, 38px); }
-  .dp-project-status { display: inline-flex; align-items: center; gap: 8px; color: var(--dp-cyan); font-size: 0.63rem; font-weight: 800; letter-spacing: 0.14em; }
-  .dp-project-status span { width: 6px; height: 6px; }
-  .dp-project-copy h3 { margin: 14px 0 10px; color: var(--dp-ink); font-size: clamp(1.35rem, 3vw, 1.85rem); letter-spacing: -0.04em; }
-  .dp-project-copy p { margin: 0; color: var(--dp-ink-soft); font-size: 0.86rem; line-height: 1.85; }
-  .dp-project-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 19px; }
-  .dp-project-tags span { padding: 6px 9px; border: 1px solid var(--dp-border); border-radius: 7px; color: var(--dp-muted); font: 0.62rem "Fira Code", ui-monospace, monospace; }
-  .dp-project-link { display: inline-flex; align-items: center; gap: 10px; margin-top: 24px; color: var(--dp-cyan); font-size: 0.8rem; font-weight: 800; text-decoration: none; }
-  .dp-project-link i { transition: transform 180ms ease; }
-  .dp-project-link:hover i { transform: translate(3px, -3px); }
-
-  .dp-timeline { position: relative; display: grid; gap: 0; max-width: 850px; margin: 8px auto 0; padding-left: 30px; }
-  .dp-timeline::before { content: ""; position: absolute; top: 12px; bottom: 22px; left: 9px; width: 1px; background: linear-gradient(var(--dp-purple), var(--dp-cyan), transparent); }
-  .dp-timeline-item { position: relative; display: grid; grid-template-columns: 46px 1fr; gap: 15px; padding: 0 0 26px; }
-  .dp-timeline-item:last-child { padding-bottom: 0; }
-  .dp-timeline-number { position: relative; z-index: 1; display: grid; place-items: center; width: 35px; height: 35px; border: 1px solid var(--dp-border-strong); border-radius: 11px; background: var(--dp-bg-soft); color: var(--dp-cyan); font: 0.7rem "Fira Code", ui-monospace, monospace; box-shadow: 0 0 18px rgba(84, 223, 255, 0.08); }
-  .dp-timeline-item h3 { margin: 3px 0 7px; color: var(--dp-ink); font-size: 1rem; font-weight: 780; }
-  .dp-timeline-item p { margin: 0; color: var(--dp-ink-soft); font-size: 0.85rem; line-height: 1.8; }
-
-  .dp-quote-card { position: relative; margin: 0; padding: clamp(24px, 4vw, 42px); overflow: hidden; border: 1px solid var(--dp-border-strong); border-radius: 20px; background: linear-gradient(120deg, rgba(149, 117, 255, 0.14), rgba(84, 223, 255, 0.065)), var(--dp-panel); }
-  .dp-quote-mark { position: absolute; top: -22px; left: 17px; color: var(--dp-purple); font-family: Georgia, serif; font-size: 6rem; line-height: 1; opacity: 0.3; }
-  .dp-quote-card p { position: relative; max-width: 780px; margin: 0; color: var(--dp-ink); font-size: clamp(1.12rem, 2.7vw, 1.65rem); font-weight: 700; line-height: 1.55; letter-spacing: -0.025em; }
-  .dp-quote-card footer { margin-top: 18px; color: var(--dp-cyan); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
-  .dp-principles-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-top: 15px; }
-  .dp-principle-card { padding: 21px; }
-  .dp-principle-icon { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 15px; border-radius: 11px; background: rgba(149, 117, 255, 0.13); color: var(--dp-purple); }
-  .dp-principle-card h3 { font-size: 0.91rem; }
-  .dp-principle-card p { font-size: 0.77rem; line-height: 1.75; }
-
-  .dp-experience-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-  .dp-experience-item { padding: 22px; }
-  .dp-experience-item h3 { margin-top: 9px; }
-  .dp-experience-item p { font-size: 0.82rem; }
-  .dp-experience-org { margin-bottom: 7px !important; color: var(--dp-cyan) !important; font-weight: 700; }
-
-  .dp-social-group + .dp-social-group { margin-top: 27px; }
-  .dp-social-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-  .dp-social-heading h3 { margin: 0; color: var(--dp-ink); font-size: 1.02rem; }
-  .dp-social-heading > span { color: var(--dp-faint); font: 0.6rem "Fira Code", ui-monospace, monospace; letter-spacing: 0.12em; }
-  .dp-social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
-  .dp-social-card { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 13px 15px; border: 1px solid var(--dp-border); border-radius: 13px; background: var(--dp-panel); color: var(--dp-ink); font-size: 0.82rem; font-weight: 750; text-decoration: none; transition: transform 180ms ease, background 180ms ease, border-color 180ms ease; }
-  .dp-social-card > i:first-child { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: rgba(149, 117, 255, 0.14); color: var(--dp-cyan); font-size: 0.95rem; }
-  .dp-social-arrow { margin-left: auto; color: var(--dp-faint); font-size: 0.65rem; }
-  .dp-social-card:hover { transform: translateY(-2px); border-color: var(--dp-border-strong); background: var(--dp-panel-hover); }
-
-  .dp-footer { display: flex; align-items: center; gap: 12px; margin-top: 42px; padding: 20px 4px 0; border-top: 1px solid var(--dp-border); color: var(--dp-faint); }
-  .dp-footer-mark { display: grid; place-items: center; width: 30px; height: 30px; flex: 0 0 auto; border: 1px solid var(--dp-border); border-radius: 9px; color: var(--dp-cyan); }
-  .dp-footer p { margin: 0; font-size: 0.7rem; }
-  .dp-footer strong { color: var(--dp-ink-soft); }
-  .dp-footer-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--dp-border-strong), transparent); }
-
-  .developer-portfolio :focus-visible { outline: 2px solid var(--dp-cyan); outline-offset: 3px; }
-
-  @keyframes dp-spin { to { transform: rotate(360deg); } }
-  @keyframes dp-spin-reverse { to { transform: rotate(-360deg); } }
-  @keyframes dp-pulse { 0% { transform: scale(0.94); opacity: 0.3; } 100% { transform: scale(1.24); opacity: 0; } }
-  @keyframes dp-blink { to { opacity: 0; } }
-  @keyframes dp-panel-in { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
-
-  @media (max-width: 850px) {
-    .dp-hero { grid-template-columns: minmax(0, 1fr) 190px; min-height: 390px; }
-    .dp-orbit-art { width: 205px; }
-    .dp-orbit-core { width: 82px; height: 82px; font-size: 1.8rem; }
-    .dp-navigation { align-items: stretch; flex-direction: column; }
-    .dp-theme-picker { align-self: flex-end; }
-    .dp-tabs { width: 100%; }
-  }
-
-  @media (max-width: 650px) {
-    .developer-portfolio { width: min(100% - 16px, 1180px); margin: 12px auto 40px; padding: 12px; border-radius: 22px; }
-    .dp-hero { display: block; min-height: 0; padding: 25px 7px 30px; }
-    .dp-hero-side { display: none; }
-    .dp-eyebrow { margin-bottom: 20px; font-size: 0.59rem; }
-    .dp-avatar-wrap { width: 100px; height: 100px; margin-bottom: 20px; }
-    .dp-name { font-size: clamp(1.85rem, 9vw, 2.7rem); }
-    .dp-headline { font-size: 0.88rem; }
-    .dp-tagline { max-width: 100%; font-size: 0.68rem; overflow-wrap: anywhere; }
-    .dp-hero-actions { gap: 8px; margin-top: 20px; }
-    .dp-button { min-height: 41px; padding: 0 13px; font-size: 0.73rem; }
-    .dp-hero-meta { gap: 8px 13px; font-size: 0.64rem; }
-    .dp-navigation { top: calc(var(--top-h, 72px) + 5px); gap: 7px; margin-bottom: 24px; padding: 6px; border-radius: 14px; }
-    .dp-tab { min-height: 39px; padding: 0 11px; font-size: 0.7rem; }
-    .dp-theme-picker { align-self: stretch; justify-content: center; }
-    .dp-theme-button { flex: 1; justify-content: center; min-height: 31px; }
-    .dp-panel-heading { margin-bottom: 17px; }
-    .dp-panel-heading p { font-size: 0.8rem; }
-    .dp-about-grid, .dp-project-card { grid-template-columns: 1fr; }
-    .dp-about-aside { min-height: 205px; }
-    .dp-project-visual { min-height: 230px; padding: 20px; }
-    .dp-project-window { transform: none; }
-    .dp-window-content { min-height: 160px; }
-    .dp-project-copy { padding: 23px; }
-    .dp-principles-grid, .dp-experience-list { grid-template-columns: 1fr; }
-    .dp-principle-card { padding: 19px; }
-    .dp-social-grid { grid-template-columns: 1fr; }
-    .dp-footer { margin-top: 30px; }
-    .dp-footer p { font-size: 0.63rem; }
-  }
-
-  @media (max-width: 360px) {
-    .dp-tabs { gap: 1px; }
-    .dp-tab { gap: 6px; padding: 0 9px; font-size: 0.65rem; }
-    .dp-theme-button { gap: 4px; padding: 0 6px; font-size: 0.63rem; }
-    .dp-hero-meta { flex-direction: column; }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .dp-card { transition: border-color 180ms ease, background 180ms ease, transform 180ms ease; }
-    .dp-card:hover { transform: translateY(-2px); border-color: var(--dp-border-strong); background: var(--dp-panel-hover); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .developer-portfolio *, .developer-portfolio *::before, .developer-portfolio *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-  }
-</style>
-
-<script>
-  const portfolio = document.querySelector('.developer-portfolio');
-
-  if (portfolio) {
-    const themeButtons = Array.from(portfolio.querySelectorAll<HTMLButtonElement>('[data-portfolio-theme]'));
-    const tabs = Array.from(portfolio.querySelectorAll<HTMLButtonElement>('[data-tab]'));
-    const panels = Array.from(portfolio.querySelectorAll<HTMLElement>('[data-panel]'));
-    const typewriter = portfolio.querySelector<HTMLElement>('#dp-typewriter');
-    let configuredTaglines: string[] = [];
-    try {
-      const parsedTaglines = JSON.parse(portfolio.getAttribute('data-taglines') || '[]');
-      if (Array.isArray(parsedTaglines)) configuredTaglines = parsedTaglines.filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
-    } catch { /* Keep the rendered CMS headline as fallback. */ }
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    const setTheme = (theme: string) => {
-      if (!['dark', 'light', 'ghost'].includes(theme)) return;
-      portfolio.setAttribute('data-theme', theme);
-      themeButtons.forEach((button) => {
-        const active = button.getAttribute('data-portfolio-theme') === theme;
-        button.classList.toggle('active', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
-      });
-      try { localStorage.setItem('tkj-developer-theme', theme); } catch { /* Storage may be unavailable. */ }
-    };
-
-    const activateTab = (tabId: string, focus = false) => {
-      const selectedTab = tabs.find((tab) => tab.getAttribute('data-tab') === tabId);
-      if (!selectedTab) return;
-      tabs.forEach((tab) => {
-        const active = tab === selectedTab;
-        tab.classList.toggle('active', active);
-        tab.setAttribute('aria-selected', active ? 'true' : 'false');
-        tab.tabIndex = active ? 0 : -1;
-      });
-      panels.forEach((panel) => {
-        const active = panel.getAttribute('data-panel') === tabId;
-        panel.hidden = !active;
-        panel.classList.toggle('active', active);
-      });
-      if (focus) selectedTab.focus();
-    };
-
-    themeButtons.forEach((button) => {
-      button.addEventListener('click', () => setTheme(button.getAttribute('data-portfolio-theme') || 'dark'));
-    });
-
-    tabs.forEach((tab, index) => {
-      tab.addEventListener('click', () => activateTab(tab.getAttribute('data-tab') || 'about'));
-      tab.addEventListener('keydown', (event) => {
-        const keyboardEvent = event as KeyboardEvent;
-        let nextIndex = index;
-        if (keyboardEvent.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
-        else if (keyboardEvent.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
-        else if (keyboardEvent.key === 'Home') nextIndex = 0;
-        else if (keyboardEvent.key === 'End') nextIndex = tabs.length - 1;
-        else return;
-        keyboardEvent.preventDefault();
-        const nextTab = tabs[nextIndex];
-        activateTab(nextTab.getAttribute('data-tab') || 'about', true);
-        nextTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      });
-    });
-
-    portfolio.querySelectorAll('[data-open-tab]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const target = button.getAttribute('data-open-tab');
-        if (target) {
-          activateTab(target);
-          portfolio.querySelector('.dp-navigation')?.scrollIntoView({ behavior: prefersReducedMotion.matches ? 'auto' : 'smooth', block: 'start' });
-        }
-      });
-    });
-
-    try {
-      const savedTheme = localStorage.getItem('tkj-developer-theme');
-      if (savedTheme) setTheme(savedTheme);
-    } catch { /* Use the default dark theme. */ }
-
-    if (typewriter) {
-      const renderedPhrase = typewriter.textContent?.trim() || '';
-      const words = configuredTaglines.length ? configuredTaglines : (renderedPhrase ? [renderedPhrase] : []);
-      if (prefersReducedMotion.matches || !words.length) {
-        if (words[0]) typewriter.textContent = words[0];
-      } else {
-        let phraseIndex = 0;
-        let characterIndex = 0;
-        let deleting = false;
-        let timer = 0;
-        const type = () => {
-          const current = words[phraseIndex] || renderedPhrase;
-          characterIndex += deleting ? -1 : 1;
-          typewriter.textContent = current.slice(0, Math.max(0, characterIndex));
-          let delay = deleting ? 28 : 58;
-          if (!deleting && characterIndex >= current.length) { deleting = true; delay = 1800; }
-          else if (deleting && characterIndex <= 0) { deleting = false; phraseIndex = (phraseIndex + 1) % words.length; delay = 380; }
-          timer = window.setTimeout(type, delay);
-        };
-        timer = window.setTimeout(type, 450);
-        prefersReducedMotion.addEventListener?.('change', (event) => {
-          if (event.matches) {
-            window.clearTimeout(timer);
-            typewriter.textContent = words[0] || renderedPhrase;
-          }
-        });
-      }
-    }
-
-    const canvas = portfolio.querySelector<HTMLCanvasElement>('.dp-particles');
-    const context = canvas?.getContext('2d', { alpha: true });
-    if (canvas && context && !prefersReducedMotion.matches) {
-      let width = 0;
-      let height = 0;
-      let animationFrame = 0;
-      let inView = true;
-      let pageVisible = document.visibilityState !== 'hidden';
-      let particles: Array<{ x: number; y: number; vx: number; vy: number; radius: number }> = [];
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.35);
-
-      const resizeCanvas = () => {
-        const rect = portfolio.getBoundingClientRect();
-        width = Math.max(1, rect.width);
-        height = Math.max(1, rect.height);
-        canvas.width = Math.round(width * pixelRatio);
-        canvas.height = Math.round(height * pixelRatio);
-        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-        const count = width < 650 ? 11 : 19;
-        particles = Array.from({ length: count }, () => ({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 0.22,
-          vy: (Math.random() - 0.5) * 0.22,
-          radius: Math.random() * 1.2 + 0.55,
-        }));
-      };
-
-      const draw = () => {
-        if (!inView || !pageVisible || prefersReducedMotion.matches) { animationFrame = 0; return; }
-        context.clearRect(0, 0, width, height);
-        const lightTheme = portfolio?.getAttribute('data-theme') === 'light';
-        const pointColor = lightTheme ? '91, 76, 175' : '157, 153, 220';
-        particles.forEach((particle, index) => {
-          particle.x += particle.vx;
-          particle.y += particle.vy;
-          if (particle.x < 0 || particle.x > width) particle.vx *= -1;
-          if (particle.y < 0 || particle.y > height) particle.vy *= -1;
-          context.beginPath();
-          context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-          context.fillStyle = `rgba(${pointColor}, 0.42)`;
-          context.fill();
-          for (let next = index + 1; next < particles.length; next += 1) {
-            const other = particles[next];
-            const dx = particle.x - other.x;
-            const dy = particle.y - other.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 105) {
-              context.beginPath();
-              context.moveTo(particle.x, particle.y);
-              context.lineTo(other.x, other.y);
-              context.strokeStyle = `rgba(${pointColor}, ${0.11 * (1 - distance / 105)})`;
-              context.lineWidth = 0.6;
-              context.stroke();
-            }
-          }
-        });
-        animationFrame = window.requestAnimationFrame(draw);
-      };
-
-      const startAnimation = () => {
-        if (!animationFrame && inView && pageVisible && !prefersReducedMotion.matches) animationFrame = window.requestAnimationFrame(draw);
-      };
-      const stopAnimation = () => {
-        if (animationFrame) window.cancelAnimationFrame(animationFrame);
-        animationFrame = 0;
-      };
-
-      resizeCanvas();
-      startAnimation();
-      try {
-        const resizeObserver = new ResizeObserver(resizeCanvas);
-        resizeObserver.observe(portfolio);
-      } catch {
-        window.addEventListener('resize', resizeCanvas, { passive: true });
-      }
-      document.addEventListener('visibilitychange', () => {
-        pageVisible = document.visibilityState !== 'hidden';
-        if (pageVisible) startAnimation();
-        else stopAnimation();
-      });
-      if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(([entry]) => {
-          inView = Boolean(entry?.isIntersecting);
-          if (inView) startAnimation();
-          else stopAnimation();
-        }, { threshold: 0.01 });
-        observer.observe(portfolio);
-      }
-      prefersReducedMotion.addEventListener?.('change', (event) => {
-        if (event.matches) stopAnimation();
-        else startAnimation();
-      });
-    }
-  }
-</script>
+  </div>
+</DeveloperLayout>

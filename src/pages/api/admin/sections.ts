@@ -6,7 +6,10 @@ import { getSupabaseAdmin } from '../../../lib/supabase';
 export const prerender = false;
 const ALLOWED = new Set([
   '/:hero', '/:stats', '/:teachers', '/anggota:list', '/galeri:featured', '/galeri:grid',
-  '/struktur:organization', '/keahlian:list', '/tkj:overview', '/tkj:subjects', '/tkj:curriculum', '/tkj:careers', '/tkj:tools', '/pengembang:story',
+  '/struktur:organization', '/keahlian:list', '/tkj:overview', '/tkj:subjects', '/tkj:curriculum', '/tkj:careers', '/tkj:tools',
+  '/pengembang:story', '/pengembang:profile', '/pengembang:skills', '/pengembang:work',
+  '/pengembang:motivation', '/pengembang:contact', '/pengembang:philosophy', '/pengembang:experience',
+  '/pengembang:quotes', '/pengembang:education', '/pengembang:notes',
 ]);
 
 export const GET: APIRoute = async ({ request }) => {
@@ -28,13 +31,21 @@ export const PUT: APIRoute = async ({ request }) => {
   const body = parsedBody.data as any;
   if (!Array.isArray(body?.items) || body.items.length > 50) return Response.json({ error: 'Daftar section tidak valid.' }, { status: 400 });
   const items = [];
+  const seen = new Set<string>();
   for (let i = 0; i < body.items.length; i++) {
     const item = body.items[i];
     if (!isPlainRecord(item) || (item.enabled !== undefined && typeof item.enabled !== 'boolean')) return Response.json({ error: `Section urutan ${i + 1} tidak valid.` }, { status: 400 });
     const page_slug = cleanText(item.page_slug, 80);
     const section_key = cleanText(item.section_key, 50);
-    if (!ALLOWED.has(`${page_slug}:${section_key}`)) return Response.json({ error: `Section ${page_slug}/${section_key} tidak didukung.` }, { status: 400 });
-    items.push({ id: `${page_slug === '/' ? 'home' : page_slug.slice(1)}.${section_key}`, page_slug, section_key, label: cleanText(item.label, 100), sort_order: Number.isFinite(Number(item.sort_order)) ? Number(item.sort_order) : i, enabled: item.enabled ?? true, updated_at: new Date().toISOString() });
+    const uniqueKey = `${page_slug}:${section_key}`;
+    if (!ALLOWED.has(uniqueKey)) return Response.json({ error: `Section ${page_slug}/${section_key} tidak didukung.` }, { status: 400 });
+    if (seen.has(uniqueKey)) return Response.json({ error: `Section ${page_slug}/${section_key} dikirim lebih dari sekali.` }, { status: 400 });
+    seen.add(uniqueKey);
+    const label = cleanText(item.label, 100);
+    if (!label) return Response.json({ error: `Label section urutan ${i + 1} wajib diisi.` }, { status: 400 });
+    const requestedOrder = Number(item.sort_order);
+    const sort_order = Number.isFinite(requestedOrder) ? Math.max(0, Math.min(1000, Math.round(requestedOrder))) : i;
+    items.push({ id: `${page_slug === '/' ? 'home' : page_slug.slice(1)}.${section_key}`, page_slug, section_key, label, sort_order, enabled: item.enabled ?? true, updated_at: new Date().toISOString() });
   }
   const { error } = items.length ? await db.from('site_sections').upsert(items, { onConflict: 'id' }) : { error: null };
   if (error) return Response.json({ error: 'Pengaturan section gagal disimpan.' }, { status: 500 });
