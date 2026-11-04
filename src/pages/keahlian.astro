@@ -39,32 +39,36 @@ function getLevelText(level: number) {
         </p>
       </div>
       {skillsVisible && (
-      <div
-        class="skills-list"
-        id="skills-list"
-        aria-label="Daftar keahlian kelas TKJ XII-9"
-      >
-        {skills.map((skill, idx) => (
-          <div class="skill-card reveal" style={`--d: ${(idx % 4) * 0.1}s`} data-level="0">
-            <div class="skill-top">
-              <div style="font-size:1.5rem;color:var(--primary);width:40px;text-align:center;">
-                <i class={skill.icon} aria-hidden="true"></i>
-              </div>
-              <div class="skill-info">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                  <h3 class="skill-name">{skill.nama}</h3>
-                  <span class={`skill-level-tag ${getLevelClass(skill.level)}`}>{getLevelText(skill.level)}</span>
+        skills.length > 0 ? (
+          <div
+            class="skills-list"
+            id="skills-list"
+            aria-label="Daftar keahlian kelas TKJ XII-9"
+          >
+            {skills.map((skill, idx) => (
+              <div class="skill-card reveal" style={`--d: ${(idx % 4) * 0.1}s`} data-level="0">
+                <div class="skill-top">
+                  <div style="font-size:1.5rem;color:var(--primary);width:40px;text-align:center;">
+                    <i class={skill.icon} aria-hidden="true"></i>
+                  </div>
+                  <div class="skill-info">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                      <h3 class="skill-name">{skill.nama}</h3>
+                      <span class={`skill-level-tag ${getLevelClass(skill.level)}`}>{getLevelText(skill.level)}</span>
+                    </div>
+                    <p class="skill-desc">{skill.desc}</p>
+                  </div>
+                  <div class="skill-pct" data-target={skill.level}>0%</div>
                 </div>
-                <p class="skill-desc">{skill.desc}</p>
+                <div class="bar-bg">
+                  <div class="bar-fill" data-width={`${skill.level}%`} style="width:0%"></div>
+                </div>
               </div>
-              <div class="skill-pct" data-target={skill.level}>0%</div>
-            </div>
-            <div class="bar-bg">
-              <div class="bar-fill" data-width={`${skill.level}%`} style="width:0%"></div>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
+        ) : (
+          <p class="content-empty-state" role="status">Data keahlian belum ditambahkan.</p>
+        )
       )}
     
   </main>

@@ -232,107 +232,81 @@ export function showNotification(
   }, 2200);
 }
 
-/* FOCUS TRAP */
-let _focusTrap = null,
-  _prevActive = null;
+/* FOCUS TRAP — supports stacked dialogs (e.g. photo lightbox inside member modal). */
+const _focusTrapStack = [];
 function _isElement(el) {
   return el && el.nodeType === 1;
 }
+function _getFocusable(wadah) {
+  return Array.from(wadah.querySelectorAll(
+    'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, object, embed, [contenteditable="true"], [tabindex]:not([tabindex="-1"])',
+  )).filter((el) => !el.hidden && el.getAttribute('aria-hidden') !== 'true' && el.getAttribute('tabindex') !== '-1');
+}
 
-export function enableFocusTrap(
-  wadah,
-) {
+export function enableFocusTrap(wadah) {
   if (!_isElement(wadah)) return;
-  _prevActive =
-    document.activeElement;
-  const focusable =
-    wadah.querySelectorAll(
-      'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])',
-    );
-  const list = Array.from(
-    focusable,
-  ).filter(
-    (el) =>
-      !el.hasAttribute("disabled"),
-  );
-  if (!list.length)
-    wadah
-      .querySelector(
-        "button, [data-focus]",
-      )
-      ?.setAttribute(
-        "tabindex",
-        "0",
-      );
-  _focusTrap = (e) => {
-    if (e.key !== "Tab") return;
-    const els = Array.from(
-      wadah.querySelectorAll(
-        'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])',
-      ),
-    );
-    const filtered = els.filter(
-      (el) =>
-        !el.hasAttribute(
-          "disabled",
-        ),
-    );
-    if (!filtered.length) {
-      e.preventDefault();
+
+  // Reopening an already registered dialog must not leave duplicate handlers.
+  const existingIndex = _focusTrapStack.findIndex((entry) => entry.element === wadah);
+  if (existingIndex !== -1) {
+    const [existing] = _focusTrapStack.splice(existingIndex, 1);
+    document.removeEventListener('keydown', existing.onKeydown);
+  }
+
+  const entry = {
+    element: wadah,
+    previousActive: document.activeElement,
+    onKeydown: null,
+  };
+
+  entry.onKeydown = (event) => {
+    if (_focusTrapStack[_focusTrapStack.length - 1] !== entry || event.key !== 'Tab') return;
+    const focusable = _getFocusable(wadah);
+    if (!focusable.length) {
+      event.preventDefault();
+      if (!wadah.hasAttribute('tabindex')) wadah.setAttribute('tabindex', '-1');
+      wadah.focus();
       return;
     }
-    const first = filtered[0],
-      last =
-        filtered[
-          filtered.length - 1
-        ];
-    if (e.shiftKey) {
-      if (
-        document.activeElement ===
-        first
-      ) {
-        e.preventDefault();
-        last.focus();
-      }
-    } else {
-      if (
-        document.activeElement ===
-        last
-      ) {
-        e.preventDefault();
-        first.focus();
-      }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !wadah.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !wadah.contains(active))) {
+      event.preventDefault();
+      first.focus();
     }
   };
-  document.addEventListener(
-    "keydown",
-    _focusTrap,
-  );
-  const first =
-    list[0] ||
-    wadah.querySelector(
-      "[data-focus], button",
-    );
+
+  _focusTrapStack.push(entry);
+  document.addEventListener('keydown', entry.onKeydown);
+  const first = _getFocusable(wadah)[0];
   if (first) first.focus();
+  else {
+    if (!wadah.hasAttribute('tabindex')) wadah.setAttribute('tabindex', '-1');
+    wadah.focus();
+  }
 }
 
 export function disableFocusTrap() {
-  if (_focusTrap) {
-    document.removeEventListener(
-      "keydown",
-      _focusTrap,
-    );
-    _focusTrap = null;
+  const entry = _focusTrapStack.pop();
+  if (!entry) return;
+  document.removeEventListener('keydown', entry.onKeydown);
+
+  const previous = entry.previousActive;
+  if (_isElement(previous) && previous.isConnected && !previous.hasAttribute('disabled')) {
+    try { previous.focus(); } catch {}
   }
-  if (
-    _prevActive &&
-    _isElement(_prevActive)
-  ) {
-    try {
-      _prevActive.focus();
-    } catch {}
+
+  // When closing a nested dialog, keep focus within the dialog underneath it.
+  const parent = _focusTrapStack[_focusTrapStack.length - 1];
+  if (parent && !parent.element.contains(document.activeElement)) {
+    const first = _getFocusable(parent.element)[0];
+    if (first) first.focus();
   }
-  _prevActive = null;
 }
 
 /* REVEAL OBSERVER */

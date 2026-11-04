@@ -20,6 +20,14 @@ function initStructureLightbox() {
   if (!lightbox || !tutupBtn || !img || !wrap) return;
 
   let captionDiv = document.getElementById("structure-lightbox-caption");
+  let placeholder = document.getElementById("structure-lightbox-placeholder");
+  if (!placeholder) {
+    placeholder = document.createElement("div");
+    placeholder.id = "structure-lightbox-placeholder";
+    placeholder.className = "structure-lightbox-placeholder";
+    placeholder.hidden = true;
+    lightbox.insertBefore(placeholder, img);
+  }
   if (!captionDiv) {
     captionDiv = document.createElement("div");
     captionDiv.id = "structure-lightbox-caption";
@@ -32,9 +40,17 @@ function initStructureLightbox() {
   }
 
   function terbukaLightboxStruktur(src, nama, jabatan, profil) {
-    if (!src) return;
-
-    img.src = src;
+    img.hidden = !src;
+    if (src) {
+      img.src = src;
+      img.alt = `Foto ${nama || "pengurus kelas"}`;
+      placeholder.hidden = true;
+      placeholder.textContent = "";
+    } else {
+      img.removeAttribute("src");
+      placeholder.hidden = false;
+      placeholder.textContent = String(nama || "?").trim().split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase() || "").join("") || "?";
+    }
     captionDiv.replaceChildren();
 
     const namaElement = document.createElement("div");
@@ -57,13 +73,15 @@ function initStructureLightbox() {
     lightbox.classList.add("terbuka");
     lightbox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
-    tutupBtn.focus();
     enableFocusTrap(lightbox);
   }
 
   function tutupLightbox() {
     lightbox.classList.remove("terbuka");
     lightbox.setAttribute("aria-hidden", "true");
+    img.hidden = false;
+    img.removeAttribute("src");
+    placeholder.hidden = true;
     document.body.style.overflow = "";
     disableFocusTrap();
   }
@@ -71,6 +89,15 @@ function initStructureLightbox() {
   wrap.addEventListener("click", (e) => {
     const card = e.target.closest(".org-card");
     if (!card) return;
+    const { nama, jabatan, foto, desc } = card.dataset;
+    terbukaLightboxStruktur(foto, nama, jabatan, desc);
+  });
+
+  wrap.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const card = e.target.closest(".org-card");
+    if (!card) return;
+    e.preventDefault();
     const { nama, jabatan, foto, desc } = card.dataset;
     terbukaLightboxStruktur(foto, nama, jabatan, desc);
   });

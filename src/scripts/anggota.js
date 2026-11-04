@@ -59,6 +59,12 @@ function initMembersInteractions() {
   if (!grid) return;
 
   const cards = Array.from(grid.querySelectorAll(".member-card"));
+  const emptyState = document.createElement("p");
+  emptyState.className = "members-empty-state";
+  emptyState.setAttribute("role", "status");
+  emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan pencarian." : "Belum ada data anggota yang ditampilkan.";
+  emptyState.hidden = cards.length > 0;
+  grid.closest(".members-slider-container")?.insertAdjacentElement("afterend", emptyState);
   let G = { namaSiswa: [], strukturOrg: [] };
 
   try {
@@ -77,13 +83,19 @@ function initMembersInteractions() {
       let matchCount = 0;
 
       cards.forEach((card) => {
-        const name = card.querySelector(".member-card-name")?.textContent.toLowerCase() || "";
-        const match = !q || name.includes(q);
+        const name = card.querySelector(".member-card-name")?.textContent || "";
+        const nis = card.dataset.nis || "";
+        const role = card.querySelector(".member-card-role")?.textContent || "";
+        const searchable = `${name} ${nis} ${role}`.toLocaleLowerCase("id-ID");
+        const match = !q || searchable.includes(q);
         card.style.display = match ? "" : "none";
         if (match) matchCount++;
       });
 
       if (countEl) countEl.textContent = q ? `Menampilkan ${matchCount} dari ${totalSiswa} anggota` : `Semua ${totalSiswa} anggota`;
+      emptyState.hidden = matchCount > 0;
+      emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan pencarian." : "Belum ada data anggota yang ditampilkan.";
+      grid.setAttribute("aria-label", q ? `Hasil pencarian anggota: ${matchCount} ditemukan` : "Daftar anggota kelas");
       clearBtn?.classList.toggle("terlihat", search.value.length > 0);
     });
 
@@ -193,6 +205,12 @@ function initMembersInteractions() {
   }
 
   function tutupMemberModal() {
+    if (photoLightbox?.classList.contains("terbuka")) {
+      photoLightbox.classList.remove("terbuka");
+      photoLightbox.setAttribute("aria-hidden", "true");
+      photoLightboxImg?.removeAttribute("src");
+      disableFocusTrap();
+    }
     if (currentAudioInstance) {
       currentAudioInstance.pause();
       currentAudioInstance = null;
@@ -227,33 +245,44 @@ function initMembersInteractions() {
     if (e.key === "Escape") {
       const lb = document.getElementById("member-photo-lightbox");
       if (lb?.classList.contains("terbuka")) {
-        lb.classList.remove("terbuka");
-        document.body.style.overflow = "";
+        tutupPhotoLightbox();
       } else {
         tutupMemberModal();
       }
     }
   });
 
-  // Avatar Click to Lightbox
+  // Photo lightbox is a nested dialog, so keep its own focus trap and return focus to the member modal.
+  const photoLightbox = document.getElementById("member-photo-lightbox");
+  const photoLightboxImg = document.getElementById("member-photo-lightbox-img");
+  const photoLightboxClose = document.getElementById("member-photo-lightbox-tutup");
+
+  function tutupPhotoLightbox() {
+    if (!photoLightbox?.classList.contains("terbuka")) return;
+    photoLightbox.classList.remove("terbuka");
+    photoLightbox.setAttribute("aria-hidden", "true");
+    if (photoLightboxImg) photoLightboxImg.removeAttribute("src");
+    // Parent member dialog remains open underneath the photo overlay.
+    document.body.style.overflow = modal?.classList.contains("terbuka") ? "hidden" : "";
+    disableFocusTrap();
+  }
+
   document.getElementById("modal-avatar")?.addEventListener("click", () => {
     const name = document.getElementById("modal-name")?.textContent;
     const data = G.namaSiswa.find((s) => s.nama === name);
     if (!data?.foto || !URLValidator.isSafe(data.foto)) return;
-
-    const lb = document.getElementById("member-photo-lightbox");
-    const lbImg = document.getElementById("member-photo-lightbox-img");
-    if (lb && lbImg) {
-      lbImg.src = data.foto;
-      lb.classList.add("terbuka");
+    if (photoLightbox && photoLightboxImg) {
+      photoLightboxImg.src = data.foto;
+      photoLightbox.classList.add("terbuka");
+      photoLightbox.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
+      enableFocusTrap(photoLightbox);
     }
   });
 
-  document.getElementById("member-photo-lightbox-tutup")?.addEventListener("click", () => {
-    document.getElementById("member-photo-lightbox")?.classList.remove("terbuka");
-    // Modal anggota masih terbuka.
-    document.body.style.overflow = "hidden";
+  photoLightboxClose?.addEventListener("click", tutupPhotoLightbox);
+  photoLightbox?.addEventListener("click", (event) => {
+    if (event.target === photoLightbox) tutupPhotoLightbox();
   });
 }
 

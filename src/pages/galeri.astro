@@ -40,25 +40,26 @@ const carouselData = galeri.slice(0, 5);
         <section class="carousel-3d-wrapper reveal" aria-label="Sorotan Galeri" style={`order:${sectionOrder("featured",1)}`}>
           <div class="sec-tag" style="text-align: center;">{cmsFeaturedEyebrow}</div>
           <h2 class="sec-subtitle" style="text-align: center; margin-bottom: 2rem;">{cmsFeaturedTitle}</h2>
-          <div class="carousel-3d" id="carousel-3d">
+          <div class="carousel-3d" id="carousel-3d" aria-label="Foto pilihan kelas">
             {carouselData.map((item, idx) => (
-              <div class={`carousel-item ${idx === 0 ? 'active' : ''}`} data-index={idx}>
-                <img src={item.src} alt={item.caption || "Carousel item"} decoding="async" />
+              <div id={`carousel-slide-${idx}`} class={`carousel-item ${idx === 0 ? 'active' : ''}`} data-index={idx} role="button" tabindex={idx === 0 ? 0 : -1} aria-roledescription="slide" aria-label={`Slide ${idx + 1} dari ${carouselData.length}`}>
+                <img src={item.src} alt={item.caption || "Foto pilihan kelas"} decoding="async" />
               </div>
             ))}
           </div>
           <div class="carousel-3d-controls">
-            <button class="carousel-3d-prev" id="carousel-3d-prev" aria-label="Foto Sebelumnya">
+            <button class="carousel-3d-prev" id="carousel-3d-prev" aria-label="Foto Sebelumnya" type="button">
               <i class="fas fa-chevron-left" aria-hidden="true"></i>
             </button>
-            <div class="carousel-3d-dots" id="carousel-3d-dots" role="tablist">
+            <div class="carousel-3d-dots" id="carousel-3d-dots" role="group" aria-label="Pilih foto sorotan">
               {carouselData.map((_, idx) => (
-                <button class={`carousel-dot ${idx === 0 ? 'active' : ''}`} data-index={idx} aria-label={`Pergi ke slide ${idx + 1}`} aria-selected={idx === 0 ? 'true' : 'false'}></button>
+                <button type="button" class={`carousel-dot ${idx === 0 ? 'active' : ''}`} data-index={idx} aria-controls={`carousel-slide-${idx}`} aria-label={`Pergi ke slide ${idx + 1}`} aria-pressed={idx === 0 ? 'true' : 'false'}></button>
               ))}
             </div>
-            <button class="carousel-3d-next" id="carousel-3d-next" aria-label="Foto Berikutnya">
+            <button class="carousel-3d-next" id="carousel-3d-next" aria-label="Foto Berikutnya" type="button">
               <i class="fas fa-chevron-right" aria-hidden="true"></i>
             </button>
+            <button class="carousel-autoplay-toggle" id="carousel-autoplay-toggle" type="button" aria-pressed="false" aria-label="Jeda pergantian foto otomatis">Jeda otomatis</button>
           </div>
         </section>
       )}
@@ -67,9 +68,10 @@ const carouselData = galeri.slice(0, 5);
       <section class="gallery-section reveal" style={`margin-top:4rem;order:${sectionOrder("grid",2)}`}>
         <div class="sec-tag">{cmsCollectionEyebrow}</div>
         <h2 class="sec-subtitle">{cmsCollectionTitle}</h2>
+        {galeri.length > 0 ? (
         <div class="grid-galeri" id="grid-galeri" aria-label="Galeri foto kelas TKJ XII-9" role="list">
           {galeri.map((item, idx) => (
-            <div class="item-galeri reveal" style={`--d: ${(idx % 5) * 0.05}s`} tabindex="0">
+            <div class="item-galeri reveal" style={`--d: ${(idx % 5) * 0.05}s`} tabindex="0" role="button" aria-label={`Perbesar foto ${idx + 1}${item.caption ? `: ${item.caption}` : ""}`}>
               <img src={item.src} alt={item.caption || "Galeri foto"} loading="lazy" />
               {item.caption && (
                 <div class="keterangan-galeri">
@@ -79,6 +81,9 @@ const carouselData = galeri.slice(0, 5);
             </div>
           ))}
         </div>
+        ) : (
+          <p class="gallery-empty-state" role="status">Belum ada foto yang ditambahkan ke galeri.</p>
+        )}
       </section>
       )}
 

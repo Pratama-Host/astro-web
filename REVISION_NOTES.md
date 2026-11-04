@@ -22,3 +22,11 @@ Implementasi final menggunakan `SECURITY INVOKER` (bukan `SECURITY DEFINER`) den
 - Menjalankan smoke test rollback-only dengan sukses; seluruh perubahan uji dibatalkan.
 
 Automated app checks (`npm run check`, `npm test`, `npm run build`) belum dijalankan karena dependencies belum terpasang dan runtime container Node 22.16.0 lebih rendah dari versi minimum yang ditentukan project (`>=22.23.4`).
+
+
+## UI/UX Refresh Phase 2 — 2026-11-04
+- Added interaction/accessibility improvements for nested photo dialogs, gallery carousel pause controls, member search, CMS mobile drawer, and live status messages.
+- Added public/admin/developer finishing stylesheets and page-level empty states.
+- Fixed nested-dialog focus restoration and the gallery lightbox close path when the CMS gallery grid is disabled.
+- Added accessible names to CMS row actions and explicit button types to avoid accidental form submission.
+- See `docs/UI_UX_REFRESH_PHASE2.md` for scope, changed files, verification, and manual acceptance checklist.

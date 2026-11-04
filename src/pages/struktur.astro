@@ -41,7 +41,7 @@ function getExtendedMemberData(nama) {
         {/* Row 1: Wali Kelas */}
         {G.waliKelas && (
           <div class="org-row">
-            <div class="org-card reveal is-wali" tabindex="0" role="button" data-nama={G.waliKelas.nama} data-jabatan="Wali Kelas" data-foto={G.waliKelas.foto} data-desc={G.waliKelas.desc}>
+            <div class="org-card reveal is-wali" tabindex="0" role="button" data-nama={G.waliKelas.nama} data-jabatan="Wali Kelas" data-foto={G.waliKelas.foto} data-desc={G.waliKelas.desc} aria-label={`Lihat detail ${G.waliKelas.nama}, Wali Kelas`}>
               <div class="avatar lg" style="margin-bottom: 8px;">
                 {G.waliKelas.foto ? (
                   <img src={G.waliKelas.foto} alt={G.waliKelas.nama} loading="lazy" />
@@ -58,14 +58,14 @@ function getExtendedMemberData(nama) {
         )}
 
         {/* Row 2: Ketua & Wakil */}
-        {G.strukturOrg && G.strukturOrg.length >= 2 && (
+        {G.strukturOrg && G.strukturOrg.length > 0 && (
           <div class="org-row">
-            {[G.strukturOrg[0], G.strukturOrg[1]].map((m, i) => {
+            {G.strukturOrg.slice(0, 2).map((m, i) => {
               const ext = getExtendedMemberData(m.nama);
               const foto = m.foto || (ext ? ext.foto : "");
               const desc = m.desc || (ext ? ext.desc : "");
               return (
-                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} style={`--d: ${(i+1) * 0.15}s`}>
+                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+1) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
                       <img src={foto} alt={m.nama} loading="lazy" />
@@ -84,14 +84,14 @@ function getExtendedMemberData(nama) {
         )}
 
         {/* Row 3: Sekretaris & Bendahara */}
-        {G.strukturOrg && G.strukturOrg.length >= 6 && (
+        {G.strukturOrg && G.strukturOrg.length > 2 && (
            <div class="org-row">
-            {[G.strukturOrg[2], G.strukturOrg[3], G.strukturOrg[4], G.strukturOrg[5]].map((m, i) => {
+            {G.strukturOrg.slice(2, 6).map((m, i) => {
               const ext = getExtendedMemberData(m.nama);
               const foto = m.foto || (ext ? ext.foto : "");
               const desc = m.desc || (ext ? ext.desc : "");
               return (
-                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} style={`--d: ${(i+3) * 0.15}s`}>
+                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+3) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
                       <img src={foto} alt={m.nama} loading="lazy" />
@@ -110,14 +110,14 @@ function getExtendedMemberData(nama) {
         )}
 
         {/* Row 4: Others */}
-        {G.strukturOrg && G.strukturOrg.length >= 8 && (
+        {G.strukturOrg && G.strukturOrg.length > 6 && (
           <div class="org-row">
             {G.strukturOrg.slice(6).map((m, i) => {
               const ext = getExtendedMemberData(m.nama);
               const foto = m.foto || (ext ? ext.foto : "");
               const desc = m.desc || (ext ? ext.desc : "");
               return (
-                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} style={`--d: ${(i+7) * 0.15}s`}>
+                <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+7) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
                       <img src={foto} alt={m.nama} loading="lazy" />
@@ -138,7 +138,7 @@ function getExtendedMemberData(nama) {
     </div>
 
     <!-- Lightbox foto struktur -->
-    <div id="structure-photo-lightbox" class="foto-jendela" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Foto profil anggota">
+    <div id="structure-photo-lightbox" class="foto-jendela" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Detail pengurus kelas">
       <button id="structure-photo-lightbox-tutup" class="tutup-foto-jendela" aria-label="Tutup foto">
         <i class="fas fa-times" aria-hidden="true"></i>
       </button>
