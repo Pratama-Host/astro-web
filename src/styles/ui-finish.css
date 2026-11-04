@@ -213,12 +213,12 @@ main[id="main-content"] > .halaman-anggota { width: 100%; }
   position: relative !important;
   box-sizing: border-box !important;
 
-  width: 44px !important;
-  height: 44px !important;
-  min-width: 44px !important;
-  min-height: 44px !important;
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
 
-  flex: 0 0 44px !important;
+  flex: 0 0 30px !important;
   display: inline-grid !important;
   place-items: center !important;
 
