@@ -14,21 +14,26 @@ function initTkjTools() {
   // Helper IP Functions
   const isValidIPv4 = (ip) => {
     const parts = ip.split(".");
-    return parts.length === 4 && parts.every((part) => {
-      if (!/^(?:0|[1-9]\d{0,2})$/.test(part)) return false;
-      const value = Number(part);
-      return value >= 0 && value <= 255;
-    });
+    return (
+      parts.length === 4 &&
+      parts.every((part) => {
+        if (!/^(?:0|[1-9]\d{0,2})$/.test(part)) return false;
+        const value = Number(part);
+        return value >= 0 && value <= 255;
+      })
+    );
   };
   const ipToInt = (ip) =>
-    ip.split(".").map(Number).reduce((acc, n) => (acc << 8) + n, 0) >>> 0;
-  const intToIp = (int) => [
-    (int >>> 24) & 255,
-    (int >>> 16) & 255,
-    (int >>> 8) & 255,
-    int & 255,
-  ].join(".");
-  const maskFromCidr = (cidr) => cidr === 0 ? 0 : ~((1 << (32 - cidr)) - 1) >>> 0;
+    ip
+      .split(".")
+      .map(Number)
+      .reduce((acc, n) => (acc << 8) + n, 0) >>> 0;
+  const intToIp = (int) =>
+    [(int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255].join(
+      ".",
+    );
+  const maskFromCidr = (cidr) =>
+    cidr === 0 ? 0 : ~((1 << (32 - cidr)) - 1) >>> 0;
 
   // --- Subnet Calculator ---
   const subInput = document.getElementById("subnet-input");
@@ -43,15 +48,18 @@ function initTkjTools() {
       if (parts.length !== 2) {
         const error = document.createElement("span");
         error.style.color = "var(--accent)";
-        error.textContent = "Format salah! Gunakan: IP/CIDR (e.g. 192.168.1.1/24)";
+        error.textContent =
+          "Format salah! Gunakan: IP/CIDR (e.g. 192.168.1.1/24)";
         subResult.replaceChildren(error);
         return;
       }
 
       try {
         const ip = parts[0].trim();
-        if (!isValidIPv4(ip)) throw new Error("IPv4 tidak valid. Gunakan empat oktet 0-255.");
-        if (!/^(?:0|[1-9]\d{0,1}|[12]\d|3[0-2])$/.test(parts[1].trim())) throw new Error("CIDR tidak valid.");
+        if (!isValidIPv4(ip))
+          throw new Error("IPv4 tidak valid. Gunakan empat oktet 0-255.");
+        if (!/^(?:0|[1-9]\d{0,1}|[12]\d|3[0-2])$/.test(parts[1].trim()))
+          throw new Error("CIDR tidak valid.");
         const cidr = Number(parts[1]);
         if (cidr < 0 || cidr > 32) throw new Error("CIDR tidak valid");
 
@@ -71,7 +79,8 @@ function initTkjTools() {
         }
 
         const section = document.createElement("div");
-        section.style.cssText = "margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-mid)";
+        section.style.cssText =
+          "margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border-mid)";
         const details = document.createElement("div");
 
         const addLine = (container, label, value) => {
@@ -114,31 +123,35 @@ function initTkjTools() {
       connecting.textContent = `Connecting to ${host}...`;
       pingLog.replaceChildren(connecting);
 
-      setTimeout(() => {
-        const success = Math.random() > 0.15;
-        const latency = Math.floor(Math.random() * 150) + 5;
-        pingLog.replaceChildren();
+      setTimeout(
+        () => {
+          const success = Math.random() > 0.15;
+          const latency = Math.floor(Math.random() * 150) + 5;
+          pingLog.replaceChildren();
 
-        if (success) {
-          const reply = document.createElement("div");
-          reply.style.color = "var(--accent-2)";
-          reply.textContent = `Reply from ${host}: bytes=32 time=${latency}ms TTL=64`;
+          if (success) {
+            const reply = document.createElement("div");
+            reply.style.color = "var(--accent-2)";
+            reply.textContent = `Reply from ${host}: bytes=32 time=${latency}ms TTL=64`;
 
-          const packetInfo = document.createElement("div");
-          packetInfo.style.fontSize = "0.8rem";
-          packetInfo.style.marginTop = "4px";
-          packetInfo.textContent = "Packets: Sent = 1, Received = 1, Lost = 0 (0% loss)";
-          pingLog.append(reply, packetInfo);
-        } else {
-          const errorNode = document.createElement("div");
-          errorNode.style.color = "var(--accent)";
-          errorNode.textContent = `Request timed out. Unable to reach ${host}.`;
-          pingLog.appendChild(errorNode);
-        }
+            const packetInfo = document.createElement("div");
+            packetInfo.style.fontSize = "0.8rem";
+            packetInfo.style.marginTop = "4px";
+            packetInfo.textContent =
+              "Packets: Sent = 1, Received = 1, Lost = 0 (0% loss)";
+            pingLog.append(reply, packetInfo);
+          } else {
+            const errorNode = document.createElement("div");
+            errorNode.style.color = "var(--accent)";
+            errorNode.textContent = `Request timed out. Unable to reach ${host}.`;
+            pingLog.appendChild(errorNode);
+          }
 
-        pingBtn.disabled = false;
-        pingBtn.textContent = "Ping";
-      }, 1200 + Math.random() * 1000);
+          pingBtn.disabled = false;
+          pingBtn.textContent = "Ping";
+        },
+        1200 + Math.random() * 1000,
+      );
     });
   }
 }

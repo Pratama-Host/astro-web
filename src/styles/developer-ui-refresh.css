@@ -1,27 +1,58 @@
 /* Accessibility and responsive safety layer for the intentionally distinct
    developer portfolio visual identity. Avoids overriding its brutalist theme. */
-:where(a,button,input,textarea,select,[tabindex]):focus-visible {
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
   outline: 3px solid var(--dev-highlight, #ffd700);
   outline-offset: 3px;
-  box-shadow: 0 0 0 5px rgba(0,0,0,.22);
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.22);
 }
-button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
-img, video, iframe { max-width: 100%; }
-button, input, textarea, select { font: inherit; }
-button { touch-action: manipulation; }
-.skip-to-main:focus { z-index: 10000; }
-.draft-preview { width: min(calc(100% - 24px), 900px); }
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  touch-action: manipulation;
+}
+.skip-to-main:focus {
+  z-index: 10000;
+}
+.draft-preview {
+  width: min(calc(100% - 24px), 900px);
+}
 @media (max-width: 540px) {
-  body { padding-bottom: env(safe-area-inset-bottom); }
-  .wrap { width: 100%; }
-  .navbar { padding-top: max(8px, env(safe-area-inset-top)); }
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap {
+    width: 100%;
+  }
+  .navbar {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
-    animation-duration: .01ms !important;
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: .01ms !important;
+    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }

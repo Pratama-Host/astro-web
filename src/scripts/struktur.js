@@ -49,23 +49,32 @@ function initStructureLightbox() {
     } else {
       img.removeAttribute("src");
       placeholder.hidden = false;
-      placeholder.textContent = String(nama || "?").trim().split(/\s+/).slice(0, 2).map((word) => word[0]?.toUpperCase() || "").join("") || "?";
+      placeholder.textContent =
+        String(nama || "?")
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .map((word) => word[0]?.toUpperCase() || "")
+          .join("") || "?";
     }
     captionDiv.replaceChildren();
 
     const namaElement = document.createElement("div");
-    namaElement.style.cssText = "font-weight:700;font-size:1.25rem;color:white;margin-bottom:4px;";
+    namaElement.style.cssText =
+      "font-weight:700;font-size:1.25rem;color:white;margin-bottom:4px;";
     namaElement.textContent = String(nama || "");
 
     const jabatanElement = document.createElement("div");
-    jabatanElement.style.cssText = "color:var(--accent);font-family:monospace;font-size:0.9rem;margin-bottom:12px;letter-spacing:0.05em;text-transform:uppercase;";
+    jabatanElement.style.cssText =
+      "color:var(--accent);font-family:monospace;font-size:0.9rem;margin-bottom:12px;letter-spacing:0.05em;text-transform:uppercase;";
     jabatanElement.textContent = String(jabatan || "");
 
     captionDiv.append(namaElement, jabatanElement);
 
     if (profil) {
       const profilElement = document.createElement("div");
-      profilElement.style.cssText = "font-size:0.9rem;color:var(--text-2);max-width:500px;margin:0 auto;line-height:1.5;";
+      profilElement.style.cssText =
+        "font-size:0.9rem;color:var(--text-2);max-width:500px;margin:0 auto;line-height:1.5;";
       profilElement.textContent = String(profil);
       captionDiv.appendChild(profilElement);
     }
@@ -103,8 +112,11 @@ function initStructureLightbox() {
   });
 
   tutupBtn.addEventListener("click", tutupLightbox);
-  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) tutupLightbox(); });
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) tutupLightbox();
+  });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && lightbox.classList.contains("terbuka")) tutupLightbox();
+    if (e.key === "Escape" && lightbox.classList.contains("terbuka"))
+      tutupLightbox();
   });
 }

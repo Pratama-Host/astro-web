@@ -1,1 +1,20 @@
-.draft-preview-banner{position:sticky;top:0;z-index:99999;padding:10px 14px;text-align:center;background:#5b3411;color:#fff7ed;font:700 12px/1.4 system-ui,sans-serif;letter-spacing:.04em;box-shadow:0 4px 18px #0003}.draft-preview-banner a{margin-left:8px;color:#fff;text-decoration:underline;text-underline-offset:3px}
+.draft-preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 99999;
+  padding: 10px 14px;
+  text-align: center;
+  background: #5b3411;
+  color: #fff7ed;
+  font:
+    700 12px/1.4 system-ui,
+    sans-serif;
+  letter-spacing: 0.04em;
+  box-shadow: 0 4px 18px #0003;
+}
+.draft-preview-banner a {
+  margin-left: 8px;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

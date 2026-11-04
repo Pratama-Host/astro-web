@@ -4,7 +4,6 @@
 
 /* BLINK */
 @keyframes blink {
-
   0%,
   50% {
     opacity: 1;
@@ -18,19 +17,21 @@
 
 /* CLOCK */
 @keyframes clockPulse {
-
   0%,
   100% {
-    box-shadow: inset 0 1px 0 rgba(var(--accent-rgb), 0.06), 0 0 0 rgba(var(--accent-rgb), 0);
+    box-shadow:
+      inset 0 1px 0 rgba(var(--accent-rgb), 0.06),
+      0 0 0 rgba(var(--accent-rgb), 0);
   }
 
   50% {
-    box-shadow: inset 0 1px 0 rgba(var(--accent-rgb), 0.06), 0 0 8px rgba(var(--accent-rgb), 0.15);
+    box-shadow:
+      inset 0 1px 0 rgba(var(--accent-rgb), 0.06),
+      0 0 8px rgba(var(--accent-rgb), 0.15);
   }
 }
 
 @keyframes clockPulseAdvanced {
-
   0%,
   100% {
     opacity: 1;
@@ -42,7 +43,6 @@
 }
 
 @keyframes clockPulseIndicator {
-
   0%,
   100% {
     opacity: 1;
@@ -100,7 +100,6 @@
 
 /* GLITCH */
 @keyframes glitch {
-
   0%,
   89%,
   100% {
@@ -125,7 +124,6 @@
 }
 
 @keyframes glitchR {
-
   0%,
   87%,
   100% {
@@ -150,7 +148,6 @@
 }
 
 @keyframes glitchL {
-
   0%,
   85%,
   100% {
@@ -175,7 +172,6 @@
 }
 
 @keyframes glitch-error {
-
   0%,
   80%,
   100% {
@@ -185,12 +181,16 @@
 
   82% {
     transform: translate(-3px, 1px) skewX(-10deg);
-    text-shadow: -3px 0 var(--accent-2), 3px 0 #0ff;
+    text-shadow:
+      -3px 0 var(--accent-2),
+      3px 0 #0ff;
   }
 
   84% {
     transform: translate(3px, -1px) skewX(10deg);
-    text-shadow: 3px 0 var(--accent), -3px 0 #f0f;
+    text-shadow:
+      3px 0 var(--accent),
+      -3px 0 #f0f;
   }
 
   86% {
@@ -200,7 +200,9 @@
 
   88% {
     transform: translate(-1px, 2px);
-    text-shadow: -1px 0 var(--accent-2), 1px 0 #0ff;
+    text-shadow:
+      -1px 0 var(--accent-2),
+      1px 0 #0ff;
   }
 
   90% {
@@ -312,13 +314,14 @@
 
 .glitch-text::after {
   left: -2px;
-  text-shadow: -2px 0 #00fff9, 2px 2px #ff00c1;
+  text-shadow:
+    -2px 0 #00fff9,
+    2px 2px #ff00c1;
   animation: glitch-anim-2 3s infinite linear alternate-reverse;
 }
 
 /* FLOAT */
 @keyframes floatDrift {
-
   0%,
   100% {
     transform: translateY(0) rotate(0deg);
@@ -341,7 +344,6 @@
 
 /* PULSE */
 @keyframes pulse {
-
   0%,
   100% {
     opacity: 1;
@@ -353,7 +355,6 @@
 }
 
 @keyframes dotPulse {
-
   0%,
   100% {
     box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
@@ -365,7 +366,6 @@
 }
 
 @keyframes subpulse {
-
   0%,
   100% {
     opacity: 1;
@@ -377,7 +377,6 @@
 }
 
 @keyframes introWordPulse {
-
   0%,
   100% {
     transform: scale(1);
@@ -418,7 +417,6 @@
 }
 
 @keyframes shimmerPulse {
-
   0%,
   100% {
     transform: translateX(-100%);
@@ -430,7 +428,12 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    var(--surface-2) 50%,
+    var(--surface) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
   border-radius: var(--radius-s);
@@ -449,7 +452,6 @@
 
 /* INTRO SCREEN */
 @keyframes introGridPulse {
-
   0%,
   100% {
     opacity: 0.25;
@@ -482,7 +484,6 @@
 }
 
 @keyframes eyebrowPulse {
-
   0%,
   100% {
     opacity: 0.4;
@@ -496,7 +497,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .hero-eyebrow::before,
   .hero-eyebrow::after {
     animation: none;
@@ -531,7 +531,6 @@
 }
 
 @keyframes placeholderPulse {
-
   0%,
   100% {
     opacity: 0.7;
@@ -611,7 +610,7 @@
   animation-delay: 0.16s;
 }
 
-.member-card[data-nis]:nth-child(n+6) {
+.member-card[data-nis]:nth-child(n + 6) {
   animation-delay: 0.2s;
 }
 
@@ -624,7 +623,6 @@
 
 /* WAVEFORM */
 @keyframes whatsapp-waveform {
-
   0%,
   100% {
     height: 40%;
@@ -639,14 +637,17 @@
 
 /* ORG CARDS — Snake Border */
 @keyframes snakeBorderSlide {
-
   0%,
   100% {
-    background-position: 0 0, 0% 0%;
+    background-position:
+      0 0,
+      0% 0%;
   }
 
   50% {
-    background-position: 0 0, 100% 0%;
+    background-position:
+      0 0,
+      100% 0%;
   }
 }
 
@@ -701,9 +702,20 @@
   padding: 3px !important;
   background:
     linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 33%, var(--accent) 66%, var(--accent-2) 100%) border-box !important;
-  background-size: auto, 200% 100% !important;
-  background-position: 0 0, 0% 0% !important;
+    linear-gradient(
+        90deg,
+        var(--accent) 0%,
+        var(--accent-2) 33%,
+        var(--accent) 66%,
+        var(--accent-2) 100%
+      )
+      border-box !important;
+  background-size:
+    auto,
+    200% 100% !important;
+  background-position:
+    0 0,
+    0% 0% !important;
   animation: snakeBorderSlide 10s linear infinite !important;
   pointer-events: none !important;
   z-index: 0 !important;
@@ -714,8 +726,18 @@
 .org-card.is-wali::before {
   background:
     linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(90deg, var(--accent-2) 0%, var(--accent) 25%, var(--accent-2) 50%, var(--accent) 75%, var(--accent-2) 100%) border-box !important;
-  background-size: auto, 200% 100% !important;
+    linear-gradient(
+        90deg,
+        var(--accent-2) 0%,
+        var(--accent) 25%,
+        var(--accent-2) 50%,
+        var(--accent) 75%,
+        var(--accent-2) 100%
+      )
+      border-box !important;
+  background-size:
+    auto,
+    200% 100% !important;
 }
 
 @media (hover: hover) {
@@ -739,7 +761,6 @@
 }
 
 @keyframes skillBarShimmer {
-
   0%,
   100% {
     background-position: 0% 0;
@@ -780,13 +801,21 @@
 @media (hover: hover) {
   .skill-card:hover {
     border-left-color: var(--accent-2) !important;
-    box-shadow: var(--shadow-md), 0 0 16px rgba(var(--accent-rgb), 0.3) !important;
+    box-shadow:
+      var(--shadow-md),
+      0 0 16px rgba(var(--accent-rgb), 0.3) !important;
     transform: translateX(6px) !important;
   }
 }
 
 .bar-fill {
-  background: linear-gradient(90deg, var(--red-900) 0%, var(--red-700) 30%, var(--red-500) 65%, var(--red-400) 100%) !important;
+  background: linear-gradient(
+    90deg,
+    var(--red-900) 0%,
+    var(--red-700) 30%,
+    var(--red-500) 65%,
+    var(--red-400) 100%
+  ) !important;
   background-size: 200% 100% !important;
   animation: skillBarShimmer 4s ease-in-out infinite !important;
   box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3) !important;
@@ -800,7 +829,12 @@
   top: 0 !important;
   bottom: 0 !important;
   width: 100% !important;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100%) !important;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  ) !important;
   animation: skillWormGlow 3s ease-in-out infinite !important;
   pointer-events: none !important;
 }
@@ -881,7 +915,9 @@
 
 /* GURU */
 .guru-card.reveal {
-  transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .guru-card.reveal:not(.on) {
@@ -904,7 +940,6 @@
 
 /* REDUCE MOTION */
 @media (prefers-reduced-motion: reduce) {
-
   #global-clock,
   .hamburger-tombol,
   .org-card,

@@ -3,10 +3,13 @@
    ================================================================ */
 
 const validThemes = ["light", "dark", "blue"];
-const defaultTheme = document.documentElement.getAttribute("data-theme") || "light";
+const defaultTheme =
+  document.documentElement.getAttribute("data-theme") || "light";
 let themeListenerAttached = false;
 
-function ambilTombolTema() { return document.getElementById("tombol-tema"); }
+function ambilTombolTema() {
+  return document.getElementById("tombol-tema");
+}
 
 export function perbaruiIkonTombol(t) {
   const tombol = ambilTombolTema();
@@ -17,7 +20,14 @@ export function perbaruiIkonTombol(t) {
     else if (t === "light") icon.className = "fas fa-moon";
     else icon.className = "fas fa-palette";
   }
-  tombol.setAttribute("aria-label", t === "dark" ? "Aktifkan mode terang" : t === "light" ? "Aktifkan mode biru" : "Aktifkan mode gelap");
+  tombol.setAttribute(
+    "aria-label",
+    t === "dark"
+      ? "Aktifkan mode terang"
+      : t === "light"
+        ? "Aktifkan mode biru"
+        : "Aktifkan mode gelap",
+  );
 }
 
 export function terapkanTema(t) {
@@ -29,7 +39,10 @@ export function terapkanTema(t) {
   if (!tombol) return;
   tombol.setAttribute("data-switching", "true");
   document.body.classList.add("theme-switching");
-  setTimeout(() => { tombol.removeAttribute("data-switching"); document.body.classList.remove("theme-switching"); }, 600);
+  setTimeout(() => {
+    tombol.removeAttribute("data-switching");
+    document.body.classList.remove("theme-switching");
+  }, 600);
 }
 
 export function pasangPendengarTema() {
@@ -51,15 +64,21 @@ export function pasangPendengarTema() {
 export function mulaiTema() {
   const root = document.documentElement;
   let saved = localStorage.getItem("tkj-theme");
-  if (!validThemes.includes(saved)) { saved = defaultTheme; localStorage.setItem("tkj-theme", defaultTheme); }
+  if (!validThemes.includes(saved)) {
+    saved = defaultTheme;
+    localStorage.setItem("tkj-theme", defaultTheme);
+  }
   terapkanTema(saved);
-  
+
   const buttonObserver = new MutationObserver(() => {
     if (!themeListenerAttached && ambilTombolTema()) {
       pasangPendengarTema();
       buttonObserver.disconnect();
     }
   });
-  buttonObserver.observe(document.documentElement, { childList: true, subtree: true });
+  buttonObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
   return { pasangPendengarTema };
 }

@@ -2,7 +2,7 @@
 
 ## Aktivasi database
 
-Database inti proyek sudah berisi tabel `site_settings`, `anggota`, `guru`, `skills`, dan `galeri`. Untuk instalasi CMS baru, jalankan migration berurutan: `20261101_cms.sql`, `20261103_stage3_workflow.sql`, `20261103_stage3_hardening.sql`, lalu `20261103_stage4_developer_and_global_asset.sql`. Pada database yang sudah menjalankan migration sebelumnya, jangan mengulang file lama. Jalankan hanya migration yang belum diterapkan, satu kali, melalui Supabase SQL Editor. Migration kelas/data historis tetap mengikuti status database proyek dan tidak perlu diulang hanya untuk fitur ini.
+Database aktif `astro` sudah memiliki 13 tabel dan seluruh sembilan RPC aplikasi (tujuh CMS + dua login). Untuk instalasi baru, ikuti satu-satunya urutan kanonik dalam `docs/MIGRATIONS.md`. Pada database aktif/production, jangan menjalankan ulang snapshot, seed, atau migration historis. Migration lama `20261103_stage4_developer_and_global_asset.sql` tidak lagi menjadi jalur instalasi: fungsi di dalamnya memakai `SECURITY DEFINER`; gunakan RPC `SECURITY INVOKER` dari `0003` dan recursive merge dari `0005`.
 
 Migration ini bersifat additive. Migration menambah kolom `anggota.visible`, `anggota.skills`, metadata galeri, serta tabel:
 
@@ -114,7 +114,7 @@ Section hanya dapat diatur jika sudah dipetakan di markup Astro. Halaman `/penge
 
 ## Publikasi dan revisi
 
-Simpan di dashboard berarti langsung memperbarui database dan halaman SSR menggunakan nilai baru pada request berikutnya. Pastikan migration Stage 4 diterapkan sebelum mengaktifkan kode patch pengaturan global dan halaman Pengembang yang memiliki section terpisah. Workflow draft/publish dan preview khusus admin tersedia setelah migrasi Stage 3 (`20261103_stage3_workflow.sql` dan `20261103_stage3_hardening.sql`). Riwayat menyimpan snapshot pengaturan global dan SEO/konten halaman; admin dapat memulihkan versi terdahulu. Pengaturan global memakai RPC patch `patch_tkj_cms_site_settings` pada migration `20261103_stage4_developer_and_global_asset.sql`. Patch digabungkan secara rekursif di PostgreSQL di bawah advisory lock agar pembacaan lama tidak menimpa field lain yang berubah bersamaan. Pengunggahan aset global memakai RPC `set_tkj_cms_global_asset` dengan lock yang sama. Keduanya menulis pengaturan, snapshot revisi, dan audit log dalam satu transaksi database.
+Simpan di dashboard berarti langsung memperbarui database dan halaman SSR menggunakan nilai baru pada request berikutnya. Database aktif sudah memiliki seluruh RPC CMS dan tabel draft. Migration `0005_fix_nested_settings_merge_and_developer_sections.sql` (ledger `20261104134549`) menambahkan seluruh 11 section Pengembang serta memperbaiki `patch_tkj_cms_site_settings` agar menggabungkan object JSONB secara rekursif di bawah advisory lock. Properti di dalam object yang tidak disentuh patch tetap dipertahankan. Fungsi tetap `SECURITY INVOKER` dan hanya dapat dieksekusi `service_role`. Workflow draft/publish, revision, backup, dan aset global disediakan oleh migration `0003`/`0004`/`0005`. Pengunggahan aset global memakai RPC `set_tkj_cms_global_asset` dengan lock yang sama. Keduanya menulis pengaturan, snapshot revisi, dan audit log dalam satu transaksi database.
 
 Backup JSON berisi baris database/metadata CMS, bukan binary object Storage. Import melakukan upsert dan tidak menghapus baris yang tidak ada dalam file backup.
 
@@ -122,20 +122,18 @@ Backup JSON berisi baris database/metadata CMS, bukan binary object Storage. Imp
 
 - Form ganti password admin mandiri. Password tetap diubah melalui mekanisme environment `ADMIN_PASSWORD` yang sudah ada.
 - Kuota total bucket Storage. Dashboard menghitung file yang ditemukan melalui listing Storage dan metadata yang terindeks, tetapi tidak menampilkan batas kuota akun Supabase. Listing dibatasi dan dapat memberi peringatan jika pemindaian tidak lengkap.
-- Editor visual khusus untuk seluruh array konten belum lengkap. CMS kini menyediakan editor cerita per bab serta Theme Studio khusus `/pengembang`; konten lain tetap bisa diedit lewat JSON textarea pada modul Pengembang & SEO. Semua perubahan halaman disimpan sebagai draft, dan publikasi memerlukan RPC Stage 3 Hardening.
+- Editor visual khusus untuk seluruh array konten belum lengkap. CMS kini menyediakan editor cerita per bab serta Theme Studio khusus `/pengembang`; konten lain tetap bisa diedit lewat JSON textarea pada modul Pengembang & SEO. Perubahan halaman disimpan sebagai draft; publikasi menggunakan RPC `publish_tkj_cms_draft` yang tersedia pada database aktif.
 - Workflow draft/publish saat ini mencakup konten dan SEO `site_pages`; perubahan global, anggota, galeri, koleksi, navigasi, section, dan metadata media tetap disimpan langsung.
 
 ## Pengujian sesudah penerapan
 
-1. Jalankan migration CMS sekali di Supabase.
-2. Jalankan `npm run build` di lingkungan Termux dengan versi Node yang digunakan proyek.
-3. Jalankan server lokal, login ke `/pengembang/admin`, dan buka dashboard.
-4. Uji simpan satu field hero, lalu muat ulang beranda untuk memeriksa hasil publik.
-5. Uji tambah/edit/sembunyikan/hapus satu anggota percobaan.
-6. Uji upload satu foto galeri, edit metadata, sembunyikan, lalu tampilkan lagi.
-7. Uji upload logo/audio baru dan periksa header/player.
-8. Uji ubah label/urutan navigasi, warna aksen, favicon, dan SEO.
-9. Uji media library: edit metadata, ganti file dengan ekstensi yang sama, dan pastikan file yang masih dipakai tidak dapat dihapus.
-10. Uji export backup dan pemulihan satu revisi.
+1. Pastikan CI dan Cloudflare Workers Preview Build lulus pada branch kerja.
+2. Buka URL Preview melalui browser HP, lalu login ke `/pengembang/admin`.
+3. Uji simpan satu field hero, lalu muat ulang beranda Preview.
+4. Uji CRUD satu record dummy anggota dan galeri.
+5. Uji upload satu media uji, edit metadata, sembunyikan/tampilkan, lalu periksa Media Library.
+6. Uji pengaturan tema, favicon, navigasi, dan SEO.
+7. Uji draft → preview → publish serta revision restore pada halaman risiko rendah.
+8. Uji export/import backup hanya di Preview dengan bundle cadangan; ingat file binary Storage tidak termasuk JSON backup.
 
 Jangan menganggap deployment Cloudflare berhasil sebelum ada build/deployment aktual dan verifikasi URL produksi.

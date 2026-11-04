@@ -7,9 +7,9 @@
 --    dijalankan ulang ke project `astro` yang sedang aktif.
 -- 2) Snapshot ini mereproduksi tabel/index/constraint/RLS/grant/bucket yang
 --    benar-benar ditemukan, serta 2 RPC yang definisinya masih ada.
--- 3) Tujuh RPC lain yang dipanggil kode TIDAK ADA di database saat audit.
---    Karena itu file ini BELUM cukup untuk membuat seluruh CMS berfungsi.
---    Lihat docs/RPC_RECONSTRUCTION_BACKLOG.md sebelum membuat baseline final.
+-- 3) Snapshot ini memuat dua RPC login yang sudah ada pada saat direkam.
+--    Tujuh RPC CMS disediakan oleh migrations/0003_restore_cms_rpc_workflows.sql
+--    dan dilengkapi recursive merge oleh migrations/0005_...sql.
 -- 4) Skema tabel anggota/galeri pada snapshot ini adalah kondisi database saat
 --    inspeksi; migrations/0002_align_schema_with_current_astro_code.sql adalah
 --    langkah lanjutan agar tipe/kolom selaras dengan kode Astro saat ini.

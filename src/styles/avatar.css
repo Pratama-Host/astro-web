@@ -21,7 +21,6 @@
   animation: avatarPulse 3s ease-in-out infinite;
 }
 @keyframes avatarPulse {
-
   0%,
   100% {
     transform: scale(1);
@@ -60,11 +59,12 @@
 }
 .avatar-ring {
   border: 2px solid var(--border-mid);
-  transition: border-color 0.3s var(--ease-in-out), box-shadow 0.3s var(--ease-in-out);
+  transition:
+    border-color 0.3s var(--ease-in-out),
+    box-shadow 0.3s var(--ease-in-out);
 }
 
 @media (hover: hover) {
-
   a:hover .avatar-ring,
   .member-card:hover .avatar-ring,
   .org-card:hover .avatar-ring {

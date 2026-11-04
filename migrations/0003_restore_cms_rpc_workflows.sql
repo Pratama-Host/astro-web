@@ -1,4 +1,4 @@
--- CMS RPC reconstruction for xi9-mubela.
+-- CMS RPC layer for astro-web.
 -- Based on the exact RPC signatures and call sites in src/pages/api/admin/*.ts.
 -- All functions are backend-only SECURITY INVOKER and EXECUTE is restricted to service_role.
 -- No table data is modified by applying this migration.

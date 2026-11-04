@@ -1,15 +1,15 @@
-# RPC yang belum tersedia pada database aktif
+# Status RPC CMS dan autentikasi — 4 November 2026
 
-Audit dilakukan dengan membandingkan pemanggilan `.rpc(...)` di source code dengan `pg_proc` database Supabase `astro` pada 2026-11-04.
+Audit dan verifikasi dilakukan dengan membandingkan pemanggilan `.rpc(...)` di source code dengan `pg_proc` database Supabase `astro` pada 2026-11-04. Status di bawah adalah status sesudah migration terbaru diterapkan.
 
 ## Status hasil verifikasi
 
-Dari 9 nama RPC yang dirujuk source code:
+Dari 9 nama RPC yang dirujuk source code, **9/9 ditemukan dan tersedia** pada database aktif:
 
-- **Ditemukan (2):** `consume_tkj_admin_login_attempt`, `clear_tkj_admin_login_attempts`.
-- **Tidak ditemukan (7):** `set_tkj_cms_global_asset`, `export_tkj_cms_backup`, `restore_tkj_cms_backup`, `patch_tkj_cms_site_settings`, `save_tkj_cms_page`, `publish_tkj_cms_draft`, `restore_tkj_cms_revision`.
+- **7 RPC CMS:** `set_tkj_cms_global_asset`, `export_tkj_cms_backup`, `restore_tkj_cms_backup`, `patch_tkj_cms_site_settings`, `save_tkj_cms_page`, `publish_tkj_cms_draft`, `restore_tkj_cms_revision`.
+- **2 RPC login:** `consume_tkj_admin_login_attempt`, `clear_tkj_admin_login_attempts`.
 
-Dua RPC login yang ada menggunakan `SECURITY DEFINER`. Untuk tujuh RPC CMS hasil rekonstruksi, implementasi final menggunakan `SECURITY INVOKER`, `search_path` dibatasi ke `pg_catalog, public`, dan hak `EXECUTE` hanya diberikan ke `service_role`.
+Tujuh RPC CMS memakai `SECURITY INVOKER`, `search_path` dibatasi ke `pg_catalog, public`, dan `EXECUTE` hanya diberikan ke `service_role`. Dua RPC login memakai `SECURITY DEFINER` dengan `EXECUTE` hanya untuk `service_role`, sesuai kondisi existing yang dipertahankan. Fungsi helper `merge_tkj_cms_jsonb(jsonb,jsonb)` ditambahkan pada migration terbaru; helper ini bukan RPC aplikasi yang dipanggil langsung oleh browser. ACL helper dan patch telah diverifikasi: `anon=false`, `authenticated=false`, `service_role=true`.
 
 ## Kontrak fungsi dari kode (belum merupakan definisi SQL)
 
@@ -23,15 +23,17 @@ Dua RPC login yang ada menggunakan `SECURITY DEFINER`. Untuk tujuh RPC CMS hasil
 | `publish_tkj_cms_draft` | `p_slug text` | `src/pages/api/admin/drafts.ts` | Mengambil draft, menerbitkan konten/SEO ke `site_pages`, membuat snapshot revision, lalu menyelesaikan draft dalam satu transaksi. Kode mengharapkan SQLSTATE `P0002` bila draft tak ditemukan dan `22023` untuk slug/parameter tidak valid. |
 | `restore_tkj_cms_revision` | `p_id uuid` | `src/pages/api/admin/revisions.ts` | Memulihkan revision terpilih. Komentar endpoint menyatakan keadaan aktif sebelum restore disimpan sebagai snapshot baru. Kode mengharapkan `P0002` bila ID tidak ada dan `22023` untuk input invalid. |
 
-## Status rekonstruksi 2026-11-04
+## Status penerapan 2026-11-04
 
-Implementasi rekonstruksi tujuh RPC tersedia di `migrations/0003_restore_cms_rpc_workflows.sql` dan telah diterapkan ke project aktif pada migration `20261104053918 restore_cms_rpc_workflows_functions`, lalu diperbaiki oleh `20261104054021 fix_revision_restore_snapshot` untuk snapshot sebelum restore. Implementasi mengikuti signature/pemanggil pada source, menggunakan `SECURITY INVOKER`, `search_path` terbatas, advisory transaction locks untuk penulisan konten, serta `EXECUTE` hanya untuk `service_role`.
+Implementasi tujuh RPC CMS tersedia di `migrations/0003_restore_cms_rpc_workflows.sql` dan telah diterapkan ke project aktif pada migration `20261104053918 restore_cms_rpc_workflows_functions`. Migration `20261104054021 fix_revision_restore_snapshot` memperbaiki snapshot sebelum restore. Migration terbaru `20261104134549 fix_nested_site_settings_merge_and_developer_sections` memperkenalkan recursive helper `merge_tkj_cms_jsonb`, mengganti merge dangkal di `patch_tkj_cms_site_settings`, dan men-seed 11 section Pengembang.
 
-**Penting:** implementasi ini adalah rekonstruksi dari kontrak source, bukan salinan definisi SQL historis. Smoke test transaksi yang memeriksa snapshot sebelum restore pada `tests/supabase-cms-rpc-smoke.sql` telah lulus dan semua perubahan tes di-rollback. Restore backup sengaja upsert-only, sesuai teks konfirmasi UI bahwa baris yang tidak ada di bundle tetap dipertahankan. Percobaan awal mencatat satu entri migration placeholder kosong `20261104053820 restore_cms_rpc_workflows`; entri itu dibiarkan di riwayat, sedangkan implementasi aktif tercatat pada migration berikutnya.
+Verifikasi terbaru menunjukkan seluruh 11 section ada, recursive merge mempertahankan properti bersarang yang tidak disentuh, dan dua fungsi terkait tetap `SECURITY INVOKER` serta hanya dapat dipanggil `service_role`. Smoke test rollback-only untuk workflow CMS tersedia di `tests/supabase-cms-rpc-smoke.sql`. Restore backup tetap upsert-only: baris yang tidak ada dalam bundle tidak dihapus.
 
-## Pekerjaan yang belum aman untuk ditebak
+Riwayat aktif mencatat 10 migration hingga `20261104134549`. Entri placeholder `20261104053820 restore_cms_rpc_workflows` tetap dibiarkan; jangan hapus/ubah ledger manual.
 
-Kode di atas memberi signature dan sebagian kontrak, tetapi tidak memberi definisi lengkap untuk:
+## Hal yang tetap perlu diuji pada preview
+
+Penerapan database telah berhasil, tetapi hasil integrasi browser dan Cloudflare Preview belum terverifikasi. Sisa pengujian mencakup:
 
 - aturan version numbering saat dua request berjalan bersamaan;
 - bentuk tepat JSON hasil export dan restore;

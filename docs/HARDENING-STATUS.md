@@ -7,7 +7,7 @@ Paket ini berisi source Astro SSR lengkap yang telah diperkuat untuk preview Clo
 - Penghapusan media memeriksa referensi di tabel anggota, galeri, pengaturan situs, halaman terbit, draft, dan revisi. Pemeriksaan membaca halaman data secara bertahap dan gagal tertutup bila referensi tidak dapat diverifikasi.
 - Upload media memeriksa signature file, bukan mempercayai MIME browser. SVG aktif ditolak; request multipart dibatasi sebelum parsing.
 - Endpoint JSON admin memakai pembacaan stream berbatas byte. Mutasi admin dan login/logout menolak request lintas-origin.
-- Login memiliki rate limit persisten 5 percobaan per IP per 5 menit melalui Supabase. Hanya HMAC IP yang disimpan, bukan IP mentah. Fitur ini memerlukan migration hardening.
+- Login memiliki rate limit persisten 5 percobaan per IP per 5 menit melalui Supabase. Hanya HMAC IP yang disimpan, bukan IP mentah. Fitur ini memerlukan tabel dan RPC login yang sudah terdapat dalam baseline database aktif.
 - Preview draft menggunakan `no-store`/`noindex` dan dilewati Service Worker agar tidak masuk cache offline.
 - Thumbnail memakai nama berversi untuk menghindari cache gambar lama setelah file diganti.
 - Publish, simpan halaman/pengaturan, pulihkan revisi, dan restore backup menggunakan RPC database transaksional.
@@ -15,14 +15,11 @@ Paket ini berisi source Astro SSR lengkap yang telah diperkuat untuk preview Clo
 - Header keamanan diterapkan untuk SSR/API dan aset statis; sink DOM `innerHTML`/`document.write` yang ditemukan di script proyek dihilangkan.
 - Konfigurasi Cloudflare menggunakan entry point adapter Astro modern.
 
-## Sebelum Preview
+## Status Supabase aktif
 
-1. **Backup terlebih dahulu** database Supabase dan isi Storage. Backup JSON CMS tidak menyertakan binary media Storage.
-2. Pastikan migration CMS dasar sudah ada. Pada database production yang sudah berisi data, jangan menjalankan ulang `schema.sql`, seed, atau migration historis yang sudah diterapkan.
-3. Jika tabel draft belum ada, jalankan `migrations/20261103_stage3_workflow.sql` satu kali.
-4. Jalankan `migrations/20261103_stage3_hardening.sql` satu kali setelah tabel CMS dan draft tersedia. Migration ini menambahkan rate limiter login serta RPC transaksional. Tanpa migration tersebut, login akan merespons `503` dan operasi transaksional akan gagal dengan pesan migration.
-5. Deploy dulu dari branch Preview/non-production. Jangan hubungkan branch preview ke domain production.
-6. Isi environment Preview Cloudflare: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `ADMIN_PASSWORD`, dan `ADMIN_SESSION_SECRET` (minimal 32 byte acak). Tambahkan `SUPABASE_STORAGE_BUCKET=astro` dan `SITE_ORIGIN=https://domain-anda` bila diperlukan.
+Project `astro` sudah memiliki 13 tabel, tujuh RPC CMS, dua RPC login, dan migration ledger sampai `20261104134549`. Migration terbaru mengisi 11 section Pengembang dan memperbaiki recursive merge pengaturan global. Fungsi helper dan patch tetap `SECURITY INVOKER` serta `EXECUTE` hanya untuk `service_role`. Lihat `docs/MIGRATIONS.md` untuk urutan instalasi baru dan larangan menjalankan ulang baseline.
+
+Sebelum perubahan DB berikutnya, backup database dan object Storage. Jangan menjalankan `0001`, `schema.sql`, seed, atau file Stage 4 deprecated ke database aktif. Untuk Preview, deploy branch non-production dahulu dan isi environment Preview Cloudflare.
 
 ## Build dari perangkat terbatas
 
@@ -37,7 +34,7 @@ Cloudflare menjalankan instalasi package dan build di lingkungan cloud. Dependen
 
 ## Batas verifikasi saat paket dibuat
 
-Pemeriksaan statis yang selesai:
+Pemeriksaan statis yang tercatat dari paket sumber sebelumnya (bukan pengganti pipeline CI pada commit terbaru):
 
 - 51 file TypeScript: tidak ada kesalahan parsing.
 - 18 file JavaScript: `node --check` lulus.
@@ -51,7 +48,7 @@ Pemeriksaan statis yang selesai:
 Belum dapat dijalankan di lingkungan pembuatan paket:
 
 - `astro check`, `vitest`, production build Astro, dan `npm audit` (akses registry npm tidak tersedia).
-- Eksekusi migration SQL terhadap instance PostgreSQL/Supabase nyata.
+- Uji end-to-end browser pada Cloudflare Workers Preview.
 - Cloudflare Workers Preview dan uji end-to-end browser.
 
 Karena itu, gunakan Preview terlebih dahulu. Periksa build log, login, navigasi semua halaman, preview draft, upload/hapus media, backup/restore, dan revisi sebelum mengalihkan branch production.

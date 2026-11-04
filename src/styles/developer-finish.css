@@ -1,17 +1,49 @@
 /* Portfolio detail pass: keep the editorial/brutalist identity, improve fit. */
-html { scroll-padding-top: 88px; }
-body { overflow-x: hidden; overflow-x: clip; }
-:where(button, a, input, select, textarea) { touch-action: manipulation; }
-:where(button, input, select, textarea):disabled { cursor: not-allowed; opacity: .62; }
-:where(img, video, iframe, svg, canvas) { max-width: 100%; }
-:where(pre, code) { overflow-wrap: anywhere; }
-:where(section, article, [id]) { scroll-margin-top: 86px; }
-:where(button, a, input, select, textarea):focus-visible { outline-offset: 4px; }
+html {
+  scroll-padding-top: 88px;
+}
+body {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+:where(button, a, input, select, textarea) {
+  touch-action: manipulation;
+}
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+:where(img, video, iframe, svg, canvas) {
+  max-width: 100%;
+}
+:where(pre, code) {
+  overflow-wrap: anywhere;
+}
+:where(section, article, [id]) {
+  scroll-margin-top: 86px;
+}
+:where(button, a, input, select, textarea):focus-visible {
+  outline-offset: 4px;
+}
 @media (max-width: 680px) {
-  .wrap { min-width: 0; max-width: 100%; }
-  .navbar { max-width: 100%; }
-  .draft-preview { margin-top: max(8px, env(safe-area-inset-top)); }
+  .wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .navbar {
+    max-width: 100%;
+  }
+  .draft-preview {
+    margin-top: max(8px, env(safe-area-inset-top));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

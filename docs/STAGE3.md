@@ -11,12 +11,7 @@
 
 ## Database migration
 
-Apply migrations in this order in the same Supabase project and schema used by production:
-
-1. `migrations/20261103_stage3_workflow.sql` — creates the isolated draft table.
-2. `migrations/20261103_stage3_hardening.sql` — creates persistent login throttling and transactional RPC functions for backup/restore, draft publishing, page/content saves, and revision restore.
-
-Both are additive and repeatable. No existing table is dropped or renamed. The hardening migration requires the base CMS migration (`20261101_cms.sql`) and workflow migration to have completed first. The server-side `service_role` is the only role granted execute permission on these RPC functions.
+For the active `astro` project these migrations are historical; the database already contains the draft/login tables and the nine application RPCs. Do not re-run them on the live project. For a genuinely new database, follow the canonical chain in [`MIGRATIONS.md`](MIGRATIONS.md): baseline `0001`, CMS core, schema alignment `0002`, CMS RPCs `0003`, revision fix `0004`, and nested-settings/section migration `0005`. The older Stage 3 files remain for historical reference, not as the primary bootstrap sequence.
 
 ## Draft workflow
 
@@ -63,7 +58,7 @@ The browser creates WebP thumbnails for JPEG/PNG/WebP/AVIF-like browser-decodabl
 7. Upload a test JPEG/PNG and confirm its media card uses `thumbnail_url`; verify original public page URLs remain unchanged.
 8. Confirm audit filters and pagination work.
 
-Do not commit real `.env` values or Supabase service-role credentials.
+Do not commit real `.env` values or Supabase service-role credentials. The active project’s database permission model is intentionally left unchanged during this development phase.
 
 ## Deployment without a local phone build
 

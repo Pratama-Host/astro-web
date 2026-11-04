@@ -41,32 +41,46 @@ function initDeveloperTabs() {
         content.setAttribute("aria-hidden", active ? "false" : "true");
         if (active && window.innerWidth < 768) {
           const container = document.querySelector(".developer-tabs");
-          if (container) window.scrollTo({ top: container.offsetTop - 80, behavior: "smooth" });
+          if (container)
+            window.scrollTo({
+              top: container.offsetTop - 80,
+              behavior: "smooth",
+            });
         }
       });
     });
 
     tab.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this.click(); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        this.click();
+      }
     });
   });
 }
 
 function initTimelineAnimation() {
   if (!("IntersectionObserver" in window)) {
-    document.querySelectorAll(".timeline-item").forEach((el) => el.classList.add("visible"));
+    document
+      .querySelectorAll(".timeline-item")
+      .forEach((el) => el.classList.add("visible"));
     return;
   }
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll(".timeline-item").forEach((item, index) => {
-          setTimeout(() => item.classList.add("visible"), index * 150);
-        });
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target
+            .querySelectorAll(".timeline-item")
+            .forEach((item, index) => {
+              setTimeout(() => item.classList.add("visible"), index * 150);
+            });
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1 },
+  );
   const timeline = document.getElementById("dev-timeline");
   if (timeline) observer.observe(timeline);
 }
@@ -74,31 +88,43 @@ function initTimelineAnimation() {
 function initStatsAnimation() {
   const statsGrid = document.querySelector(".stats-grid");
   if (!statsGrid) return;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll(".stat-number[data-target]").forEach((num) => {
-          animateCounter(num, parseInt(num.getAttribute("data-target")), 2000);
-        });
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.2 });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target
+            .querySelectorAll(".stat-number[data-target]")
+            .forEach((num) => {
+              animateCounter(
+                num,
+                parseInt(num.getAttribute("data-target")),
+                2000,
+              );
+            });
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 },
+  );
   observer.observe(statsGrid);
 }
 
 function initSkillBars() {
   const skillSection = document.querySelector(".skill-bars-section");
   if (!skillSection) return;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll(".skill-bar-fill").forEach((bar) => {
-          bar.style.width = (bar.getAttribute("data-pct") || "0") + "%";
-        });
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.2 });
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll(".skill-bar-fill").forEach((bar) => {
+            bar.style.width = (bar.getAttribute("data-pct") || "0") + "%";
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 },
+  );
   observer.observe(skillSection);
 }

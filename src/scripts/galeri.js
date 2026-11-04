@@ -25,7 +25,9 @@ function initGalleryImageLoading() {
       show();
     } else {
       img.addEventListener("load", show, { once: true });
-      img.addEventListener("error", () => img.classList.add("loaded"), { once: true });
+      img.addEventListener("error", () => img.classList.add("loaded"), {
+        once: true,
+      });
     }
   });
 }
@@ -46,8 +48,12 @@ function initGallery() {
   carousel.setAttribute("aria-roledescription", "carousel");
   updateCarousel();
 
-  document.getElementById("carousel-3d-prev")?.addEventListener("click", () => moveCarousel(-1));
-  document.getElementById("carousel-3d-next")?.addEventListener("click", () => moveCarousel(1));
+  document
+    .getElementById("carousel-3d-prev")
+    ?.addEventListener("click", () => moveCarousel(-1));
+  document
+    .getElementById("carousel-3d-next")
+    ?.addEventListener("click", () => moveCarousel(1));
   dotsContainer.addEventListener("click", (event) => {
     const dot = event.target.closest(".carousel-dot");
     if (!dot) return;
@@ -69,8 +75,19 @@ function initGallery() {
     if (!autoPlayButton) return;
     const motionBlocked = Boolean(reducedMotion?.matches);
     autoPlayButton.disabled = motionBlocked;
-    autoPlayButton.textContent = motionBlocked ? "Gerak otomatis nonaktif" : userPaused ? "Lanjutkan otomatis" : "Jeda otomatis";
-    autoPlayButton.setAttribute("aria-label", motionBlocked ? "Gerak otomatis dinonaktifkan oleh preferensi perangkat" : userPaused ? "Lanjutkan pergantian foto otomatis" : "Jeda pergantian foto otomatis");
+    autoPlayButton.textContent = motionBlocked
+      ? "Gerak otomatis nonaktif"
+      : userPaused
+        ? "Lanjutkan otomatis"
+        : "Jeda otomatis";
+    autoPlayButton.setAttribute(
+      "aria-label",
+      motionBlocked
+        ? "Gerak otomatis dinonaktifkan oleh preferensi perangkat"
+        : userPaused
+          ? "Lanjutkan pergantian foto otomatis"
+          : "Jeda pergantian foto otomatis",
+    );
     autoPlayButton.setAttribute("aria-pressed", String(userPaused));
   };
   const stopAutoPlay = () => {
@@ -79,7 +96,15 @@ function initGallery() {
   };
   const startAutoPlay = () => {
     stopAutoPlay();
-    if (!wrapper || reducedMotion?.matches || userPaused || document.hidden || wrapper.matches(":hover") || wrapper.contains(document.activeElement)) return;
+    if (
+      !wrapper ||
+      reducedMotion?.matches ||
+      userPaused ||
+      document.hidden ||
+      wrapper.matches(":hover") ||
+      wrapper.contains(document.activeElement)
+    )
+      return;
     autoPlay = window.setInterval(() => moveCarousel(1), 5000);
   };
 
@@ -96,7 +121,9 @@ function initGallery() {
   wrapper?.addEventListener("focusout", (event) => {
     if (!wrapper.contains(event.relatedTarget)) startAutoPlay();
   });
-  document.addEventListener("visibilitychange", () => document.hidden ? stopAutoPlay() : startAutoPlay());
+  document.addEventListener("visibilitychange", () =>
+    document.hidden ? stopAutoPlay() : startAutoPlay(),
+  );
   reducedMotion?.addEventListener?.("change", () => {
     refreshAutoPlayButton();
     reducedMotion.matches ? stopAutoPlay() : startAutoPlay();
@@ -109,7 +136,8 @@ function initGallery() {
     if (item.classList.contains("active")) {
       const idx = Number.parseInt(item.dataset.index, 10);
       const data = carouselItemsData[idx];
-      if (data && typeof window.terbukaLightbox === "function") window.terbukaLightbox(data.src, data.caption);
+      if (data && typeof window.terbukaLightbox === "function")
+        window.terbukaLightbox(data.src, data.caption);
     } else {
       carouselIndex = Number.parseInt(item.dataset.index, 10);
       updateCarousel();
@@ -139,12 +167,17 @@ function updateCarousel() {
   items.forEach((item, idx) => {
     item.className = "carousel-item";
     item.setAttribute("tabindex", idx === carouselIndex ? "0" : "-1");
-    item.setAttribute("aria-label", `Slide ${idx + 1} dari ${max}: ${carouselItemsData[idx]?.caption || "Foto galeri"}`);
+    item.setAttribute(
+      "aria-label",
+      `Slide ${idx + 1} dari ${max}: ${carouselItemsData[idx]?.caption || "Foto galeri"}`,
+    );
     item.setAttribute("aria-current", idx === carouselIndex ? "true" : "false");
     if (idx === carouselIndex) item.classList.add("active");
-    else if (idx === (carouselIndex - 1 + max) % max) item.classList.add("prev");
+    else if (idx === (carouselIndex - 1 + max) % max)
+      item.classList.add("prev");
     else if (idx === (carouselIndex + 1) % max) item.classList.add("next");
-    else if (idx === (carouselIndex - 2 + max) % max) item.classList.add("prev-hidden");
+    else if (idx === (carouselIndex - 2 + max) % max)
+      item.classList.add("prev-hidden");
     else item.classList.add("next-hidden");
   });
 
@@ -164,7 +197,7 @@ function initGalleryLightbox() {
 
   if (!lightbox || !tutupBtn || !img || !caption) return;
 
-  window.terbukaLightbox = function(src, text) {
+  window.terbukaLightbox = function (src, text) {
     if (!src) return;
     img.src = src;
     caption.textContent = text || "";
@@ -190,7 +223,8 @@ function initGalleryLightbox() {
       const item = e.target.closest(".item-galeri");
       if (!item) return;
       const image = item.querySelector("img");
-      const text = item.querySelector(".keterangan-galeri span")?.textContent || "";
+      const text =
+        item.querySelector(".keterangan-galeri span")?.textContent || "";
       if (image && image.src) window.terbukaLightbox(image.src, text);
     });
 
@@ -200,15 +234,19 @@ function initGalleryLightbox() {
         if (!item) return;
         e.preventDefault();
         const image = item.querySelector("img");
-        const text = item.querySelector(".keterangan-galeri span")?.textContent || "";
+        const text =
+          item.querySelector(".keterangan-galeri span")?.textContent || "";
         if (image && image.src) window.terbukaLightbox(image.src, text);
       }
     });
   }
 
   tutupBtn.addEventListener("click", tutupLightbox);
-  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) tutupLightbox(); });
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) tutupLightbox();
+  });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && lightbox.classList.contains("terbuka")) tutupLightbox();
+    if (e.key === "Escape" && lightbox.classList.contains("terbuka"))
+      tutupLightbox();
   });
 }

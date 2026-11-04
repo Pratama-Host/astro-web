@@ -1,3 +1,9 @@
+-- LEGACY / DEPRECATED: DO NOT APPLY to the active database or as a fresh-install step.
+-- This historical script redefines CMS functions as SECURITY DEFINER and uses an
+-- older section conflict strategy. The canonical, backend-only SECURITY INVOKER
+-- implementation is migrations/0003_restore_cms_rpc_workflows.sql plus
+-- migrations/0005_fix_nested_settings_merge_and_developer_sections.sql.
+-- See docs/MIGRATIONS.md before running any SQL from this folder.
 -- Independent developer portfolio sections and atomic global-asset settings.
 -- Apply after 20261103_stage3_hardening.sql.
 begin;

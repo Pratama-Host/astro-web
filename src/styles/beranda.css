@@ -23,7 +23,9 @@
 .intro-grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(var(--accent-rgb), 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--accent-rgb), 0.06) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(var(--accent-rgb), 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--accent-rgb), 0.06) 1px, transparent 1px);
   background-size: 48px 48px;
   opacity: 0.4;
   animation: introGridPulse 4s ease-in-out infinite;
@@ -35,7 +37,12 @@
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent) 50%,
+    transparent 100%
+  );
   animation: scan 2s linear infinite;
   opacity: 0.6;
 }
@@ -247,14 +254,22 @@
   transform: translateX(-50%);
   width: clamp(80px, 90%, 200px);
   height: 2.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent),
+    var(--accent-2),
+    transparent
+  );
   box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
   border-radius: 2px;
 }
 
 .hero-title .hl {
   color: var(--accent);
-  text-shadow: 0 0 30px rgba(var(--accent-rgb), 0.5), 0 0 60px rgba(var(--accent-rgb), 0.2);
+  text-shadow:
+    0 0 30px rgba(var(--accent-rgb), 0.5),
+    0 0 60px rgba(var(--accent-rgb), 0.2);
   position: relative;
   animation: glitch-error 1.5s step-end infinite;
 }
@@ -299,7 +314,9 @@
   color: var(--accent);
   font-size: 1.1rem;
   animation: floatDrift 7s ease-in-out infinite;
-  box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    var(--shadow-xs),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   opacity: 0.65;
 }
 
@@ -380,7 +397,11 @@
 
 .stats-section {
   padding: 48px 0 32px;
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.04) 0%, rgba(var(--accent-rgb), 0.02) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(var(--accent-rgb), 0.04) 0%,
+    rgba(var(--accent-rgb), 0.02) 100%
+  );
   border-top: 1px solid var(--border);
 }
 
@@ -564,7 +585,13 @@
   transform: translateX(-50%);
   width: clamp(60px, 70%, 180px);
   height: 2.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent),
+    var(--accent-2),
+    transparent
+  );
   box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
   border-radius: 2px;
 }
@@ -608,7 +635,13 @@
   transform: translateX(-50%);
   width: clamp(60px, 70%, 180px);
   height: 2.5px;
-  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent),
+    var(--accent-2),
+    transparent
+  );
   box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.5);
   border-radius: 2px;
 }
@@ -639,7 +672,11 @@
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
   line-height: 1.6;
-  transition: color 0.2s, border-color 0.2s, background 0.2s, padding-left 0.25s var(--ease-spring);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background 0.2s,
+    padding-left 0.25s var(--ease-spring);
   border-radius: var(--radius-xs);
   padding-left: 0;
 }
@@ -677,7 +714,9 @@
   color: var(--text-1);
   font-style: italic;
   font-weight: 500;
-  transition: background var(--trans), color var(--trans);
+  transition:
+    background var(--trans),
+    color var(--trans);
 }
 
 /* STATISTICS PAGE CHARTS */
@@ -726,7 +765,12 @@
   max-width: 220px;
   aspect-ratio: 1/1;
   border-radius: 50%;
-  background: conic-gradient(var(--accent) 0%, var(--accent-2) 25%, rgba(var(--accent-rgb), 0.75) 50%, rgba(var(--accent-rgb), 0.45) 100%);
+  background: conic-gradient(
+    var(--accent) 0%,
+    var(--accent-2) 25%,
+    rgba(var(--accent-rgb), 0.75) 50%,
+    rgba(var(--accent-rgb), 0.45) 100%
+  );
   margin: 0 auto;
 }
 

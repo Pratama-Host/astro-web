@@ -5,15 +5,24 @@
 "use strict";
 
 import { mulaiTema, pasangPendengarTema } from "./tema.js";
-import { tampilkanStatusKanvasJaringan, aturStatusKanvas, ambilStatusKanvas } from "./kanvas.js";
-import { inisialisasiAudio, tampilkanStatusAudio, aturStatusAudio, ambilStatusAudio } from "./audio.js";
-import { 
-  initReveal, 
-  mulaiProgresGulir, 
-  mulaiKodeRahasia, 
-  initProgressBar, 
+import {
+  tampilkanStatusKanvasJaringan,
+  aturStatusKanvas,
+  ambilStatusKanvas,
+} from "./kanvas.js";
+import {
+  inisialisasiAudio,
+  tampilkanStatusAudio,
+  aturStatusAudio,
+  ambilStatusAudio,
+} from "./audio.js";
+import {
+  initReveal,
+  mulaiProgresGulir,
+  mulaiKodeRahasia,
+  initProgressBar,
   enableFocusTrap,
-  disableFocusTrap
+  disableFocusTrap,
 } from "./alat.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -92,7 +101,8 @@ function initHamburger() {
   }
 
   function toggle() {
-    if (isOpen) close(); else open();
+    if (isOpen) close();
+    else open();
   }
 
   btn.addEventListener("click", toggle);
@@ -112,9 +122,10 @@ function initHamburger() {
 
   // Highlight link aktif berdasarkan URL saat ini
   const currentPath = window.location.pathname;
-  nav.querySelectorAll("a.tautan-menu-hamburger").forEach(link => {
+  nav.querySelectorAll("a.tautan-menu-hamburger").forEach((link) => {
     const href = link.getAttribute("href");
-    const isActive = href === currentPath || (href !== "/" && currentPath.startsWith(href));
+    const isActive =
+      href === currentPath || (href !== "/" && currentPath.startsWith(href));
     link.classList.toggle("aktif", isActive);
     if (isActive) link.setAttribute("aria-current", "page");
   });
@@ -124,7 +135,10 @@ function initReplayIntro() {
   const btn = document.getElementById("replay-intro-tombol");
   if (!btn) return;
   // Tampilkan tombol replay hanya di halaman beranda
-  if (window.location.pathname === "/" || window.location.pathname.endsWith("index.html")) {
+  if (
+    window.location.pathname === "/" ||
+    window.location.pathname.endsWith("index.html")
+  ) {
     btn.classList.add("terlihat");
   }
   btn.addEventListener("click", () => {
@@ -136,8 +150,14 @@ function initReplayIntro() {
 function initBackToTop() {
   const btn = document.getElementById("back-to-top");
   if (!btn) return;
-  window.addEventListener("scroll", () => btn.classList.toggle("terlihat", window.scrollY > 300), { passive: true });
-  btn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  window.addEventListener(
+    "scroll",
+    () => btn.classList.toggle("terlihat", window.scrollY > 300),
+    { passive: true },
+  );
+  btn.addEventListener("click", () =>
+    window.scrollTo({ top: 0, behavior: "smooth" }),
+  );
 }
 
 function initLogoLightbox() {
@@ -161,16 +181,26 @@ function initLogoLightbox() {
   };
 
   logo.addEventListener("click", open);
-  logo.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+  logo.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      open();
+    }
+  });
   closeBtn.addEventListener("click", close);
-  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) close(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && lightbox.classList.contains("terbuka")) close(); });
+  lightbox.addEventListener("click", (e) => {
+    if (e.target === lightbox) close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && lightbox.classList.contains("terbuka")) close();
+  });
 }
 
 function initKeyboardShortcuts() {
   document.addEventListener("keydown", (e) => {
     const tag = document.activeElement?.tagName?.toLowerCase();
     if (tag === "input" || tag === "textarea") return;
-    if (e.key === "t" && !e.ctrlKey && !e.metaKey) document.getElementById("tombol-tema")?.click();
+    if (e.key === "t" && !e.ctrlKey && !e.metaKey)
+      document.getElementById("tombol-tema")?.click();
   });
 }

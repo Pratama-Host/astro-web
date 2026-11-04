@@ -12,18 +12,23 @@ export function ambilStatusAudio() {
 }
 
 export function aturStatusAudio(value) {
-  try { localStorage.setItem(AUDIO_PREF_KEY, value ? "1" : "0"); } catch {}
+  try {
+    localStorage.setItem(AUDIO_PREF_KEY, value ? "1" : "0");
+  } catch {}
 }
 
 export function perbaruiStatusTombolAudio(tombol, enabled) {
   if (!tombol) return;
   tombol.classList.toggle("aktif", enabled);
-  tombol.setAttribute("aria-label", enabled ? "Matikan musik latar" : "Nyalakan musik latar");
+  tombol.setAttribute(
+    "aria-label",
+    enabled ? "Matikan musik latar" : "Nyalakan musik latar",
+  );
   const wrapper = tombol.querySelector(".pembungkus-ikon-audio");
   if (wrapper) {
-    const icon = document.createElement('i');
-    icon.className = `fas fa-volume-${enabled ? 'up' : 'mute'}`;
-    icon.setAttribute('aria-hidden', 'true');
+    const icon = document.createElement("i");
+    icon.className = `fas fa-volume-${enabled ? "up" : "mute"}`;
+    icon.setAttribute("aria-hidden", "true");
     wrapper.replaceChildren(icon);
   }
 }
@@ -39,7 +44,9 @@ export function kirimPesanAudio(payload) {
   }
 }
 
-export function mintaStatusAudio() { kirimPesanAudio({ action: "getState" }); }
+export function mintaStatusAudio() {
+  kirimPesanAudio({ action: "getState" });
+}
 
 export function tanganiPesanBingkaiAudio(messageEvent) {
   if (!messageEvent.data || typeof messageEvent.data !== "object") return;
@@ -49,12 +56,18 @@ export function tanganiPesanBingkaiAudio(messageEvent) {
   if (["play", "pause", "state", "error"].includes(audioEvent)) {
     const tombol = document.getElementById("tombol-audio");
     let enabled;
-    if (audioEvent === "error") { enabled = ambilStatusAudio(); }
-    else { enabled = sedangBermain === true; aturStatusAudio(enabled); }
+    if (audioEvent === "error") {
+      enabled = ambilStatusAudio();
+    } else {
+      enabled = sedangBermain === true;
+      aturStatusAudio(enabled);
+    }
     perbaruiStatusTombolAudio(tombol, enabled);
   }
   if (typeof volume === "number") {
-    try { localStorage.setItem("tkj-audio-volume", String(volume)); } catch {}
+    try {
+      localStorage.setItem("tkj-audio-volume", String(volume));
+    } catch {}
   }
 }
 
@@ -80,8 +93,14 @@ export function inisialisasiAudio() {
 
   const audioFrame = document.getElementById("bingkai-audio");
   if (audioFrame) {
-    audioFrame.addEventListener("load", () => { tampilkanStatusAudio(); mintaStatusAudio(); });
-    if (audioFrame.contentWindow) { tampilkanStatusAudio(); mintaStatusAudio(); }
+    audioFrame.addEventListener("load", () => {
+      tampilkanStatusAudio();
+      mintaStatusAudio();
+    });
+    if (audioFrame.contentWindow) {
+      tampilkanStatusAudio();
+      mintaStatusAudio();
+    }
   }
   window.addEventListener("message", tanganiPesanBingkaiAudio);
 }

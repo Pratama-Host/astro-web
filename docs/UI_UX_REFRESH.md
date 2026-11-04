@@ -1,4 +1,4 @@
-# UI/UX Refresh — xi9-mubela
+# UI/UX Refresh — astro-web
 
 ## Tujuan
 Menyatukan kualitas pengalaman halaman publik dan CMS admin tanpa mengubah data, kontrak API, alur CMS, atau identitas konten yang sudah berjalan.
