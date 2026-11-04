@@ -19,7 +19,12 @@
   let typingTimer = null;
   let glitchTimer = null;
   let revealObserver = null;
-  let skillsAnimated = false;
+  let quotePaused = false;
+  let quoteInteracting = false;
+  let touchStartX = 0;
+  let statsAnimated = false;
+  let paletteIndex = 0;
+  const paletteSets = [['#F5CD32','#32CFC2','#D90B46'],['#9BE7FF','#FFB4A2','#5B3A9E'],['#B7E4C7','#FFD6A5','#7B2CBF']];
 
   const safeUrl = (value) => {
     if (typeof value !== 'string' || value.length > 2048) return null;
@@ -86,13 +91,15 @@
 
   const closeDrawer = () => {
     if (!drawer || !overlay) return;
+    const wasOpen = drawer.classList.contains('open');
     drawer.classList.remove('open');
     overlay.classList.remove('on');
     drawer.inert = true;
     drawer.setAttribute('aria-hidden', 'true');
     overlay.setAttribute('aria-hidden', 'true');
     menuButton?.setAttribute('aria-expanded', 'false');
-    if (previousFocus?.isConnected) previousFocus.focus();
+    if (wasOpen && previousFocus?.isConnected) previousFocus.focus();
+    previousFocus = null;
   };
 
   const triggerReveal = (scope = card) => {
@@ -106,6 +113,7 @@
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
           entry.target.classList.add('in');
+          if (entry.target.classList.contains('proj') && !entry.target.dataset.stampAngle) { const angle = (Math.random() * 1.2 - .6).toFixed(2); entry.target.dataset.stampAngle = angle; entry.target.style.setProperty('--stamp-angle', `${angle}deg`); }
           revealObserver?.unobserve(entry.target);
         });
       }, { threshold: 0.12 });
@@ -116,32 +124,24 @@
     });
   };
 
-  const animateSkills = () => {
-    if (skillsAnimated) return;
-    skillsAnimated = true;
-    $$('.sr-progress').forEach((circle) => {
-      window.requestAnimationFrame(() => circle.classList.add('animate'));
-    });
-    $$('[data-countup]').forEach((element) => {
-      const target = Math.min(100, Math.max(0, Number.parseInt(element.getAttribute('data-countup') || '0', 10) || 0));
-      const valueElement = element.closest('.skill-radial-ring')?.querySelector('.sr-val');
-      if (!valueElement) return;
-      if (reducedMotion.matches) {
-        valueElement.textContent = String(target);
-        return;
-      }
+  const animateStats = () => {
+    if (statsAnimated) return;
+    const counters = $$('[data-countup]');
+    if (!counters.length) return;
+    statsAnimated = true;
+    const animate = (element) => {
+      const target = Math.max(0, Number.parseInt(element.getAttribute('data-countup') || '0', 10) || 0);
+      if (reducedMotion.matches || !('requestAnimationFrame' in window)) { element.textContent = String(target); return; }
       const start = performance.now();
-      const step = (now) => {
-        const progress = Math.min(1, (now - start) / 900);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        valueElement.textContent = String(Math.round(target * eased));
-        if (progress < 1) window.requestAnimationFrame(step);
-      };
+      const step = (now) => { const progress = Math.min(1, (now - start) / 750); const eased = 1 - Math.pow(1 - progress, 3); element.textContent = String(Math.round(target * eased)); if (progress < 1) window.requestAnimationFrame(step); };
       window.requestAnimationFrame(step);
-    });
+    };
+    if (!('IntersectionObserver' in window)) { counters.forEach(animate); return; }
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) { animate(entry.target); observer.unobserve(entry.target); } }), { threshold: .2 });
+    counters.forEach((element) => observer.observe(element));
   };
 
-  const showPage = (pageId, navId = pageId) => {
+  const showPage = (pageId, navId = pageId, updateHistory = true) => {
     const target = $(`#page-${CSS.escape(pageId)}`);
     if (!target) return;
     pages.forEach((page) => {
@@ -155,10 +155,14 @@
       item.classList.toggle('on', active);
       item.setAttribute('aria-current', active ? 'page' : 'false');
     });
+    const mobilePageName = $('.mobile-page-name');
+    const activeNav = navItems.find((item) => item.getAttribute('data-nav') === navId && item.hasAttribute('data-nav-label'));
+    if (mobilePageName && activeNav) mobilePageName.textContent = activeNav.getAttribute('data-nav-label') || 'Portofolio';
     closeDrawer();
+    if (updateHistory) { const next = `#page-${pageId}`; if (window.location.hash !== next) window.history.pushState({ pageId }, '', next); }
     window.scrollTo({ top: 0, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
     triggerReveal(target);
-    if (pageId === 'skills') animateSkills();
+    if (pageId === 'skills' || pageId === 'work') animateStats();
     if (pageId === 'quotes') startQuoteCarousel();
     else stopQuoteCarousel();
   };
@@ -172,7 +176,7 @@
   };
 
   const updateClock = () => {
-    const clock = $('#clock');
+    const clock = $('#clock-time');
     if (!clock) return;
     try {
       const now = new Date();
@@ -214,45 +218,53 @@
       showToast('GAGAL MENYALIN');
       return;
     }
-    showToast('TERSALIN ✓');
+    showToast('TERSALIN');
     if (button) {
-      const original = button.textContent;
-      button.textContent = '✓';
-      window.setTimeout(() => { if (button.isConnected) button.textContent = original || '📋'; }, 1500);
+      const originalLabel = button.getAttribute('aria-label') || 'Salin informasi';
+      button.classList.add('copied');
+      button.setAttribute('aria-label', 'Berhasil disalin');
+      window.setTimeout(() => { if (button.isConnected) { button.classList.remove('copied'); button.setAttribute('aria-label', originalLabel); } }, 1500);
     }
     showSound();
   };
 
   const quoteCarousel = $('[data-carousel]');
-  const changeQuote = (index) => {
+  const quoteSlides = quoteCarousel ? $$('[data-quote-slide]', quoteCarousel) : [];
+  const updateQuoteStatus = () => {
     if (!quoteCarousel) return;
+    const counter = $('.quote-count', quoteCarousel);
+    if (counter) counter.textContent = `${String(quoteIndex + 1).padStart(2, '0')} / ${String(quoteSlides.length).padStart(2, '0')}`;
+    quoteSlides.forEach((slide, index) => { const active = index === quoteIndex; slide.setAttribute('aria-hidden', active ? 'false' : 'true'); slide.inert = !active; });
+  };
+  const changeQuote = (index) => {
+    if (!quoteCarousel || quoteSlides.length === 0) return;
+    quoteIndex = ((index % quoteSlides.length) + quoteSlides.length) % quoteSlides.length;
     const track = $('.quote-track', quoteCarousel);
-    const cards = $$('.quote-card', quoteCarousel);
-    if (!track || cards.length === 0) return;
-    quoteIndex = ((index % cards.length) + cards.length) % cards.length;
-    track.style.transform = `translateX(-${quoteIndex * 100}%)`;
-    $$('[data-dot]', quoteCarousel).forEach((dot, dotIndex) => {
-      const active = dotIndex === quoteIndex;
-      dot.classList.toggle('on', active);
-      dot.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
+    if (track) track.style.transform = `translateX(-${quoteIndex * 100}%)`;
+    $$('[data-dot]', quoteCarousel).forEach((dot, dotIndex) => { const active = dotIndex === quoteIndex; dot.classList.toggle('on', active); dot.setAttribute('aria-pressed', active ? 'true' : 'false'); });
+    updateQuoteStatus();
   };
-
-  const stopQuoteCarousel = () => {
-    if (quoteTimer !== null) window.clearTimeout(quoteTimer);
-    quoteTimer = null;
-  };
-
+  const stopQuoteCarousel = () => { if (quoteTimer !== null) window.clearTimeout(quoteTimer); quoteTimer = null; };
   const startQuoteCarousel = () => {
     stopQuoteCarousel();
-    if (!quoteCarousel) return;
-    const cards = $$('.quote-card', quoteCarousel);
-    if (cards.length < 2 || quoteCarousel.getAttribute('data-auto') !== 'true' || reducedMotion.matches) return;
-    quoteTimer = window.setTimeout(() => {
-      changeQuote(quoteIndex + 1);
-      startQuoteCarousel();
-    }, 5200);
+    if (!quoteCarousel || quotePaused || quoteInteracting || quoteSlides.length < 2 || quoteCarousel.getAttribute('data-auto') !== 'true' || reducedMotion.matches || document.visibilityState === 'hidden') return;
+    quoteTimer = window.setTimeout(() => { changeQuote(quoteIndex + 1); startQuoteCarousel(); }, 5200);
   };
+  if (quoteCarousel) {
+    quoteCarousel.addEventListener('mouseenter', () => { quoteInteracting = true; stopQuoteCarousel(); });
+    quoteCarousel.addEventListener('mouseleave', () => { quoteInteracting = false; startQuoteCarousel(); });
+    quoteCarousel.addEventListener('focusin', () => { quoteInteracting = true; stopQuoteCarousel(); });
+    quoteCarousel.addEventListener('focusout', (event) => { if (!quoteCarousel.contains(event.relatedTarget)) { quoteInteracting = false; startQuoteCarousel(); } });
+    quoteCarousel.addEventListener('pointerdown', (event) => { touchStartX = event.clientX; quoteInteracting = true; stopQuoteCarousel(); }, { passive: true });
+    const finishQuoteTouch = () => window.setTimeout(() => { quoteInteracting = quoteCarousel.matches(':hover') || quoteCarousel.contains(document.activeElement); startQuoteCarousel(); }, 900);
+    quoteCarousel.addEventListener('pointerup', (event) => { const delta = event.clientX - touchStartX; if (Math.abs(delta) > 45) changeQuote(quoteIndex + (delta < 0 ? 1 : -1)); finishQuoteTouch(); }, { passive: true });
+    quoteCarousel.addEventListener('pointercancel', finishQuoteTouch, { passive: true });
+    quoteCarousel.addEventListener('keydown', (event) => { if (event.key === 'ArrowLeft') { changeQuote(quoteIndex - 1); stopQuoteCarousel(); } if (event.key === 'ArrowRight') { changeQuote(quoteIndex + 1); stopQuoteCarousel(); } });
+    $('[data-quote-prev]', quoteCarousel)?.addEventListener('click', () => { changeQuote(quoteIndex - 1); startQuoteCarousel(); });
+    $('[data-quote-next]', quoteCarousel)?.addEventListener('click', () => { changeQuote(quoteIndex + 1); startQuoteCarousel(); });
+    $('[data-quote-pause]', quoteCarousel)?.addEventListener('click', (event) => { quotePaused = !quotePaused; const button = event.currentTarget; button.textContent = quotePaused ? 'Lanjutkan' : 'Jeda'; button.setAttribute('aria-label', quotePaused ? 'Lanjutkan otomatis' : 'Jeda otomatis'); button.setAttribute('aria-pressed', String(quotePaused)); if (quotePaused) stopQuoteCarousel(); else startQuoteCarousel(); });
+    updateQuoteStatus();
+  }
 
   const runTyping = () => {
     const target = $('#typing');
@@ -355,10 +367,81 @@
     else if (action === 'close-menu') closeDrawer();
   });
 
+  // Exclusive story accordion with deep-link support.
+  const avatarImage = $('.av img');
+  const fallbackAvatar = () => { const avatar = $('.av'); const initials = card.getAttribute('data-initials') || 'AP'; avatarImage?.remove(); if (avatar) avatar.textContent = initials; };
+  avatarImage?.addEventListener('error', fallbackAvatar);
+  if (avatarImage?.complete && avatarImage.naturalWidth === 0) fallbackAvatar();
+  const storyAccordion = $('[data-story-accordion]');
+  const storyItems = storyAccordion ? $$('[data-story-item]', storyAccordion) : [];
+  const setStoryOpen = (item, open, scroll = false, exclusive = true) => {
+    const button = $('.story-toggle', item);
+    const panel = $('.story-panel', item);
+    if (!button || !panel) return;
+    if (open && exclusive) storyItems.filter((other) => other !== item).forEach((other) => setStoryOpen(other, false, false, false));
+    button.setAttribute('aria-expanded', String(open));
+    const instruction = $('.story-heading-copy em', button);
+    if (instruction) instruction.textContent = open ? 'Ketuk untuk menutup' : 'Ketuk untuk membuka';
+    panel.setAttribute('aria-hidden', String(!open));
+    panel.inert = !open;
+    panel.classList.toggle('open', open);
+    const icon = $('.story-toggle-icon svg', button);
+    if (icon) icon.innerHTML = open ? '<path d="M5 12h14"/>' : '<path d="M12 5v14M5 12h14"/>';
+    if (open && exclusive) { const key = item.id; if (key && window.location.hash !== `#${key}`) window.history.pushState({ story: key }, '', `#${key}`); }
+    if (scroll && open) window.setTimeout(() => item.scrollIntoView({ behavior: reducedMotion.matches ? 'auto' : 'smooth', block: 'start' }), 80);
+  };
+  storyItems.forEach((item) => $('.story-toggle', item)?.addEventListener('click', () => setStoryOpen(item, $('.story-toggle', item).getAttribute('aria-expanded') !== 'true', true)));
+  $('[data-story-expand]')?.addEventListener('click', () => storyItems.forEach((item) => setStoryOpen(item, true, false, false)));
+  $('[data-story-collapse]')?.addEventListener('click', () => storyItems.forEach((item) => setStoryOpen(item, false)));
+  const openStoryFromHash = () => {
+    const match = window.location.hash.match(/^#legacy-story-(.+)$/);
+    if (!match) return false;
+    const item = document.getElementById(`legacy-story-${match[1]}`);
+    if (!item) return false;
+    showPage('story', 'story', false);
+    setStoryOpen(item, true, true);
+    return true;
+  };
+
+  // Project filters and expandable details.
+  $$('[data-project-filter]').forEach((button) => button.addEventListener('click', () => {
+    const filter = button.getAttribute('data-project-filter') || 'Semua';
+    $$('[data-project-filter]').forEach((chip) => { const active = chip === button; chip.classList.toggle('active', active); chip.setAttribute('aria-pressed', String(active)); });
+    $$('.proj').forEach((project) => {
+      window.clearTimeout(project.filterTimer);
+      const hide = filter !== 'Semua' && project.getAttribute('data-project-category') !== filter;
+      if (hide) {
+        project.classList.add('filter-out');
+        project.filterTimer = window.setTimeout(() => { project.hidden = true; }, reducedMotion.matches ? 0 : 180);
+      } else {
+        project.hidden = false;
+        if (reducedMotion.matches) project.classList.remove('filter-out');
+        else window.requestAnimationFrame(() => project.classList.remove('filter-out'));
+      }
+    });
+  }));
+  $$('.project-detail-toggle').forEach((button) => button.addEventListener('click', () => { const detail = button.parentElement?.querySelector('.project-detail'); if (!detail) return; const open = detail.hidden; detail.hidden = !open; button.setAttribute('aria-expanded', String(open)); button.textContent = open ? 'Tutup detail' : 'Detail proyek'; }));
+
+  // Small, bounded extras: Konami comic burst, palette clock, pointer tilt and hover medal.
+  const konami = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a']; let konamiIndex = 0;
+  document.addEventListener('keydown', (event) => { if (reducedMotion.matches) return; konamiIndex = event.key.toLowerCase() === konami[konamiIndex].toLowerCase() ? konamiIndex + 1 : 0; if (konamiIndex === konami.length) { for (let i = 0; i < 5; i++) window.setTimeout(showSound, i * 120); konamiIndex = 0; } });
+  let paletteTimer = null;
+  $('#clock')?.addEventListener('click', () => { if (reducedMotion.matches) return; paletteIndex = (paletteIndex + 1) % paletteSets.length; const [yellow, cyan, red] = paletteSets[paletteIndex]; card.style.setProperty('--yellow', yellow); card.style.setProperty('--cyan', cyan); card.style.setProperty('--red', red); window.clearTimeout(paletteTimer); paletteTimer = window.setTimeout(() => { card.style.removeProperty('--yellow'); card.style.removeProperty('--cyan'); card.style.removeProperty('--red'); }, 12000); });
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !reducedMotion.matches) $$('.proj').forEach((project) => { project.addEventListener('pointermove', (event) => { const rect = project.getBoundingClientRect(); const x = (event.clientX - rect.left) / rect.width - .5; const y = (event.clientY - rect.top) / rect.height - .5; project.style.transform = `perspective(700px) rotateX(${(-y * 3).toFixed(2)}deg) rotateY(${(x * 3).toFixed(2)}deg)`; project.style.setProperty('--glare-x', `${((x + .5) * 100).toFixed(1)}%`); project.style.setProperty('--glare-y', `${((y + .5) * 100).toFixed(1)}%`); }); project.addEventListener('pointerleave', () => { project.style.transform = ''; project.style.removeProperty('--glare-x'); project.style.removeProperty('--glare-y'); }); });
+
   overlay?.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && drawer?.classList.contains('open')) closeDrawer();
+    if (!drawer?.classList.contains('open')) return;
+    if (event.key === 'Escape') { closeDrawer(); return; }
+    if (event.key !== 'Tab') return;
+    const focusable = $$('a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])', drawer).filter((element) => !element.hidden);
+    if (!focusable.length) return;
+    const first = focusable[0]; const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
+  window.addEventListener('popstate', () => { const page = window.location.hash.match(/^#page-(.+)$/)?.[1]; if (page) showPage(page, page, false); else if (!openStoryFromHash()) showPage('about', 'about', false); });
+  window.addEventListener('hashchange', openStoryFromHash);
   window.addEventListener('scroll', updateProgress, { passive: true });
   window.addEventListener('resize', updateProgress, { passive: true });
   document.addEventListener('visibilitychange', () => {
@@ -387,12 +470,14 @@
   });
 
   triggerReveal();
+  if (window.location.hash.startsWith('#legacy-story-')) openStoryFromHash();
+  else { const initialHashPage = window.location.hash.match(/^#page-(.+)$/)?.[1]; if (initialHashPage) showPage(initialHashPage, initialHashPage, false); }
   updateClock();
   updateProgress();
   window.setInterval(updateClock, 60000);
   runTyping();
   window.setTimeout(scrambleName, 450);
-  if ($('#page-skills')?.classList.contains('active')) animateSkills();
+  if ($('#page-skills')?.classList.contains('active') || $('#page-work')?.classList.contains('active')) animateStats();
   if ($('#page-quotes')?.classList.contains('active')) startQuoteCarousel();
 
   if (!reducedMotion.matches) {
@@ -411,6 +496,7 @@
     window.clearTimeout(typingTimer);
     window.clearInterval(glitchTimer);
     stopQuoteCarousel();
+    quotePaused = true;
     $$('.page [data-reveal]').forEach((item) => item.classList.add('in'));
   });
 })();

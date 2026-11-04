@@ -1,5 +1,6 @@
 ---
 import DeveloperLayout from '../layouts/DeveloperLayout.astro';
+import Icon from '../components/Icon.astro';
 import { DEVELOPER_DEFAULTS } from '../data/developer-defaults';
 import { DEVELOPER_LEGACY_STORIES, DEVELOPER_LEGACY_TIMELINE } from '../data/developer-legacy-stories';
 import { getPageContent, getPageSEO, getSections, getSiteData } from '../lib/data';
@@ -36,7 +37,7 @@ const textValue = (value: unknown, fallback: string, max = 1200): string =>
   typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : fallback;
 const safeImage = (value: unknown): string | null => {
   if (typeof value !== 'string' || value.length > 2048) return null;
-  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  if (value.startsWith('/') && !value.startsWith('//') && !value.startsWith('/assets/')) return value;
   try {
     const url = new URL(value);
     return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
@@ -83,6 +84,10 @@ const normalizeObjects = (
     }
     if (Array.isArray(item.paragraphs)) clean.paragraphs = item.paragraphs.filter((part: unknown) => typeof part === 'string').slice(0, 8).map((part: string) => part.slice(0, 5000));
     if (Array.isArray(item.tags)) clean.tags = item.tags.filter((tag: unknown) => typeof tag === 'string').slice(0, 10).map((tag: string) => tag.slice(0, 80));
+    for (const field of ['stack', 'highlights']) if (Array.isArray(item[field])) clean[field] = item[field].filter((part: unknown) => typeof part === 'string').slice(0, 20).map((part: string) => part.slice(0, 180));
+    if (typeof item.featured === 'boolean') clean.featured = item.featured;
+    if (typeof item.draft === 'boolean') clean.draft = item.draft;
+    if (typeof item.category === 'string') clean.category = item.category.slice(0, 80);
     if (typeof item.href === 'string') clean.href = item.href.slice(0, 2048);
     if (typeof item.copy === 'string') clean.copy = item.copy.slice(0, 500);
     return [clean];
@@ -121,13 +126,23 @@ const typingTaglines = Array.from(new Set([...cmsTaglines, ...customTyping, ...D
 const focusCards = normalizeObjects(devContent.focusCards, DEVELOPER_DEFAULTS.focusCards, ['title', 'description', 'icon'], 12);
 const hardSkills = normalizeObjects(devContent.hardSkills, DEVELOPER_DEFAULTS.hardSkills, ['name', 'description', 'evidence'], 20);
 const softSkills = normalizeObjects(devContent.softSkills, DEVELOPER_DEFAULTS.softSkills, ['name', 'description'], 20);
-const draftProjects = normalizeObjects(devContent.projects, DEVELOPER_DEFAULTS.projects, ['title', 'description', 'icon', 'tag', 'status', 'href'], 30);
+const draftProjects = normalizeObjects(
+  devContent.projects,
+  DEVELOPER_DEFAULTS.projects,
+  ['title', 'description', 'icon', 'tag', 'status', 'href', 'category'],
+  30,
+).map((item: any) => {
+  const rawCategory = item.category || (typeof item.status === 'string' ? item.status.split('/').pop()?.trim() : '');
+  const category = ['Automation', 'Frontend', 'Backend', 'Website'].find((value) => value.toLowerCase() === String(rawCategory).toLowerCase()) || 'Website';
+  return { ...item, stack: item.stack || [], highlights: item.highlights || [], featured: item.featured === true, category };
+});
 const projects = draftProjects;
+const featuredProject = projects.find((project: any) => project.featured) || null;
 const motivations = normalizeObjects(devContent.motivation, DEVELOPER_DEFAULTS.motivation, ['title', 'description'], 30);
 const journeys = normalizeObjects(devContent.journey, DEVELOPER_DEFAULTS.journey, ['title', 'description'], 30);
 const principles = normalizeObjects(devContent.principles, DEVELOPER_DEFAULTS.principles, ['title', 'description', 'icon'], 20);
 const quoteCards = normalizeObjects(devContent.quotes, DEVELOPER_DEFAULTS.quotes, ['text', 'author'], 20);
-quoteCards.push({ text: developerQuote, author: 'Catatan pengembang' });
+if (!quoteCards.some((quote: any) => quote.text.trim().toLowerCase() === developerQuote.trim().toLowerCase())) quoteCards.push({ text: developerQuote, author: 'Catatan pengembang' });
 const educationCards = normalizeObjects(devContent.education, DEVELOPER_DEFAULTS.education, ['title', 'category'], 20);
 const noteCards = normalizeObjects(devContent.notes, DEVELOPER_DEFAULTS.notes, ['title', 'description', 'category'], 20);
 const contactMethods = normalizeObjects(devContent.contacts, DEVELOPER_DEFAULTS.contacts, ['label', 'value', 'icon', 'href', 'copy'], 12)
@@ -135,7 +150,7 @@ const contactMethods = normalizeObjects(devContent.contacts, DEVELOPER_DEFAULTS.
 
 const storySource = Array.isArray(devContent.stories) && devContent.stories.length
   ? devContent.stories : DEVELOPER_LEGACY_STORIES;
-const legacyStories = storySource.slice(0, 12).flatMap((entry: any) => {
+const legacyStories = storySource.slice(0, 6).flatMap((entry: any) => {
   const item = asRecord(entry);
   if (typeof item.title !== 'string' || !item.title.trim() || !Array.isArray(item.blocks)) return [];
   const blocks = item.blocks.slice(0, 80).flatMap((block: any) => {
@@ -163,14 +178,14 @@ const personalSkills = Array.isArray(alfredoMember?.skills)
     : [];
 const websiteStack = ['Astro', 'Supabase', 'Cloudflare', 'JavaScript', 'CSS'];
 const marqueeSkills = Array.from(new Set(['JavaScript', 'Node.js', 'HTML', 'CSS', 'Baileys', 'React', 'Python', 'Linux', ...websiteStack]));
-const experienceEntries = normalizeObjects(pageContent.experiences, [], ['title', 'period', 'date', 'organization', 'description'], 30);
+const experienceEntries = normalizeObjects(devContent.experiences ?? pageContent.experiences, DEVELOPER_DEFAULTS.experiences, ['title', 'period', 'date', 'organization', 'description'], 30).map((entry: any) => ({ ...entry, draft: entry.draft !== false }));
 const socialPlatforms = [
-  { key: 'instagram', label: 'Instagram', icon: '📷' },
-  { key: 'youtube', label: 'YouTube', icon: '▶️' },
-  { key: 'tiktok', label: 'TikTok', icon: '🎵' },
-  { key: 'github', label: 'GitHub', icon: '⌘' },
-  { key: 'linkedin', label: 'LinkedIn', icon: 'in' },
-  { key: 'website', label: 'Website', icon: '🌐' },
+  { key: 'instagram', label: 'Instagram', icon: 'instagram' },
+  { key: 'youtube', label: 'YouTube', icon: 'youtube' },
+  { key: 'tiktok', label: 'TikTok', icon: 'tiktok' },
+  { key: 'github', label: 'GitHub', icon: 'github' },
+  { key: 'linkedin', label: 'LinkedIn', icon: 'linkedin' },
+  { key: 'website', label: 'Website', icon: 'globe' },
 ];
 const classSocialLinks = socialPlatforms.flatMap((platform) => {
   const href = safeExternalUrl(G.sosmed?.[platform.key]);
@@ -187,17 +202,17 @@ const isSectionEnabled = (key: string) => {
   return rows.length ? rows[0].enabled !== false : true;
 };
 const pageDefinitions: Array<{ id: string; label: string; icon: string; key: string }> = [
-  { id: 'about', label: 'Tentang', icon: '◐', key: 'profile' },
-  { id: 'story', label: 'Cerita', icon: '✎', key: 'story' },
-  { id: 'skills', label: 'Skill', icon: '◇', key: 'skills' },
-  { id: 'work', label: 'Karya', icon: '▤', key: 'work' },
-  { id: 'motivasi', label: 'Motiv', icon: '✦', key: 'motivation' },
-  { id: 'contact', label: 'Kontak', icon: '✉', key: 'contact' },
-  { id: 'philosophy', label: 'Filosofi', icon: '⌁', key: 'philosophy' },
-  { id: 'pengalaman', label: 'Pengalaman', icon: '🎖️', key: 'experience' },
-  { id: 'quotes', label: 'Kutipan', icon: '❝', key: 'quotes' },
-  { id: 'edukasi', label: 'Edukasi', icon: '▧', key: 'education' },
-  { id: 'notes', label: 'Catatan', icon: '✎', key: 'notes' },
+  { id: 'about', label: 'Tentang', icon: 'about', key: 'profile' },
+  { id: 'story', label: 'Cerita', icon: 'story', key: 'story' },
+  { id: 'skills', label: 'Skill', icon: 'skills', key: 'skills' },
+  { id: 'work', label: 'Karya', icon: 'work', key: 'work' },
+  { id: 'motivasi', label: 'Motivasi', icon: 'sparkles', key: 'motivation' },
+  { id: 'contact', label: 'Kontak', icon: 'contact', key: 'contact' },
+  { id: 'philosophy', label: 'Filosofi', icon: 'philosophy', key: 'philosophy' },
+  { id: 'pengalaman', label: 'Pengalaman', icon: 'medal', key: 'experience' },
+  { id: 'quotes', label: 'Kutipan', icon: 'quote', key: 'quotes' },
+  { id: 'edukasi', label: 'Edukasi', icon: 'story', key: 'education' },
+  { id: 'notes', label: 'Catatan', icon: 'story', key: 'notes' },
 ];
 const getSectionOrder = (key: string, fallback: number) => {
   const row = sectionConfig.find((section: any) => section.section_key === key) || (key === 'profile' ? sectionConfig.find((section: any) => section.section_key === 'story') : null);
@@ -214,6 +229,9 @@ const extraNav = visiblePages.filter((page) => !mainNavIds.includes(page.id));
 const hasVisiblePages = visiblePages.length > 0;
 const initialPage = visiblePages[0]?.id || 'about';
 const homePageId = mainNav[0]?.id || initialPage;
+const projectTech = Array.from(new Set(projects.flatMap((project: any) => [...(project.stack || []), ...(typeof project.tag === 'string' ? project.tag.split(/[·,]/).map((tag: string) => tag.trim()) : [])]).filter(Boolean)));
+const portfolioPageCount = visiblePages.length;
+const storyChapterCount = legacyStories.length + (legacyTimeline.length > 0 ? 1 : 0);
 const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SMK Muhammadiyah Belitang'}`;
 ---
 
@@ -227,24 +245,28 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
   profileRole={profileRole}
 >
   <div class="wrap">
-    <div class="card" id="developer-card" data-taglines={JSON.stringify(typingTaglines)} style={developerThemeStyle}>
+    <div class="card" id="developer-card" data-initials={initials} data-taglines={JSON.stringify(typingTaglines)} style={developerThemeStyle}>
       <div class="halftone" aria-hidden="true"></div>
       <div id="scroll-progress" aria-hidden="true"></div>
       <div class="intro-burst" aria-hidden="true">BAM!</div>
 
       <header class="navbar">
+        <a class="mobile-brand" href="#page-about" data-page="about" data-nav="about"><span class="mobile-monogram">{initials}</span><span class="mobile-page-name">{visiblePages.find((page) => page.id === initialPage)?.label || profileName}</span></a>
         <nav class="nav-links" aria-label="Navigasi portofolio">
           {mainNav.map((page) => (
-            <button class:list={['nav-item', { on: page.id === initialPage }]} type="button" data-page={page.id} data-nav={page.id} aria-current={page.id === initialPage ? 'page' : 'false'}>
-              <span class="nav-ico" aria-hidden="true">{page.icon}</span>{page.label}
+            <button class:list={['nav-item', { on: page.id === initialPage }]} type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label} aria-current={page.id === initialPage ? 'page' : 'false'}>
+              <span class="nav-ico"><Icon name={page.icon} size={17} /></span>{page.label}
             </button>
           ))}
         </nav>
-        <button class="menu-btn" type="button" data-action="menu" aria-label="Buka menu halaman" aria-controls="drawer" aria-expanded="false">☰</button>
+        <button class="menu-btn" type="button" data-action="menu" aria-label="Buka menu halaman" aria-controls="drawer" aria-expanded="false"><Icon name="menu" size={24} /></button>
       </header>
+      <nav class="mobile-tabs" aria-label="Navigasi cepat">
+        {mainNav.map((page) => <button class:list={['mobile-tab', { on: page.id === initialPage }]} type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label} aria-current={page.id === initialPage ? 'page' : 'false'}><Icon name={page.icon} size={19} /><span>{page.label}</span></button>)}
+      </nav>
 
       <main class="content" id="portfolio-main">
-        {!hasVisiblePages && <div class="empty-state" role="status"><div class="empty-icon">◌</div><div class="empty-text">Halaman sedang disusun ulang oleh pengelola.</div></div>}
+        {!hasVisiblePages && <div class="empty-state" role="status"><div class="empty-icon"><Icon name="sparkles" size={32} /></div><div class="empty-text">Halaman sedang disusun ulang oleh pengelola.</div></div>}
         {isSectionEnabled('profile') && (
           <section class:list={['page', { active: initialPage === 'about' }]} id="page-about" aria-label="Tentang pengembang" hidden={initialPage !== 'about'}>
             <div class="hero-bento">
@@ -252,7 +274,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
                 <div class="av-wrap">
                   <div class="av-ring" aria-hidden="true"></div>
                   <div class="av">
-                    {profilePhoto ? <img src={profilePhoto} alt={`Foto profil ${profileName}`} loading="eager" decoding="async" /> : <span>{initials}</span>}
+                    {profilePhoto ? <img src={profilePhoto} alt={`Foto profil ${profileName}`} width="180" height="180" fetchpriority="high" loading="eager" decoding="async" /> : <span>{initials}</span>}
                   </div>
                   <div class="status-dot" aria-label="Profil pengembang"></div>
                 </div>
@@ -261,12 +283,12 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
                 <div class="name" id="nameEl">{profileName}</div>
                 <div class="role">{profileRole}</div>
               </div>
-              <div class="bento-tile bento-loc"><span aria-hidden="true">📍</span><span>{profileLocation}</span></div>
-              <div class="bento-tile bento-status"><span class="dot" aria-hidden="true"></span><span>{profileStatus}</span></div>
+              <div class="bento-tile bento-loc"><span aria-hidden="true"><Icon name="pin" /></span><span>{profileLocation}</span></div>
+              <div class="bento-tile bento-status"><span class="dot" aria-hidden="true"></span><Icon name="language" size={14} /><span>{profileStatus}</span></div>
               <div class="bento-tile bento-typing"><div class="typing" id="typing" aria-label="Semboyan pengembang">{typingTaglines[0] || 'Keep learning.'}</div></div>
               <div class="bento-tile bento-actions">
-                {visiblePages.some((page) => page.id === 'contact') && <button class="btn btn-primary" type="button" data-page="contact" data-nav="contact" data-shake data-sound>💬 Hubungi</button>}
-                {visiblePages.some((page) => page.id === 'work') && <button class="btn btn-outline" type="button" data-page="work" data-nav="work" data-sound>💼 Karya</button>}
+                {visiblePages.some((page) => page.id === 'contact') && <button class="btn btn-primary" type="button" data-page="contact" data-nav="contact" data-shake data-sound><Icon name="whatsapp" size={17} /> Hubungi</button>}
+                {visiblePages.some((page) => page.id === 'work') && <button class="btn btn-outline" type="button" data-page="work" data-nav="work" data-sound><Icon name="work" size={17} /> Karya</button>}
               </div>
             </div>
 
@@ -280,10 +302,10 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
               <div class="bio" data-reveal>{textValue(devProfile.bio, DEVELOPER_DEFAULTS.profile.bio, 3000)}</div>
               {cmsIntro && <p class="bio-extra" data-reveal>{cmsIntro}</p>}
               <div class="facts-grid">
-                <div class="fact" data-reveal><div class="f-icon">📍</div><div class="f-info"><span class="f-label">Location</span><span class="f-val">{profileLocation}</span></div></div>
-                <div class="fact" data-reveal><div class="f-icon">🗣️</div><div class="f-info"><span class="f-label">Languages</span><span class="f-val">{textValue(devProfile.languages, DEVELOPER_DEFAULTS.profile.languages, 80)}</span></div></div>
-                <div class="fact" data-reveal><div class="f-icon">🎯</div><div class="f-info"><span class="f-label">Focus</span><span class="f-val">{textValue(devProfile.focus, DEVELOPER_DEFAULTS.profile.focus, 100)}</span></div></div>
-                <div class="fact" data-reveal><div class="f-icon">☕</div><div class="f-info"><span class="f-label">Fuel</span><span class="f-val">{textValue(devProfile.fuel, DEVELOPER_DEFAULTS.profile.fuel, 80)}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon"><Icon name="pin" size={22} /></div><div class="f-info"><span class="f-label">Location</span><span class="f-val">{profileLocation}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon"><Icon name="language" size={22} /></div><div class="f-info"><span class="f-label">Languages</span><span class="f-val">{textValue(devProfile.languages, DEVELOPER_DEFAULTS.profile.languages, 80)}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon"><Icon name="target" size={22} /></div><div class="f-info"><span class="f-label">Focus</span><span class="f-val">{textValue(devProfile.focus, DEVELOPER_DEFAULTS.profile.focus, 100)}</span></div></div>
+                <div class="fact" data-reveal><div class="f-icon"><Icon name="coffee" size={22} /></div><div class="f-info"><span class="f-label">Fuel</span><span class="f-val">{textValue(devProfile.fuel, DEVELOPER_DEFAULTS.profile.fuel, 80)}</span></div></div>
               </div>
               <div class="marquee-wrap" aria-label="Teknologi yang menjadi perhatian"><div class="marquee">
                 {[...marqueeSkills, ...marqueeSkills].map((skill) => <span>{skill}</span>)}
@@ -291,20 +313,20 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
               <div class="sub-title">Focus</div>
               {focusCards.map((item) => (
                 <article class="focus-card" data-reveal data-glitch={item.title === 'Learning German' ? '' : undefined}>
-                  <div class="focus-icon">{item.icon || '✦'}</div>
+                  <div class="focus-icon"><Icon name={item.icon || 'sparkles'} size={26} /></div>
                   <div class="focus-info"><div class="focus-title">{item.title}</div><div class="focus-desc">{item.description}</div></div>
                 </article>
               ))}
               <div class="sub-title">Cerita pengembangan</div>
               <p class="story-copy" data-reveal>{cmsStory}</p>
-              <div class="sub-title">THE APPROACH</div>
+              <div class="sub-title">CARA KERJA</div>
               <article class="focus-card approach-card" data-reveal>
-                <div class="focus-icon">⌘</div>
+                <div class="focus-icon"><Icon name="server" size={26} /></div>
                 <div class="focus-info"><div class="focus-title">Memahami sebelum mengembangkan.</div><div class="focus-desc">Proses belajar tidak berhenti pada membuat sesuatu berjalan. Memahami alasan di balik struktur, alur, dan keputusan teknis adalah bagian dari proses pengembangan itu sendiri.</div><code>const nextStep = learn();</code></div>
               </article>
               <div class="profile-meta">
-                <span>🏫 {G.namaSekolah || 'SMK Muhammadiyah Belitang'}</span>
-                {G.tahunAjaran && <span>📅 {G.tahunAjaran}</span>}
+                <span><Icon name="school" size={16} /> {G.namaSekolah || 'SMK Muhammadiyah Belitang'}</span>
+                {G.tahunAjaran && <span><Icon name="calendar" size={16} /> {G.tahunAjaran}</span>}
               </div>
             </section>
           </section>
@@ -314,29 +336,24 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
           <section class:list={['page', { active: initialPage === 'story' }]} id="page-story" aria-label="Cerita perjalanan pengembang" hidden={initialPage !== 'story'}>
             <section class="section story-section">
               <div class="sec-title" data-kicker="ORIGIN / LEARNING / REFLECTION">Cerita pengembang</div>
-              <p class="stack-note">Catatan perjalanan dari source pengembang terdahulu. Naskah lengkap dipertahankan; pembaruan dapat dilakukan melalui CMS.</p>
-              <nav class="story-index" aria-label="Daftar bab cerita">
-                {legacyStories.map((story, index) => <a href={`#legacy-story-${story.key}`}><span>{String(index + 1).padStart(2, '0')}</span>{story.title}</a>)}
-                {legacyTimeline.length > 0 && <a href="#legacy-journey"><span>07</span>Perjalanan & Filosofi</a>}
-              </nav>
-              {legacyStories.map((story, index) => (
-                <article class="legacy-story" id={`legacy-story-${story.key}`} data-reveal>
-                  <div class="story-chapter-label">CHAPTER {String(index + 1).padStart(2, '0')}</div>
-                  <h2>{story.title}</h2>
-                  {story.key === 'origin' && <figure class="legacy-story-photo">{profilePhoto && <img src={profilePhoto} alt={`Potret ${profileName} saat proses belajar kode`} loading="lazy"/>}<figcaption>Momen ketika kode mulai bermakna — dari teks acak menjadi bahasa yang hidup.</figcaption></figure>}
-                  {story.subtitle && <p class="story-subtitle">{story.subtitle}</p>}
-                  <div class="legacy-story-body">
-                    {story.blocks.map((block) => block.type === 'heading'
-                      ? <h3>{block.text}</h3>
-                      : block.type === 'list'
-                        ? <ul><li>{block.text}</li></ul>
-                        : <p>{block.text}</p>)}
-                  </div>
-                  {story.code && <div class="legacy-code"><div class="legacy-code-head"><span>{story.codeTitle || 'Contoh kode'}</span><span>{story.codeLanguage}</span></div><pre><code>{story.code}</code></pre></div>}
-                  {story.quote && <blockquote class="legacy-quote">{story.quote}</blockquote>}
-                </article>
-              ))}
-              {legacyTimeline.length > 0 && <section class="legacy-journey" id="legacy-journey"><div class="sec-title" data-kicker="SIX CHAPTERS">Perjalanan & filosofi</div><p class="story-subtitle">Enam babak nyata: dari kebingungan menuju pemahaman.</p><div class="timeline journey-timeline">{legacyTimeline.map((item, index) => <article class="timeline-item" data-reveal><div class="timeline-dot"></div><span class="timeline-number">{item.label || `BABAK ${String(index + 1).padStart(2, '0')}`}</span><h3 class="timeline-heading">{item.title}</h3><div class="timeline-body">{item.description}</div></article>)}</div></section>}
+              <p class="stack-note">Kumpulan cerita tentang proses belajar, percobaan, dan keputusan yang membentuk perjalanan pengembangan.</p>
+              <div class="story-accordion-tools"><button type="button" data-story-expand>Buka semua</button><button type="button" data-story-collapse>Tutup semua</button></div>
+              <div class="story-accordion" data-story-accordion>
+                {legacyStories.map((story, index) => (
+                  <article class="legacy-story" id={`legacy-story-${story.key}`} data-story-item>
+                    <h2 class="story-heading"><button type="button" class="story-toggle" aria-expanded={index === 0 ? 'true' : 'false'} aria-controls={`story-panel-${story.key}`}><span class="story-number">{String(index + 1).padStart(2, '0')}</span><span class="story-heading-copy"><strong>{story.title}</strong><small>{story.subtitle || 'Catatan proses dan refleksi.'}</small><em>Ketuk untuk membuka</em></span><span class="story-toggle-icon"><Icon name={index === 0 ? 'minus' : 'plus'} size={22} /></span></button></h2>
+                    <div class:list={['story-panel', { open: index === 0 }]} id={`story-panel-${story.key}`} aria-hidden={index === 0 ? 'false' : 'true'} inert={index === 0 ? undefined : true}><div class="story-panel-inner">
+                      <div class="story-chapter-label">BAB {String(index + 1).padStart(2, '0')}</div>
+                      {story.key === 'origin' && <figure class="legacy-story-photo">{profilePhoto && <img src={profilePhoto} alt={`Potret ${profileName} saat proses belajar kode`} loading="lazy" width="620" height="360"/>}<figcaption>Perjalanan belajar dimulai dari rasa ingin tahu dan keberanian mencoba.</figcaption></figure>}
+                      {story.subtitle && <p class="story-subtitle">{story.subtitle}</p>}
+                      <div class="legacy-story-body">{(() => { const groups: any[] = []; let list: string[] = []; for (const block of story.blocks) { if (block.type === 'list') list.push(block.text); else { if (list.length) { groups.push({ type: 'list', items: list }); list = []; } groups.push(block); } } if (list.length) groups.push({ type: 'list', items: list }); return groups.map((part) => part.type === 'heading' ? <h3>{part.text}</h3> : part.type === 'list' ? <ul>{part.items.map((item: string) => <li>{item}</li>)}</ul> : <p>{part.text}</p>); })()}</div>
+                      {story.code && <div class="legacy-code"><div class="legacy-code-head"><span>{story.codeTitle || 'Contoh kode'}</span><span>{story.codeLanguage}</span></div><pre><code>{story.code}</code></pre></div>}
+                      {story.quote && <blockquote class="legacy-quote">{story.quote}</blockquote>}
+                    </div></div>
+                  </article>
+                ))}
+                {legacyTimeline.length > 0 && <article class="legacy-story" id="legacy-story-journey" data-story-item><h2 class="story-heading"><button type="button" class="story-toggle" aria-expanded="false" aria-controls="story-panel-journey"><span class="story-number">{String(legacyStories.length + 1).padStart(2, '0')}</span><span class="story-heading-copy"><strong>Perjalanan & Filosofi</strong><small>Rangkaian refleksi dan arah pertumbuhan.</small><em>Ketuk untuk membuka</em></span><span class="story-toggle-icon"><Icon name="plus" size={22} /></span></button></h2><div class="story-panel" id="story-panel-journey" aria-hidden="true" inert><div class="story-panel-inner"><div class="timeline journey-timeline">{legacyTimeline.map((item, index) => <article class="timeline-item" data-reveal><div class="timeline-dot"></div><span class="timeline-number">{item.label || `BABAK ${String(index + 1).padStart(2, '0')}`}</span><h3 class="timeline-heading">{item.title}</h3><div class="timeline-body">{item.description}</div></article>)}</div></div></div></article>}
+              </div>
             </section>
           </section>
         )}
@@ -348,13 +365,13 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
               <p class="stack-note">Teknologi yang teridentifikasi pada implementasi website ini.</p>
               <div class="sub-title">Hard Skills</div>
               <div class="competency-list">
-                {hardSkills.map((skill) => <article class="competency-item" data-reveal><span class="competency-mark" aria-hidden="true">◆</span><div><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</div></article>)}
+                {hardSkills.map((skill) => <article class="competency-item" data-reveal><span class="competency-mark" aria-hidden="true"><Icon name="target" size={17} /></span><div><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</div></article>)}
               </div>
               <div class="sub-title">Soft Skills & refleksi personal</div>
               <div class="soft-skill-tags">{softSkills.map((skill) => <span>{skill.name}</span>)}</div>
               <p class="skill-disclaimer">Nama kompetensi dan karakter ditampilkan sebagai catatan reflektif, bukan persentase atau hasil pengukuran kemampuan.</p>
-              {personalSkills.length > 0 && <><div class="sub-title">Keahlian dari data anggota CMS</div><div class="skill-chips">{personalSkills.map((skill) => <span>{skill}</span>)}</div></>}
-              {databaseSkillNotes.length > 0 && <section class="database-skill-notes"><div class="sub-title">Catatan skill dari CMS kelas</div><p class="stack-note">Entri berikut berasal dari tabel keahlian kelas. Deskripsi bernuansa humor dipertahankan sebagai catatan, bukan penilaian kompetensi profesional. Angka level tidak ditampilkan.</p><div class="database-skill-grid">{databaseSkillNotes.map((skill) => <article class="database-skill-item" data-reveal><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</article>)}</div></section>}
+              {personalSkills.length > 0 && <><div class="sub-title">Keterampilan yang dibagikan</div><div class="skill-chips">{personalSkills.map((skill) => <span>{skill}</span>)}</div></>}
+              {databaseSkillNotes.length > 0 && <section class="database-skill-notes"><div class="sub-title">Catatan keterampilan kelas</div><p class="stack-note">Catatan ringan tentang keterampilan dan pengalaman belajar yang dibagikan oleh anggota kelas.</p><div class="database-skill-grid">{databaseSkillNotes.map((skill) => <article class="database-skill-item" data-reveal><h3>{skill.name}</h3>{skill.description && <p>{skill.description}</p>}</article>)}</div></section>}
               <div class="sub-title">Stack website kelas</div>
               <p class="stack-note">Teknologi di bawah berasal dari implementasi website kelas, bukan klaim tingkat kemahiran pribadi.</p>
               <div class="skill-chips">{websiteStack.map((technology) => <span>{technology}</span>)}</div>
@@ -367,17 +384,22 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
             <section class="section">
               <div class="sec-title" data-kicker="Chapter III">Karya & proyek</div>
               <p class="stack-note">Proyek yang sedang menjadi rumah bagi halaman portofolio ini.</p>
+              <div class="project-stats" aria-label="Ringkasan portofolio">
+                <div><strong data-countup={projects.length}>{projects.length}</strong><span>Proyek tercatat</span></div><div><strong data-countup={projectTech.length}>{projectTech.length}</strong><span>Teknologi tercatat</span></div><div><strong data-countup={portfolioPageCount}>{portfolioPageCount}</strong><span>Halaman portofolio</span></div><div><strong data-countup={storyChapterCount}>{storyChapterCount}</strong><span>Bab cerita</span></div><div><strong data-countup={members.length}>{members.length}</strong><span>Anggota kelas</span></div><div><strong data-countup={gallery.length}>{gallery.length}</strong><span>Foto galeri</span></div>
+              </div>
+              <div class="project-filters" role="group" aria-label="Filter kategori proyek">{['Semua', 'Automation', 'Frontend', 'Backend', 'Website'].map((filter) => <button type="button" data-project-filter={filter} class:list={{ active: filter === 'Semua' }} aria-pressed={filter === 'Semua' ? 'true' : 'false'}>{filter}</button>)}</div>
+              {featuredProject && <article class="featured-project" data-reveal><div class="featured-project-copy"><span class="featured-label">PROYEK UNGGULAN</span><h3>{featuredProject.title}</h3><p>{featuredProject.description}</p></div>{['Astro', 'Supabase', 'Cloudflare Workers'].every((technology) => (featuredProject.stack || []).includes(technology)) && <svg class="architecture" viewBox="0 0 600 130" role="img" aria-label="Diagram arsitektur Astro terhubung ke Supabase dan Cloudflare Workers"><rect x="12" y="30" width="160" height="70" rx="2"/><rect x="220" y="30" width="160" height="70" rx="2"/><rect x="428" y="30" width="160" height="70" rx="2"/><path d="M172 65h48m-8-8 8 8-8 8M380 65h48m-8-8 8 8-8 8"/><text x="92" y="72" text-anchor="middle">ASTRO</text><text x="300" y="72" text-anchor="middle">SUPABASE</text><text x="508" y="62" text-anchor="middle">CLOUDFLARE</text><text x="508" y="80" text-anchor="middle">WORKERS</text></svg>}</article>}
               <div class="projects-grid">
-                {projects.map((project, index) => (
-                  <article class="proj" data-reveal data-sound>
-                    <div class="proj-header">{project.icon || '✦'}<span class="proj-tag">{project.tag || (index === 3 ? 'Astro' : 'Project')}</span></div>
+                {projects.map((project) => (
+                  <article class="proj" data-reveal data-sound data-project-category={project.category || 'Website'}>
+                    <div class="proj-header"><Icon name={project.icon || 'sparkles'} size={48} /><span class="proj-tag">{project.tag || project.category || 'Project'}</span></div>
                     <div class="proj-body">
                       <div class="proj-status">{project.status || 'SELECTED WORK'}</div>
                       <div class="proj-title">{project.title}</div>
                       <div class="proj-desc">{project.description}</div>
                       {Array.isArray(project.tags) && <div class="project-tags">{project.tags.filter((tag: unknown) => typeof tag === 'string').slice(0, 10).map((tag: string) => <span>{tag}</span>)}</div>}
-                      {project.href && safeHref(project.href) && <a class="project-link" href={safeHref(project.href) || '#'}>Lihat proyek ↗</a>}
-                      {index === 3 && <div class="project-tags">{websiteStack.map((tag) => <span>{tag}</span>)}</div>}
+                      {project.href && safeHref(project.href) && <a class="project-link" href={safeHref(project.href) || '#'}>Lihat proyek <Icon name="arrow" size={15} /></a>}<button class="project-detail-toggle" type="button" aria-expanded="false">Detail proyek</button><div class="project-detail" hidden><strong>Stack</strong><div class="project-tags">{(project.stack || []).map((tag: string) => <span>{tag}</span>)}</div><strong>Pelajaran & sorotan</strong><ul>{(project.highlights || []).map((highlight: string) => <li>{highlight}</li>)}</ul></div>
+                      {project.featured && <div class="project-tags">{(project.stack || websiteStack).map((tag: string) => <span>{tag}</span>)}</div>}
                     </div>
                   </article>
                 ))}
@@ -406,20 +428,20 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
           <section class:list={['page', { active: initialPage === 'contact' }]} id="page-contact" aria-label="Kontak" hidden={initialPage !== 'contact'}>
             <section class="section">
               <div class="sec-title" data-kicker="Chapter V">Kontak & media sosial</div>
-              <p class="bio-extra">Saluran publik yang tercatat pada konfigurasi website.</p>
+              <p class="bio-extra">Temukan kanal komunikasi dan ruang digital yang tersedia.</p>
               <div class="contacts-list">
                 {contactMethods.map((item) => (
                   <article class="ctc" data-sound>
-                    <div class="ctc-left" data-link={item.href || undefined}>
-                      <div class="ctc-icon">{item.icon || '✉️'}</div>
+                    <a class="ctc-left" href={item.href || undefined} target={item.href?.startsWith('https:') ? '_blank' : undefined} rel={item.href?.startsWith('https:') ? 'noopener noreferrer' : undefined}>
+                      <div class="ctc-icon"><Icon name={item.icon || 'email'} size={25} /></div>
                       <div class="ctc-info"><span class="ctc-label">{item.label}</span><span class="ctc-val">{item.value}</span></div>
-                    </div>
-                    {item.copy && <button class="ctc-action" type="button" data-copy={item.copy} aria-label={`Salin ${item.label}`}>📋</button>}
+                    </a>
+                    {item.copy && <button class="ctc-action" type="button" data-copy={item.copy} aria-label={`Salin ${item.label}`}><Icon name="copy" size={20} class="copy-icon" /><Icon name="check" size={20} class="copy-check" /></button>}
                   </article>
                 ))}
               </div>
-              {personalSocialLinks.length > 0 && <><div class="sub-title">Profil pengembang</div><div class="socials">{personalSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label} data-sound>{item.icon}</a>)}</div></>}
-              {classSocialLinks.length > 0 && <><div class="sub-title">Media sosial kelas</div><div class="socials">{classSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`${item.label} kelas`} data-sound>{item.icon}</a>)}</div></>}
+              {personalSocialLinks.length > 0 && <><div class="sub-title">Profil pengembang</div><div class="socials">{personalSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={item.label} data-sound><Icon name={item.icon} size={23} /><span>{item.label}</span></a>)}</div></>}
+              {classSocialLinks.length > 0 && <><div class="sub-title">Media sosial kelas</div><div class="socials">{classSocialLinks.map((item) => <a class="soc" href={item.href} target="_blank" rel="noopener noreferrer" aria-label={`${item.label} kelas`} data-sound><Icon name={item.icon} size={23} /><span>{item.label}</span></a>)}</div></>}
             </section>
           </section>
         )}
@@ -427,12 +449,12 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
         {isSectionEnabled('philosophy') && (
           <section class:list={['page', { active: initialPage === 'philosophy' }]} id="page-philosophy" aria-label="Filosofi pengembang" hidden={initialPage !== 'philosophy'}>
             <section class="section">
-              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}><Icon name="arrow" size={16} /> BACK</button>
               <div class="sec-title" data-kicker="Appendix / Principles">Filosofi & catatan</div>
               <p class="bio-extra">Prinsip yang tercermin dalam cerita pengembangan di halaman ini.</p>
               <blockquote class="philosophy-quote" data-reveal>“{developerQuote}”</blockquote>
               <div class="principles-grid">
-                {principles.map((item) => <article class="principle-card" data-reveal><div class="principle-icon">{item.icon || '✦'}</div><h3>{item.title}</h3><p>{item.description}</p></article>)}
+                {principles.map((item) => <article class="principle-card" data-reveal><div class="principle-icon"><Icon name={item.icon || 'sparkles'} size={26} /></div><h3>{item.title}</h3><p>{item.description}</p></article>)}
               </div>
               <div class="sub-title">Prinsip kerja</div>
               <p class="story-copy">Pahami masalah, periksa asumsi, lalu pilih struktur yang dapat diuji dan dipelihara. Tampilan adalah bagian dari produk, bukan pengganti fondasi.</p>
@@ -443,10 +465,10 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
         {isSectionEnabled('experience') && (
           <section class:list={['page', { active: initialPage === 'pengalaman' }]} id="page-pengalaman" aria-label="Pengalaman" hidden={initialPage !== 'pengalaman'}>
             <section class="section">
-              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}><Icon name="arrow" size={16} /> BACK</button>
               <div class="sec-title" data-kicker="Appendix A">Pengalaman</div>
-              <p class="bio-extra">Catatan yang tersimpan pada konten halaman.</p>
-              {experienceEntries.length > 0 ? <div class="experience-list">{experienceEntries.map((entry) => <article class="article-card" data-reveal><div class="article-category">{entry.period || entry.date || 'PENGALAMAN'}</div><div class="article-title">{entry.title}</div>{entry.organization && <p class="experience-org">{entry.organization}</p>}{entry.description && <div class="article-body"><p>{entry.description}</p></div>}</article>)}</div> : <div class="empty-state"><div class="empty-icon">🎖️</div><div class="empty-text">Belum ada catatan.<br />Ruang ini menunggu pencapaianmu.</div></div>}
+              <p class="bio-extra">Beberapa peran, proyek, dan proses belajar yang sedang dijalani.</p>
+              <div class="experience-list timeline">{experienceEntries.map((entry) => <article class="timeline-item experience-item" data-reveal><div class="timeline-dot"><Icon name="medal" size={18} /></div><div class="experience-heading"><div class="article-title">{entry.title}</div>{entry.draft && <span class="draft-badge">DRAFT</span>}</div><div class="article-category">{entry.period || entry.date || 'Periode diisi nanti'}</div>{entry.organization && <p class="experience-org">{entry.organization}</p>}{entry.description && <div class="article-body"><p>{entry.description}</p></div>}</article>)}</div>
             </section>
           </section>
         )}
@@ -454,13 +476,14 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
         {isSectionEnabled('quotes') && (
           <section class:list={['page', { active: initialPage === 'quotes' }]} id="page-quotes" aria-label="Kutipan" hidden={initialPage !== 'quotes'}>
             <section class="section">
-              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}><Icon name="arrow" size={16} /> BACK</button>
               <div class="sec-title" data-kicker="Appendix B">Kutipan</div>
-              <div class="quote-carousel" data-carousel data-auto="true">
+              <div class="quote-carousel" data-carousel data-auto="true" role="region" aria-roledescription="carousel" aria-live="off" aria-label="Kumpulan kutipan">
                 <div class="quote-track">
-                  {quoteCards.map((quote) => <article class="quote-card"><div class="quote-text">{quote.text}</div><div class="quote-author">{quote.author}</div></article>)}
+                  {quoteCards.map((quote, index) => <article class="quote-card" data-quote-slide aria-roledescription="slide" aria-label={`${index + 1} dari ${quoteCards.length}`} aria-hidden={index === 0 ? 'false' : 'true'} inert={index === 0 ? undefined : true}><div class="quote-text">{quote.text}</div><div class="quote-author">{quote.author}</div></article>)}
                 </div>
-                <div class="quote-dots">{quoteCards.map((_quote, index) => <button type="button" data-dot={index} class:list={{ on: index === 0 }} aria-label={`Kutipan ${index + 1}`} aria-pressed={index === 0 ? 'true' : 'false'}></button>)}</div>
+                <div class="quote-controls"><button type="button" class="quote-prev" data-quote-prev aria-label="Kutipan sebelumnya"><Icon name="arrow" size={20} /></button><span class="quote-count" aria-live="polite">01 / {String(quoteCards.length).padStart(2, '0')}</span><button type="button" class="quote-next" data-quote-next aria-label="Kutipan berikutnya"><Icon name="arrow" size={20} /></button><button type="button" class="quote-pause" data-quote-pause aria-label="Jeda otomatis" aria-pressed="false">Jeda</button></div>
+                <div class="quote-dots">{quoteCards.map((_quote, index) => <button type="button" data-dot={index} class:list={{ on: index === 0 }} aria-label={`Tampilkan kutipan ${index + 1}`} aria-pressed={index === 0 ? 'true' : 'false'}></button>)}</div>
               </div>
             </section>
           </section>
@@ -469,7 +492,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
         {isSectionEnabled('education') && (
           <section class:list={['page', { active: initialPage === 'edukasi' }]} id="page-edukasi" aria-label="Edukasi" hidden={initialPage !== 'edukasi'}>
             <section class="section">
-              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}><Icon name="arrow" size={16} /> BACK</button>
               <div class="sec-title" data-kicker="Appendix C">Edukasi</div>
               <div class="edukasi-grid">
                 {educationCards.map((article) => <article class="article-card" data-reveal><div class="article-category">{article.category || 'Catatan'}</div><div class="article-title">{article.title}</div><div class="article-body">{(article.paragraphs || []).map((paragraph: string) => <p>{paragraph}</p>)}</div></article>)}
@@ -481,7 +504,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
         {isSectionEnabled('notes') && (
           <section class:list={['page', { active: initialPage === 'notes' }]} id="page-notes" aria-label="Catatan" hidden={initialPage !== 'notes'}>
             <section class="section">
-              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}>← BACK</button>
+              <button class="back-btn" type="button" data-page={homePageId} data-nav={homePageId}><Icon name="arrow" size={16} /> BACK</button>
               <div class="sec-title" data-kicker="Appendix D">Catatan</div>
               <div class="notes-grid">
                 {noteCards.map((note) => <article class="article-card" data-reveal><div class="article-category">{note.category || 'Notes'}</div><div class="article-title">{note.title}</div><div class="article-body"><p>{note.description}</p></div></article>)}
@@ -492,27 +515,27 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
       </main>
 
       <footer class="footer">
-        <div id="clock" aria-label="Waktu Indonesia Barat"></div>
+        <button id="clock" type="button" aria-label="Waktu Indonesia Barat. Ketuk untuk mengganti aksen warna sementara."><Icon name="clock" size={15} /><span id="clock-time"></span></button>
         <div class="footer-meta">{profileName} · {G.namaKelas || 'TKJ XII-9'} · PLAYFUL EDITION</div>
         <p class="footer-school">{currentPageName}</p>
       </footer>
 
       <div class="overlay" id="overlay" aria-hidden="true"></div>
       <aside class="drawer" id="drawer" aria-label="Menu tambahan" aria-hidden="true">
-        <div class="dr-hdr"><div class="dr-title">Menu</div><button class="dr-close" type="button" data-action="close-menu" aria-label="Tutup menu">×</button></div>
+        <div class="dr-hdr"><div class="dr-title">Menu</div><button class="dr-close" type="button" data-action="close-menu" aria-label="Tutup menu"><Icon name="close" size={20} /></button></div>
         <div class="dr-section">
           <div class="dr-label">Navigasi utama</div>
           <div class="dr-grid extra">
-            {mainNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id}><span>{page.icon}</span>{page.label}</button>)}
+            {mainNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label}><span><Icon name={page.icon} size={17} /></span>{page.label}</button>)}
           </div>
         </div>
         <div class="dr-section">
           <div class="dr-label">Bab tambahan</div>
           <div class="dr-grid extra">
-            {extraNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id}><span>{page.icon}</span>{page.label}</button>)}
+            {extraNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label}><span><Icon name={page.icon} size={17} /></span>{page.label}</button>)}
           </div>
         </div>
-        <div class="dr-section"><div class="dr-label">Motion language</div><div class="locked-theme"><span class="lock">✦</span>COMIC · PLAYFUL · SUBTLE</div></div>
+        <div class="dr-section"><div class="dr-label">Motion language</div><div class="locked-theme"><span class="lock"><Icon name="sparkles" size={15} /></span>COMIC · PLAYFUL · SUBTLE</div></div>
       </aside>
       <div class="toast" id="toast" role="status" aria-live="polite">COPIED!</div>
     </div>
