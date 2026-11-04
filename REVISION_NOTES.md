@@ -30,3 +30,11 @@ Automated app checks (`npm run check`, `npm test`, `npm run build`) belum dijala
 - Fixed nested-dialog focus restoration and the gallery lightbox close path when the CMS gallery grid is disabled.
 - Added accessible names to CMS row actions and explicit button types to avoid accidental form submission.
 - See `docs/UI_UX_REFRESH_PHASE2.md` for scope, changed files, verification, and manual acceptance checklist.
+
+
+## Audit UI/UX follow-up — 2026-11-04
+
+- Corrected skip-link visibility/focus behavior and made main targets focusable.
+- Fixed draggable clock anchor conflict on mobile that could stretch the fixed element.
+- Reduced gallery indicator visual size while preserving 26px touch targets.
+- Added detailed findings and validation limitations in `docs/UI_UX_AUDIT_FIX_2026-11-04.md`.

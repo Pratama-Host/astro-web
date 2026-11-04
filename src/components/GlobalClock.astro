@@ -1,6 +1,6 @@
 ---
 ---
-<div id="global-clock" role="status" aria-live="polite" title="Drag to move | Double-click to reset"></div>
+<div id="global-clock" role="timer" aria-label="Jam saat ini" title="Seret untuk memindahkan | Klik dua kali untuk mengembalikan posisi"></div>
 
 <script>
   const el = document.getElementById('global-clock');
@@ -20,6 +20,7 @@
         const pos = JSON.parse(savedPos);
         el.style.setProperty('left', pos.x + 'px', 'important');
         el.style.setProperty('top', pos.y + 'px', 'important');
+        el.style.setProperty('bottom', 'auto', 'important');
       } catch {}
     }
 
@@ -31,6 +32,11 @@
       const rect = el.getBoundingClientRect();
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
+      // Mobile CSS anchors the clock from the bottom. Clear that anchor before
+      // applying a top coordinate, otherwise the fixed element can stretch.
+      el.style.setProperty('left', rect.left + 'px', 'important');
+      el.style.setProperty('top', rect.top + 'px', 'important');
+      el.style.setProperty('bottom', 'auto', 'important');
       el.setPointerCapture(e.pointerId);
       el.classList.add('dragging');
       el.style.cursor = 'grabbing';
@@ -38,8 +44,10 @@
 
     document.addEventListener('pointermove', (e) => {
       if (!isDragging) return;
-      el.style.setProperty('left', Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - el.offsetWidth)) + 'px', 'important');
-      el.style.setProperty('top', Math.max(56, Math.min(e.clientY - offsetY, window.innerHeight - 60)) + 'px', 'important');
+      const maxLeft = Math.max(8, window.innerWidth - el.offsetWidth - 8);
+      const maxTop = Math.max(8, window.innerHeight - el.offsetHeight - 8);
+      el.style.setProperty('left', Math.max(8, Math.min(e.clientX - offsetX, maxLeft)) + 'px', 'important');
+      el.style.setProperty('top', Math.max(8, Math.min(e.clientY - offsetY, maxTop)) + 'px', 'important');
     });
 
     document.addEventListener('pointerup', (e) => {
@@ -53,8 +61,9 @@
     });
 
     el.addEventListener('dblclick', () => {
-      el.style.setProperty('left', '12px', 'important');
-      el.style.setProperty('top', '12px', 'important');
+      el.style.removeProperty('left');
+      el.style.removeProperty('top');
+      el.style.removeProperty('bottom');
       localStorage.removeItem('tkj-clock-pos');
     });
   }

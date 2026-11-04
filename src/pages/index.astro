@@ -26,7 +26,7 @@ const guru = G.guru || [];
   <Intro />
   <Header />
 
-  <main id="main-content" style="display:flex;flex-direction:column">
+  <main id="main-content" tabindex="-1" style="display:flex;flex-direction:column">
     {sectionVisible("hero") && (
     <section class="hero" aria-label="Selamat datang di TKJ XII-9" style={`order:${sectionOrder("hero",0)}`}>
       <div class="hero-noise" aria-hidden="true"></div>
