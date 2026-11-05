@@ -75,6 +75,7 @@ const carouselData = galeri.slice(0, 5);
         <div class="sec-tag">{cmsCollectionEyebrow}</div>
         <h2 class="sec-subtitle">{cmsCollectionTitle}</h2>
         {galeri.length > 0 ? (
+        <>
         <div class="grid-galeri" id="grid-galeri" aria-label="Galeri foto kelas TKJ XII-9" role="list">
           {galeri.slice(0, 8).map((item, idx) => (
             <div class="item-galeri reveal" style={`--d: ${(idx % 5) * 0.05}s`} tabindex="0" role="button" aria-label={`Perbesar foto ${idx + 1}${item.caption ? `: ${item.caption}` : ""}`}>
@@ -103,6 +104,7 @@ const carouselData = galeri.slice(0, 5);
             </div>
           </>
         )}
+        </>
         ) : (
           <p class="gallery-empty-state" role="status">Belum ada foto yang ditambahkan ke galeri.</p>
         )}
