@@ -12,6 +12,8 @@ import {
   URLValidator,
 } from "./alat.js";
 
+import { buatIkon } from "./ikon.js";
+
 const SOCIAL_ICON_CLASSES = Object.freeze({
   instagram: "fa-instagram",
   youtube: "fa-youtube",
@@ -175,10 +177,7 @@ function initMembersInteractions() {
           link.rel = "noopener noreferrer";
           link.setAttribute("aria-label", `Buka ${platform} anggota`);
 
-          const icon = document.createElement("i");
-          icon.classList.add("fab", iconClass);
-          icon.setAttribute("aria-hidden", "true");
-          link.appendChild(icon);
+          link.appendChild(buatIkon(platform));
           socialEl.appendChild(link);
         });
       }

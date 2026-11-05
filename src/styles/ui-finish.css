@@ -599,3 +599,33 @@ main[id="main-content"] > .halaman-anggota {
 }
 
 /* GALLERY DOT PATCH END */
+
+/* ---- Galeri: perbaikan stabilitas & interaksi ---- */
+.item-galeri img:not(.loaded) { aspect-ratio: 4 / 3; object-fit: cover; }
+.item-galeri:focus-visible .keterangan-galeri { opacity: 1; }
+.carousel-3d { touch-action: pan-y; }
+.carousel-item:not(.active):not(.prev):not(.next) { pointer-events: none; }
+@media (hover: hover) {
+  .item-galeri.reveal.on:hover { transform: translateY(-4px) scale(1.02); }
+}
+.item-galeri.reveal.on:active { transform: translateY(-2px) scale(0.98); }
+.jendela-gambar[inert] { visibility: hidden; }
+
+/* ---- Ikon SVG: ukuran mengikuti font, pergantian ikon bertransisi ---- */
+.ikon { width: 1em; height: 1em; }
+.ikon-tumpuk { display: inline-grid; }
+.ikon-tumpuk > svg {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+  transition: opacity 0.25s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+html[data-theme="dark"] .tombol-tema .i-dark,
+html[data-theme="light"] .tombol-tema .i-light,
+html[data-theme="blue"] .tombol-tema .i-blue,
+.tombol-audio.aktif .i-on,
+.tombol-audio:not(.aktif) .i-off,
+.alih-kanvas.aktif .i-on,
+.alih-kanvas:not(.aktif) .i-off { opacity: 1; transform: none; }
+.alih-kanvas.aktif { color: var(--accent) !important; border-color: var(--accent) !important; }
+@media (prefers-reduced-motion: reduce) { .ikon-tumpuk > svg { transition: none; } }

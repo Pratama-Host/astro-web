@@ -338,7 +338,7 @@ a.tautan-menu-hamburger::before {
   z-index: -1;
 }
 
-a.tautan-menu-hamburger i {
+a.tautan-menu-hamburger :is(i, svg) {
   width: 22px;
   text-align: center;
   color: var(--accent);
@@ -721,7 +721,7 @@ body.menu-terbuka {
   }
 }
 
-.sosial-kaki i {
+.sosial-kaki :is(i, svg) {
   font-size: 0.85rem;
 }
 

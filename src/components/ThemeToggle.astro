@@ -1,7 +1,8 @@
 ---
+import Icon from './Icon.astro';
 ---
-<button id="tombol-tema" class="tombol-tema" aria-label="Ganti tema" data-tooltip="Toggle Tema (T)">
-  <span class="pembungkus-ikon-tema">
-    <i class="fas fa-moon" aria-hidden="true"></i>
+<button id="tombol-tema" class="tombol-tema" type="button" aria-label="Ganti tema" data-tooltip="Toggle Tema (T)">
+  <span class="pembungkus-ikon-tema ikon-tumpuk">
+    <Icon name="moon" class="i-light" /><Icon name="palette" class="i-blue" /><Icon name="sun" class="i-dark" />
   </span>
 </button>

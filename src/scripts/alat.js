@@ -94,33 +94,15 @@ export function mulaiKetikHero() {
 }
 
 /* COUNTER ANIMATION */
-export function animateCounter(
-  el,
-  target,
-  duration = 1200,
-) {
+export function animateCounter(el, target, duration = 1200, suffix = "") {
   if (!el) return;
   const start = performance.now();
-  const startVal = 0;
   function update(now) {
-    const elapsed = now - start;
-    const progress = Math.min(
-      elapsed / duration,
-      1,
-    );
-    const eased =
-      1 -
-      Math.pow(1 - progress, 3);
-    el.textContent = Math.round(
-      startVal +
-        (target - startVal) *
-          eased,
-    );
-    if (progress < 1)
-      requestAnimationFrame(
-        update,
-      );
-    else el.textContent = target;
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(target * eased) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+    else el.textContent = target + suffix;
   }
   requestAnimationFrame(update);
 }

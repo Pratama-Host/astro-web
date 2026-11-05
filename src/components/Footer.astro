@@ -1,4 +1,5 @@
 ---
+import Icon from './Icon.astro';
 import { getSettings } from '../lib/data';
 import { validPublicUrl } from '../lib/cms-admin';
 const G = await getSettings();
@@ -30,7 +31,7 @@ const socialLinks = platforms.flatMap((platform) => {
 });
 
 const footerLinks = Array.isArray(G.footer?.links) ? G.footer.links.filter((item) => item?.enabled !== false && typeof item.href === 'string' && item.href.startsWith('/') && !item.href.startsWith('//')) : [
-  { href: '/tkj', label: 'Info TKJ' }, { href: '/pengembang', label: 'Tentang' }, { href: '/404', label: '404' }, { href: '/offline', label: 'Offline' },
+  { href: '/tkj', label: 'Info TKJ' }, { href: '/pengembang', label: 'Tentang' }, 
 ];
 ---
 
@@ -46,14 +47,14 @@ const footerLinks = Array.isArray(G.footer?.links) ? G.footer.links.filter((item
   <div class="sosial-kaki" aria-label="Sosial media kami">
     {socialLinks.map((platform) => (
       <a href={platform.href} target="_blank" rel="noopener noreferrer" aria-label={`${platform.label} TKJ XII-9`}>
-        <i class={platform.icon} aria-hidden="true"></i>
+        <Icon name={platform.icon} />
         <span>{platform.label}</span>
       </a>
     ))}
   </div>
   <div style="display: flex; justify-content: flex-end">
-    <button id="replay-intro-tombol" aria-label="Putar ulang intro">
-      <i class="fas fa-rotate-right" aria-hidden="true"></i> Replay Intro
+    <button id="replay-intro-tombol" type="button" aria-label="Putar ulang intro">
+      <Icon name="fa-rotate-right" /> Replay Intro
     </button>
   </div>
 </footer>

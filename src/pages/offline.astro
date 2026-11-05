@@ -1,4 +1,5 @@
 ---
+import Icon from '../components/Icon.astro';
 // offline.astro — TKJ XII-9 | Halaman Offline
 // Ditampilkan oleh Service Worker saat pengguna offline
 import Layout from '../layouts/Layout.astro';
@@ -11,7 +12,7 @@ import Layout from '../layouts/Layout.astro';
     style="min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;"
   >
     <div class="ol-icon" aria-hidden="true">
-      <i class="fas fa-wifi"></i>
+      <Icon name="fa-wifi" />
     </div>
     <h1 class="ol-title">Kamu Sedang Offline</h1>
     <p class="ol-desc">
@@ -20,10 +21,10 @@ import Layout from '../layouts/Layout.astro';
     </p>
     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap">
       <a href="/" class="tombol tombol-utama">
-        <i class="fas fa-house" aria-hidden="true"></i> Coba Beranda
+        <Icon name="fa-house" /> Coba Beranda
       </a>
       <button class="tombol tombol-garis" onclick="window.location.reload()">
-        <i class="fas fa-rotate-right" aria-hidden="true"></i> Coba Lagi
+        <Icon name="fa-rotate-right" /> Coba Lagi
       </button>
     </div>
     <p class="ol-info">

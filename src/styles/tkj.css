@@ -117,7 +117,7 @@
   }
 }
 
-.mapel-item i {
+.mapel-item :is(i, svg) {
   color: var(--accent);
   font-size: 0.8rem;
 }

@@ -1,4 +1,5 @@
 ---
+import Icon from '../components/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -51,7 +52,7 @@ const totalSiswa = siswa.length;
       <div class="bungkus-pencarian reveal" role="search">
         <label for="member-search" class="sr-only">Cari anggota</label>
         <div class="bilah-pencarian">
-          <i class="fas fa-search" aria-hidden="true"></i>
+          <Icon name="fa-search" />
           <input
             type="search"
             id="member-search"
@@ -67,7 +68,7 @@ const totalSiswa = siswa.length;
             aria-label="Hapus pencarian"
             type="button"
           >
-            <i class="fas fa-times" aria-hidden="true"></i>
+            <Icon name="fa-times" />
           </button>
         </div>
       </div>
@@ -77,7 +78,7 @@ const totalSiswa = siswa.length;
       </div>
       <div class="members-slider-container">
         <button class="members-prev" aria-label="Anggota sebelumnya">
-          <i class="fas fa-chevron-left"></i>
+          <Icon name="fa-chevron-left" />
         </button>
         <div class="members-grid" id="members-grid" aria-label="Daftar anggota kelas">
           {siswa.map((member, i) => {
@@ -109,7 +110,7 @@ const totalSiswa = siswa.length;
           })}
         </div>
         <button class="members-next" aria-label="Anggota berikutnya">
-          <i class="fas fa-chevron-right"></i>
+          <Icon name="fa-chevron-right" />
         </button>
       </div>
 
@@ -117,7 +118,7 @@ const totalSiswa = siswa.length;
       <div id="member-modal" class="member-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-name">
         <div class="member-modal-content card">
           <button id="member-modal-tutup" class="member-modal-tutup" aria-label="Tutup detail">
-            <i class="fas fa-times" aria-hidden="true"></i>
+            <Icon name="fa-times" />
           </button>
           
           <div class="member-modal-header">
@@ -145,7 +146,7 @@ const totalSiswa = siswa.length;
       <!-- Photo Lightbox -->
       <div id="member-photo-lightbox" class="foto-jendela" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Foto profil diperbesar">
         <button id="member-photo-lightbox-tutup" class="tutup-foto-jendela" aria-label="Tutup foto">
-          <i class="fas fa-times" aria-hidden="true"></i>
+          <Icon name="fa-times" />
         </button>
         <img id="member-photo-lightbox-img" src="" alt="Foto profil" class="foto-jendela-img" />
       </div>

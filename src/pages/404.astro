@@ -1,4 +1,5 @@
 ---
+import Icon from '../components/Icon.astro';
 // 404.astro — TKJ XII-9 | Halaman Tidak Ditemukan
 // Menggantikan public/404.html dengan komponen Astro yang menggunakan Layout
 import Layout from '../layouts/Layout.astro';
@@ -40,10 +41,10 @@ import Layout from '../layouts/Layout.astro';
 
     <div class="nf-actions">
       <a href="/" class="tombol tombol-utama">
-        <i class="fas fa-house" aria-hidden="true"></i> Beranda Sistem
+        <Icon name="fa-house" /> Beranda Sistem
       </a>
       <a href="/anggota" class="tombol tombol-garis">
-        <i class="fas fa-users" aria-hidden="true"></i> Database Anggota
+        <Icon name="fa-users" /> Database Anggota
       </a>
     </div>
 

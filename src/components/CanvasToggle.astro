@@ -1,7 +1,8 @@
 ---
+import Icon from './Icon.astro';
 ---
-<button id="tombol-kanvas" class="tombol-tema alih-kanvas" aria-label="Toggle animasi latar" data-tooltip="Toggle Animasi Latar">
-  <span class="pembungkus-ikon-tema">
-    <i class="fas fa-toggle-on" aria-hidden="true"></i>
+<button id="tombol-kanvas" class="tombol-tema alih-kanvas" type="button" aria-label="Toggle animasi latar" data-tooltip="Toggle Animasi Latar">
+  <span class="pembungkus-ikon-tema ikon-tumpuk">
+    <Icon name="toggle-off" class="i-off" /><Icon name="toggle-on" class="i-on" />
   </span>
 </button>

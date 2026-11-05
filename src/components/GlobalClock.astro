@@ -14,12 +14,15 @@
     update();
     setInterval(update, 1000);
 
-    const savedPos = localStorage.getItem('tkj-clock-pos');
+    let savedPos = null;
+    try { savedPos = localStorage.getItem('tkj-clock-pos'); } catch {}
     if (savedPos) {
       try {
         const pos = JSON.parse(savedPos);
-        el.style.setProperty('left', pos.x + 'px', 'important');
-        el.style.setProperty('top', pos.y + 'px', 'important');
+        const cx = Math.max(8, Math.min(Number(pos.x) || 8, window.innerWidth - 80));
+        const cy = Math.max(8, Math.min(Number(pos.y) || 8, window.innerHeight - 40));
+        el.style.setProperty('left', cx + 'px', 'important');
+        el.style.setProperty('top', cy + 'px', 'important');
         el.style.setProperty('bottom', 'auto', 'important');
       } catch {}
     }
@@ -57,14 +60,14 @@
       el.style.cursor = 'move';
       try { el.releasePointerCapture(e.pointerId); } catch {}
       const l = getComputedStyle(el).left, t = getComputedStyle(el).top;
-      localStorage.setItem('tkj-clock-pos', JSON.stringify({ x: parseInt(l), y: parseInt(t) }));
+      try { localStorage.setItem('tkj-clock-pos', JSON.stringify({ x: parseInt(l), y: parseInt(t) })); } catch {}
     });
 
     el.addEventListener('dblclick', () => {
       el.style.removeProperty('left');
       el.style.removeProperty('top');
       el.style.removeProperty('bottom');
-      localStorage.removeItem('tkj-clock-pos');
+      try { localStorage.removeItem('tkj-clock-pos'); } catch {}
     });
   }
 </script>

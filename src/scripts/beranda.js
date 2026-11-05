@@ -93,7 +93,7 @@ function jalankanIntroTerminal(intro, main) {
 function tampilkanKontenIndeks() {
   // Stats animation
   const stats = document.querySelectorAll(".stat-num[data-target]");
-  stats.forEach(el => animateCounter(el, parseInt(el.dataset.target, 10)));
+  stats.forEach(el => animateCounter(el, parseInt(el.dataset.target, 10), 1200, el.dataset.suffix || ""));
 
   // Slogan typing
   const slogan = document.getElementById("slogan-pahlawan");

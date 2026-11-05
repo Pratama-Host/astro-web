@@ -70,7 +70,7 @@ textarea.input {
   left: 5%;
   right: 5%;
 }
-.bilah-pencarian i {
+.bilah-pencarian :is(i, svg) {
   color: var(--text-3);
   font-size: 0.9rem;
   flex-shrink: 0;

@@ -1,4 +1,5 @@
 ---
+import Icon from '../components/Icon.astro';
 import '../styles/dasar.css';
 import '../styles/animasi.css';
 import '../styles/tata-letak.css';
@@ -76,7 +77,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Educ
     <!-- Anti-FOUC: restore saved theme instantly before paint -->
     <script is:inline>
       (function() {
-        const t = localStorage.getItem('tkj-theme');
+        let t = null; try { t = localStorage.getItem('tkj-theme'); } catch (e) {}
         const valid = ['light', 'dark', 'blue'];
         if (t && valid.includes(t)) {
           document.documentElement.setAttribute('data-theme', t);
@@ -85,6 +86,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Educ
     </script>
     <style is:inline set:html={themePaletteCss}></style>
 
+    <noscript><style>.reveal,.reveal-left,.reveal-scale{opacity:1!important;visibility:visible!important;transform:none!important;pointer-events:auto!important}.item-galeri img{opacity:1!important}</style></noscript>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
@@ -146,13 +148,6 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Educ
       />
     </noscript>
 
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    />
   </head>
   <body style={customBackground ? `background-image:linear-gradient(180deg,rgba(10,5,5,.9),rgba(10,5,5,.96)),url("${customBackground}");background-size:cover;background-attachment:fixed;background-position:center` : undefined}>
     {draftPreview && <div class="draft-preview-banner" role="status">PRATINJAU DRAFT · Tidak dipublikasikan · <a href={Astro.url.pathname}>Keluar dari pratinjau</a></div>}
@@ -166,7 +161,7 @@ const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@type': 'Educ
     <slot />
 
     <button id="back-to-top" aria-label="Kembali ke atas">
-      <i class="fas fa-chevron-up" aria-hidden="true"></i>
+      <Icon name="fa-chevron-up" />
     </button>
 
     <GlobalClock />

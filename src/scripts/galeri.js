@@ -4,7 +4,7 @@
    ================================================================ */
 "use strict";
 
-import { initReveal, enableFocusTrap, disableFocusTrap } from "./alat.js";
+import { initReveal, RevealObserver, enableFocusTrap, disableFocusTrap } from "./alat.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initGalleryImageLoading();
@@ -57,7 +57,9 @@ function initGalleryProgressiveLoading() {
     const addedItems = Array.from(fragment.children);
     grid.appendChild(fragment);
     addedItems.forEach((item) => initGalleryImageLoading(item));
+    RevealObserver.observe(addedItems);
     const remaining = template.content.children.length;
+    if (remaining > 0 && remaining < batchSize) button.textContent = `Muat ${remaining} foto lagi`;
     if (status) status.textContent = `${appended} foto ditambahkan. ${remaining} foto tersisa.`;
     if (remaining === 0) {
       button.hidden = true;
@@ -103,6 +105,7 @@ function initGallery() {
   // and hidden tabs. A single timer prevents duplicated autoplay intervals.
   const wrapper = document.querySelector(".carousel-3d-wrapper");
   const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+  const canHover = Boolean(window.matchMedia?.("(hover: hover)").matches);
   let autoPlay = null;
   let userPaused = false;
   const autoPlayButton = document.getElementById("carousel-autoplay-toggle");
@@ -136,8 +139,8 @@ function initGallery() {
       reducedMotion?.matches ||
       userPaused ||
       document.hidden ||
-      wrapper.matches(":hover") ||
-      wrapper.contains(document.activeElement)
+      (canHover && wrapper.matches(":hover")) ||
+      document.activeElement?.matches?.(":focus-visible") && wrapper.contains(document.activeElement)
     )
       return;
     autoPlay = window.setInterval(() => moveCarousel(1), 5000);
@@ -150,9 +153,9 @@ function initGallery() {
     else startAutoPlay();
   });
   refreshAutoPlayButton();
-  wrapper?.addEventListener("mouseenter", stopAutoPlay);
+  wrapper?.addEventListener("mouseenter", () => { if (canHover) stopAutoPlay(); });
   wrapper?.addEventListener("mouseleave", startAutoPlay);
-  wrapper?.addEventListener("focusin", stopAutoPlay);
+  wrapper?.addEventListener("focusin", (e) => { if (e.target.matches?.(":focus-visible")) stopAutoPlay(); });
   wrapper?.addEventListener("focusout", (event) => {
     if (!wrapper.contains(event.relatedTarget)) startAutoPlay();
   });
@@ -178,6 +181,16 @@ function initGallery() {
       updateCarousel();
     }
   });
+  let swipeX = null;
+  let swiped = false;
+  carousel.addEventListener("pointerdown", (e) => { swipeX = e.clientX; swiped = false; });
+  carousel.addEventListener("pointerup", (e) => {
+    if (swipeX === null) return;
+    const dx = e.clientX - swipeX;
+    swipeX = null;
+    if (Math.abs(dx) > 50) { swiped = true; moveCarousel(dx < 0 ? 1 : -1); }
+  });
+  carousel.addEventListener("click", (e) => { if (swiped) { swiped = false; e.stopImmediatePropagation(); } }, true);
   carousel.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     const item = event.target.closest(".carousel-item");
@@ -229,14 +242,41 @@ function initGalleryLightbox() {
   const tutupBtn = document.getElementById("tutup-jendela");
   const img = document.getElementById("lightbox-img");
   const caption = document.getElementById("lb-caption-bar");
-
+  const prevBtn = document.getElementById("lb-prev");
+  const nextBtn = document.getElementById("lb-next");
   if (!lightbox || !tutupBtn || !img || !caption) return;
+
+  let list = [];
+  let pos = 0;
+  let clearTimer = null;
+  const dataOf = (item) => ({
+    src: item.querySelector("img")?.src || "",
+    text: item.querySelector(".keterangan-galeri span")?.textContent || item.querySelector("img")?.alt || "",
+  });
+  const show = () => {
+    const d = list[pos];
+    if (!d) return;
+    img.src = d.src;
+    img.alt = d.text || "Pratinjau foto galeri";
+    caption.textContent = d.text;
+    const multi = list.length > 1;
+    if (prevBtn) prevBtn.hidden = !multi;
+    if (nextBtn) nextBtn.hidden = !multi;
+  };
+  const step = (n) => {
+    if (list.length < 2) return;
+    pos = (pos + n + list.length) % list.length;
+    show();
+  };
 
   window.terbukaLightbox = function (src, text) {
     if (!src) return;
-    img.src = src;
-    caption.textContent = text || "";
-    img.alt = text || "Pratinjau foto galeri";
+    list = Array.from(document.querySelectorAll("#grid-galeri .item-galeri")).map(dataOf).filter((d) => d.src);
+    pos = list.findIndex((d) => d.src === src);
+    if (pos < 0) { list = [{ src, text: text || "" }]; pos = 0; }
+    clearTimeout(clearTimer);
+    show();
+    lightbox.inert = false;
     lightbox.classList.add("terbuka");
     lightbox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -246,42 +286,39 @@ function initGalleryLightbox() {
   function tutupLightbox() {
     lightbox.classList.remove("terbuka");
     lightbox.setAttribute("aria-hidden", "true");
-    img.removeAttribute("src");
-    img.alt = "Pratinjau foto";
-    caption.textContent = "";
+    lightbox.inert = true;
     document.body.style.overflow = "";
     disableFocusTrap();
+    // Kosongkan gambar setelah fade selesai agar ikon gambar rusak tidak berkedip.
+    clearTimer = setTimeout(() => { img.removeAttribute("src"); caption.textContent = ""; }, 450);
   }
 
   if (grid) {
+    const open = (item) => {
+      const d = dataOf(item);
+      if (d.src) window.terbukaLightbox(d.src, d.text);
+    };
     grid.addEventListener("click", (e) => {
       const item = e.target.closest(".item-galeri");
-      if (!item) return;
-      const image = item.querySelector("img");
-      const text =
-        item.querySelector(".keterangan-galeri span")?.textContent || "";
-      if (image && image.src) window.terbukaLightbox(image.src, text);
+      if (item) open(item);
     });
-
     grid.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        const item = e.target.closest(".item-galeri");
-        if (!item) return;
-        e.preventDefault();
-        const image = item.querySelector("img");
-        const text =
-          item.querySelector(".keterangan-galeri span")?.textContent || "";
-        if (image && image.src) window.terbukaLightbox(image.src, text);
-      }
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const item = e.target.closest(".item-galeri");
+      if (!item) return;
+      e.preventDefault();
+      open(item);
     });
   }
 
   tutupBtn.addEventListener("click", tutupLightbox);
-  lightbox.addEventListener("click", (e) => {
-    if (e.target === lightbox) tutupLightbox();
-  });
+  prevBtn?.addEventListener("click", () => step(-1));
+  nextBtn?.addEventListener("click", () => step(1));
+  lightbox.addEventListener("click", (e) => { if (e.target === lightbox) tutupLightbox(); });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && lightbox.classList.contains("terbuka"))
-      tutupLightbox();
+    if (!lightbox.classList.contains("terbuka")) return;
+    if (e.key === "Escape") tutupLightbox();
+    else if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "ArrowRight") step(1);
   });
 }

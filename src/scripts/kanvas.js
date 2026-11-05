@@ -209,8 +209,9 @@ function mulaiKanvasJaringan() {
   }
 
   const penanganUbahUkuran = () => {
+    const samaLebar = window.innerWidth === width;
     ubahUkuran();
-    mulaiButir();
+    if (!samaLebar) mulaiButir();
   };
   ubahUkuran();
   mulaiButir();
@@ -230,11 +231,12 @@ function mulaiKanvasJaringan() {
 }
 
 export function apakahKanvasDiaktifkanSecaraDefault() {
-  return window.innerWidth >= BATAS_KANVAS;
+  return window.innerWidth >= BATAS_KANVAS && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 export function ambilStatusKanvas() {
-  const stored = localStorage.getItem(KUNCI_PREFERENSI_KANVAS);
+  let stored = null;
+  try { stored = localStorage.getItem(KUNCI_PREFERENSI_KANVAS); } catch {}
   if (stored === "1" || stored === "true") return true;
   if (stored === "0" || stored === "false") return false;
   return apakahKanvasDiaktifkanSecaraDefault();
@@ -253,8 +255,6 @@ export function perbaruiStatusTombolKanvas(tombol, enabled) {
     "aria-label",
     enabled ? "Matikan animasi latar" : "Nyalakan animasi latar",
   );
-  const icon = tombol.querySelector("i");
-  if (icon) icon.className = enabled ? "fas fa-toggle-on" : "fas fa-toggle-off";
 }
 
 export function tampilkanStatusKanvasJaringan() {

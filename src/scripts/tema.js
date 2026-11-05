@@ -14,12 +14,6 @@ function ambilTombolTema() {
 export function perbaruiIkonTombol(t) {
   const tombol = ambilTombolTema();
   if (!tombol) return;
-  const icon = tombol.querySelector("i");
-  if (icon) {
-    if (t === "dark") icon.className = "fas fa-sun";
-    else if (t === "light") icon.className = "fas fa-moon";
-    else icon.className = "fas fa-palette";
-  }
   tombol.setAttribute(
     "aria-label",
     t === "dark"
@@ -30,10 +24,10 @@ export function perbaruiIkonTombol(t) {
   );
 }
 
-export function terapkanTema(t) {
+export function terapkanTema(t, persist = true) {
   const root = document.documentElement;
   root.setAttribute("data-theme", t);
-  localStorage.setItem("tkj-theme", t);
+  if (persist) { try { localStorage.setItem("tkj-theme", t); } catch {} }
   perbaruiIkonTombol(t);
   const tombol = ambilTombolTema();
   if (!tombol) return;
@@ -63,12 +57,10 @@ export function pasangPendengarTema() {
 
 export function mulaiTema() {
   const root = document.documentElement;
-  let saved = localStorage.getItem("tkj-theme");
-  if (!validThemes.includes(saved)) {
-    saved = defaultTheme;
-    localStorage.setItem("tkj-theme", defaultTheme);
-  }
-  terapkanTema(saved);
+  let saved = null;
+  try { saved = localStorage.getItem("tkj-theme"); } catch {}
+  if (!validThemes.includes(saved)) saved = defaultTheme;
+  terapkanTema(saved, false);
 
   const buttonObserver = new MutationObserver(() => {
     if (!themeListenerAttached && ambilTombolTema()) {

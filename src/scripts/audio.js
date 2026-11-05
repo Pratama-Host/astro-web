@@ -5,7 +5,8 @@
 const AUDIO_PREF_KEY = "tkj-audio-enabled";
 
 export function ambilStatusAudio() {
-  const stored = localStorage.getItem(AUDIO_PREF_KEY);
+  let stored = null;
+  try { stored = localStorage.getItem(AUDIO_PREF_KEY); } catch {}
   if (stored === "1" || stored === "true") return true;
   if (stored === "0" || stored === "false") return false;
   return false;
@@ -24,13 +25,6 @@ export function perbaruiStatusTombolAudio(tombol, enabled) {
     "aria-label",
     enabled ? "Matikan musik latar" : "Nyalakan musik latar",
   );
-  const wrapper = tombol.querySelector(".pembungkus-ikon-audio");
-  if (wrapper) {
-    const icon = document.createElement("i");
-    icon.className = `fas fa-volume-${enabled ? "up" : "mute"}`;
-    icon.setAttribute("aria-hidden", "true");
-    wrapper.replaceChildren(icon);
-  }
 }
 
 export function kirimPesanAudio(payload) {
