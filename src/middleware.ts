@@ -40,6 +40,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (!varyValues.some((value) => value.toLowerCase() === 'cookie')) {
       headers.set('Vary', [...varyValues, 'Cookie'].join(', '));
     }
+  } else if (pathname.startsWith('/api/') && pathname !== '/api/public/settings') {
+    // Workers Cache is enabled for this Worker; make every non-public API explicit.
+    headers.set('Cache-Control', 'private, no-store, max-age=0, must-revalidate');
+  } else if (
+    context.request.method === 'GET' &&
+    response.status === 200 &&
+    headers.get('Content-Type')?.toLowerCase().includes('text/html') &&
+    !pathname.startsWith('/api/')
+  ) {
+    // Workers Cache stores the rendered public document for a short edge TTL.
+    // Private/admin routes and draft previews have already taken the no-store path above.
+    headers.set('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+    headers.set('Cache-Tag', 'site-html');
   }
 
   return new Response(response.body, {

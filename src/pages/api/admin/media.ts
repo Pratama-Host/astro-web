@@ -196,7 +196,7 @@ export const POST: APIRoute = async ({ request }) => {
   const bytes = Buffer.from(await file.arrayBuffer());
   const uploadResult = replacePath
     ? await storage.update(objectPath, bytes, { contentType: inspected.mimeType, cacheControl: '0' })
-    : await storage.upload(objectPath, bytes, { upsert: false, contentType: inspected.mimeType, cacheControl: '3600' });
+    : await storage.upload(objectPath, bytes, { upsert: false, contentType: inspected.mimeType, cacheControl: '31536000' });
   if (uploadResult.error) return Response.json({ error: 'Upload ke Storage gagal.' }, { status: 400 });
 
   const publicUrl = storage.getPublicUrl(objectPath).data.publicUrl;

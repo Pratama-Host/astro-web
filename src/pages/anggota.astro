@@ -15,6 +15,7 @@ function makeInitials(name = "") {
 }
 
 const siswa = G.namaSiswa || [];
+const firstMemberPhotoNis = siswa.find((member) => Boolean(member.foto))?.nis || null;
 const totalSiswa = siswa.length;
 
 ---
@@ -89,7 +90,13 @@ const totalSiswa = siswa.length;
                <div class="card member-card card-accent-top reveal" data-nis={member.nis} style={`--d: ${(i % 5) * 0.05}s`} role="button" tabindex="0" aria-label={`Lihat detail ${member.nama}`}>
                   <div class="avatar lg avatar-ring">
                     {member.foto ? (
-                      <img src={member.foto} alt={member.nama} loading="lazy" />
+                      <img
+                        src={member.foto}
+                        alt={member.nama}
+                        loading={member.nis === firstMemberPhotoNis ? "eager" : "lazy"}
+                        fetchpriority={member.nis === firstMemberPhotoNis ? "high" : "auto"}
+                        decoding="async"
+                      />
                     ) : (
                       <span>{makeInitials(member.nama)}</span>
                     )}

@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
-import { cleanText, logCmsAction, validInternalHref, readJsonRequest, isPlainRecord } from '../../../lib/cms-admin';
+import { cleanText, purgePublicSiteCache, validInternalHref, readJsonRequest, isPlainRecord } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 
 export const prerender = false;
@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_navigation').select('*').order('sort_order');
   if (error) return Response.json({ error: 'Navigasi gagal dibaca. Jalankan migration CMS.' }, { status: 500 });
-  return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
+  return Response.json({ data: data || [], snapshot: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
 export const PUT: APIRoute = async ({ request }) => {
@@ -36,21 +36,23 @@ export const PUT: APIRoute = async ({ request }) => {
     seenIds.add(id);
     items.push({ id, label, href, icon: cleanText(item.icon, 50), sort_order: i, enabled: item.enabled ?? true, updated_at: new Date().toISOString() });
   }
-  const { data: existing, error: existingError } = await db.from('site_navigation').select('id');
-  if (existingError) return Response.json({ error: 'Menu lama gagal dibaca.' }, { status: 500 });
+  if (!Array.isArray(body.expectedSnapshot)) return Response.json({ error: 'Snapshot navigasi tidak tersedia. Muat ulang menu.' }, { status: 409 });
+  const expectedSnapshot = body.expectedSnapshot;
+  if (expectedSnapshot.some((row: any) => !row || typeof row.id !== 'string')) return Response.json({ error: 'Snapshot navigasi tidak valid. Muat ulang menu.' }, { status: 409 });
   const keep = new Set(items.map((item) => item.id));
-  const removed = (existing || []).filter((row) => !keep.has(row.id)).map((row) => row.id);
+  const removed = expectedSnapshot.filter((row: any) => !keep.has(row.id)).map((row: any) => row.id);
   if (removed.length && body.confirmDelete !== true) {
     return Response.json({ error: `Ada ${removed.length} menu yang akan dihapus. Konfirmasi diperlukan.`, removed }, { status: 409 });
   }
-  const { error } = items.length ? await db.from('site_navigation').upsert(items, { onConflict: 'id' }) : { error: null };
-  if (error) return Response.json({ error: 'Navigasi gagal disimpan.' }, { status: 500 });
-  for (const row of existing || []) {
-    if (!keep.has(row.id)) {
-      const { error: deleteError } = await db.from('site_navigation').delete().eq('id', row.id);
-      if (deleteError) return Response.json({ error: `Navigasi tersimpan, tetapi penghapusan menu '${row.id}' gagal. Muat ulang data sebelum mencoba lagi.` }, { status: 500 });
-    }
+  const { error: replaceError } = await db.rpc('replace_tkj_cms_navigation', {
+    p_items: items,
+    p_allow_delete: body.confirmDelete === true,
+    p_expected_snapshot: expectedSnapshot,
+  });
+  if (replaceError) {
+    if (replaceError.code === '22023' || replaceError.code === '40001') return Response.json({ error: 'Navigasi berubah sejak data dimuat atau payload ditolak. Muat ulang data dan ulangi konfirmasi.' }, { status: 409 });
+    return Response.json({ error: 'Navigasi gagal disimpan secara atomik.' }, { status: 500 });
   }
-  await logCmsAction(db, 'update', 'site_navigation', null, `${items.length} item navigasi disimpan`);
+  await purgePublicSiteCache();
   return Response.json({ ok: true, data: items });
 };

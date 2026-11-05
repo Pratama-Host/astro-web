@@ -7,6 +7,8 @@ const state = {
   skills: [],
   navigation: [],
   navigationOriginal: [],
+  navigationSnapshot: [],
+  collectionSnapshots: { guru: [], skills: [] },
   pages: [],
   sections: [],
   media: [],
@@ -823,6 +825,7 @@ $("reload-content").addEventListener("click", () =>
 async function loadCollection(type) {
   const payload = await api(`/api/admin/collections?type=${type}`);
   state[type === "guru" ? "teachers" : "skills"] = payload.data || [];
+  state.collectionSnapshots[type] = structuredClone(payload.snapshot || payload.data || []);
   $(type === "guru" ? "guru-json" : "skills-json").value = JSON.stringify(
     payload.data || [],
     null,
@@ -865,7 +868,7 @@ async function saveCollection(type) {
     await api(`/api/admin/collections?type=${type}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, confirmReplace: removed.length > 0 }),
+      body: JSON.stringify({ items, confirmReplace: removed.length > 0, expectedSnapshot: state.collectionSnapshots[type] }),
     });
     setStatus(status, `${items.length} data ${type} berhasil disimpan.`, true);
     await loadCollection(type);
@@ -1578,6 +1581,7 @@ async function loadNavigation() {
   const payload = await api("/api/admin/navigation");
   state.navigation = payload.data || [];
   state.navigationOriginal = state.navigation.map((item) => item.id);
+  state.navigationSnapshot = structuredClone(payload.snapshot || payload.data || []);
   renderNavigation();
 }
 function renderNavigation() {
@@ -1600,7 +1604,7 @@ function renderNavigation() {
     href.dataset.field = "href";
     const icon = document.createElement("input");
     icon.className = "control";
-    icon.placeholder = "fa-icon";
+    icon.placeholder = "fa-house / fa-code / fa-users";
     icon.value = item.icon || "";
     icon.dataset.field = "icon";
     const controls = document.createElement("div");
@@ -1684,7 +1688,7 @@ $("save-navigation").addEventListener("click", async () => {
     await api("/api/admin/navigation", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, confirmDelete: removed.length > 0 }),
+      body: JSON.stringify({ items, confirmDelete: removed.length > 0, expectedSnapshot: state.navigationSnapshot }),
     });
     setStatus("navigation-status", "Navigasi berhasil disimpan.", true);
     await loadNavigation();

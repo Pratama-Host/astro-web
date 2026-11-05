@@ -345,3 +345,33 @@
     transform: translateX(20%) translateZ(-100px) scale(0.85);
   }
 }
+
+.gallery-load-more-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem auto 0;
+}
+
+.gallery-load-more {
+  border: 1px solid var(--border-mid, var(--border));
+  border-radius: var(--radius-s, 8px);
+  padding: 0.75rem 1.1rem;
+  color: var(--text, inherit);
+  background: var(--surface, transparent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gallery-load-more:focus-visible {
+  outline: 2px solid var(--primary, currentColor);
+  outline-offset: 3px;
+}
+
+.gallery-load-more-status {
+  min-height: 1.25em;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted, currentColor);
+}

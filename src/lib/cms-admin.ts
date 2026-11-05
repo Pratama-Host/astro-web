@@ -1,4 +1,16 @@
+
 import type { SupabaseClient } from '@supabase/supabase-js';
+
+/** Invalidate the short-lived public HTML cache after a successful CMS mutation. */
+export async function purgePublicSiteCache(): Promise<void> {
+  try {
+    const { cache } = await import('cloudflare:workers');
+    await cache.purge({ tags: ['site-html'] });
+  } catch (error) {
+    // Local Node tests and non-Workers environments do not expose the Cloudflare cache API.
+    console.warn('[CMS cache] Purge tidak tersedia atau gagal:', error instanceof Error ? error.message : 'unknown error');
+  }
+}
 
 export async function logCmsAction(
   client: SupabaseClient,
@@ -14,6 +26,7 @@ export async function logCmsAction(
     // Audit logging stays best-effort, but a failure must remain visible in server logs.
     console.error('[CMS audit] Log tidak tersimpan:', error instanceof Error ? error.message : 'unknown error');
   }
+  await purgePublicSiteCache();
 }
 
 export function isPlainRecord(value: unknown): value is Record<string, unknown> {

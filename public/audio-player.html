@@ -6,7 +6,7 @@
     <title>Audio Player</title>
   </head>
   <body>
-    <audio id="bg-audio" preload="metadata" loop>
+    <audio id="bg-audio" preload="none" loop>
       <!-- Source audio diatur melalui JavaScript setelah konfigurasi dimuat. -->
 
       Your browser does not support the audio element.
@@ -18,28 +18,32 @@
       const STORAGE_TIME = "tkj-audio-current-time";
       const audio = document.getElementById("bg-audio");
       let configuredDefaultVolume = 0.8;
-      // Audio dipasok dari Supabase. Jika belum tersedia, player tetap diam tanpa 404 aset lokal.
+      let configuredAudioSource = null;
+      let audioSettingsLoaded = false;
+      let playRequested = false;
+      let playRequestPending = false;
+      let pendingPlayAfterInteraction = false;
+      // Konfigurasi ringan boleh dibaca lebih awal; file audio baru diminta saat benar-benar diaktifkan.
       fetch("/api/public/settings", { credentials: "same-origin" })
         .then((response) => response.ok ? response.json() : null)
         .then((settings) => {
-          const source = settings?.media?.audio_url;
-          if (!source) return;
-          audio.src = source;
-          audio.load();
+          configuredAudioSource = settings?.media?.audio_url || null;
+          audioSettingsLoaded = true;
           const configuredVolume = Number(settings?.media?.audio_volume);
           if (Number.isFinite(configuredVolume)) {
             configuredDefaultVolume = Math.min(1, Math.max(0, configuredVolume));
             try { if (localStorage.getItem(STORAGE_VOLUME) === null) audio.volume = configuredDefaultVolume; } catch {}
           }
-          if (getStoredEnabled()) audio.addEventListener("canplay", playAudio, { once: true });
+          if (getStoredEnabled() || playRequested) playAudio();
+          else kirimStatusAudio("state");
         })
         .catch(() => {
-          audio.removeAttribute("src");
-          audio.load();
+          audioSettingsLoaded = true;
+          configuredAudioSource = null;
+          if (playRequested) kirimStatusAudio("error");
         });
       const FADE_DURATION_SECONDS = 1.5;
       let fadeAnimationFrame = null;
-      let pendingPlayAfterInteraction = false;
 
       function getStoredEnabled() {
         try {
@@ -132,24 +136,42 @@
       }
 
       function playAudio() {
+        playRequested = true;
+        if (!audioSettingsLoaded) return;
+        if (!configuredAudioSource) {
+          aturTersimpanAktif(false);
+          kirimStatusAudio("error");
+          return;
+        }
+        if (!audio.getAttribute("src")) {
+          audio.src = configuredAudioSource;
+          audio.load();
+        }
+        if (!audio.paused || playRequestPending) return;
+        playRequestPending = true;
         audio
           .play()
           .then(() => {
+            playRequestPending = false;
+            pendingPlayAfterInteraction = false;
             aturTersimpanAktif(true);
             kirimStatusAudio("play");
           })
           .catch((error) => {
+            playRequestPending = false;
             console.error("Audio play failed:", error);
             if (error.name === "NotAllowedError") {
-              // Autoplay blocked, mark for retry after user interaction
+              // Preference remains enabled; retry after a real user interaction.
               pendingPlayAfterInteraction = true;
-              aturTersimpanAktif(true); // Keep preference as enabled
+              aturTersimpanAktif(true);
             }
             kirimStatusAudio("error");
           });
       }
 
       function pauseAudio() {
+        playRequested = false;
+        pendingPlayAfterInteraction = false;
         audio.pause();
         aturTersimpanAktif(false);
         kirimStatusAudio("pause");
@@ -235,24 +257,24 @@
 
       window.addEventListener("load", () => {
         audio.volume = ambilTersimpanVolume();
-        // Pemutaran otomatis menunggu konfigurasi Supabase dan event canplay.
-        // Jika audio belum tersedia, player tetap diam tanpa mencoba sumber lokal.
+        // Preferensi aktif sebelumnya memulihkan audio; selain itu tidak ada file audio yang diminta.
         sendState();
-        if (getStoredEnabled() && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) playAudio();
+        if (getStoredEnabled()) playAudio();
       });
 
-      // Handle user interaction to retry pending audio play
+      // Keep the retry hooks until playback succeeds. The first user interaction
+      // can happen before the settings request finishes, so removing listeners
+      // after that event would lose the only reliable autoplay-recovery path.
       function handleUserInteraction() {
-        if (pendingPlayAfterInteraction) {
-          console.log("Retrying audio play after user interaction");
-          playAudio();
-          pendingPlayAfterInteraction = false;
-        }
-        // Remove listeners after first interaction
+        if (!playRequested || !audioSettingsLoaded || !audio.paused) return;
+        playAudio();
+      }
+
+      audio.addEventListener("playing", () => {
         document.removeEventListener("click", handleUserInteraction);
         document.removeEventListener("keydown", handleUserInteraction);
         document.removeEventListener("touchstart", handleUserInteraction);
-      }
+      }, { once: true });
 
       document.addEventListener("click", handleUserInteraction);
       document.addEventListener("keydown", handleUserInteraction);

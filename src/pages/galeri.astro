@@ -43,7 +43,13 @@ const carouselData = galeri.slice(0, 5);
           <div class="carousel-3d" id="carousel-3d" aria-label="Foto pilihan kelas">
             {carouselData.map((item, idx) => (
               <div id={`carousel-slide-${idx}`} class={`carousel-item ${idx === 0 ? 'active' : ''}`} data-index={idx} role="button" tabindex={idx === 0 ? 0 : -1} aria-roledescription="slide" aria-label={`Slide ${idx + 1} dari ${carouselData.length}`}>
-                <img src={item.src} alt={item.caption || "Foto pilihan kelas"} decoding="async" />
+                <img
+                  src={item.src}
+                  alt={item.alt_text || item.caption || "Foto pilihan kelas"}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  fetchpriority={idx === 0 ? "high" : "auto"}
+                  decoding="async"
+                />
               </div>
             ))}
           </div>
@@ -70,9 +76,9 @@ const carouselData = galeri.slice(0, 5);
         <h2 class="sec-subtitle">{cmsCollectionTitle}</h2>
         {galeri.length > 0 ? (
         <div class="grid-galeri" id="grid-galeri" aria-label="Galeri foto kelas TKJ XII-9" role="list">
-          {galeri.map((item, idx) => (
+          {galeri.slice(0, 8).map((item, idx) => (
             <div class="item-galeri reveal" style={`--d: ${(idx % 5) * 0.05}s`} tabindex="0" role="button" aria-label={`Perbesar foto ${idx + 1}${item.caption ? `: ${item.caption}` : ""}`}>
-              <img src={item.src} alt={item.caption || "Galeri foto"} loading="lazy" />
+              <img src={item.src} alt={item.alt_text || item.caption || "Galeri foto"} loading="lazy" decoding="async" />
               {item.caption && (
                 <div class="keterangan-galeri">
                   <span>{item.caption}</span>
@@ -81,6 +87,22 @@ const carouselData = galeri.slice(0, 5);
             </div>
           ))}
         </div>
+        {galeri.length > 8 && (
+          <>
+            <template id="gallery-more-template">
+              {galeri.slice(8).map((item, idx) => (
+                <div class="item-galeri reveal" style={`--d: ${(idx % 5) * 0.05}s`} tabindex="0" role="button" aria-label={`Perbesar foto ${idx + 9}${item.caption ? `: ${item.caption}` : ""}`}>
+                  <img src={item.src} alt={item.alt_text || item.caption || "Galeri foto"} loading="lazy" decoding="async" />
+                  {item.caption && <div class="keterangan-galeri"><span>{item.caption}</span></div>}
+                </div>
+              ))}
+            </template>
+            <div class="gallery-load-more-wrap">
+              <button id="load-more-gallery" class="gallery-load-more" type="button">Muat 8 foto lagi</button>
+              <p id="gallery-load-more-status" class="gallery-load-more-status" role="status" aria-live="polite"></p>
+            </div>
+          </>
+        )}
         ) : (
           <p class="gallery-empty-state" role="status">Belum ada foto yang ditambahkan ke galeri.</p>
         )}

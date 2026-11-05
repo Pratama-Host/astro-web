@@ -276,7 +276,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
                   <div class="av">
                     {profilePhoto ? <img src={profilePhoto} alt={`Foto profil ${profileName}`} width="180" height="180" fetchpriority="high" loading="eager" decoding="async" /> : <span>{initials}</span>}
                   </div>
-                  <div class="status-dot" aria-label="Profil pengembang"></div>
+                  <div class="status-dot" aria-hidden="true"></div>
                 </div>
               </div>
               <div class="bento-tile bento-name">
@@ -307,7 +307,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
                 <div class="fact" data-reveal><div class="f-icon"><Icon name="target" size={22} /></div><div class="f-info"><span class="f-label">Focus</span><span class="f-val">{textValue(devProfile.focus, DEVELOPER_DEFAULTS.profile.focus, 100)}</span></div></div>
                 <div class="fact" data-reveal><div class="f-icon"><Icon name="coffee" size={22} /></div><div class="f-info"><span class="f-label">Fuel</span><span class="f-val">{textValue(devProfile.fuel, DEVELOPER_DEFAULTS.profile.fuel, 80)}</span></div></div>
               </div>
-              <div class="marquee-wrap" aria-label="Teknologi yang menjadi perhatian"><div class="marquee">
+              <div class="marquee-wrap" role="group" aria-label="Teknologi yang menjadi perhatian"><div class="marquee">
                 {[...marqueeSkills, ...marqueeSkills].map((skill) => <span>{skill}</span>)}
               </div></div>
               <div class="sub-title">Focus</div>
@@ -384,7 +384,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
             <section class="section">
               <div class="sec-title" data-kicker="Chapter III">Karya & proyek</div>
               <p class="stack-note">Proyek yang sedang menjadi rumah bagi halaman portofolio ini.</p>
-              <div class="project-stats" aria-label="Ringkasan portofolio">
+              <div class="project-stats" role="group" aria-label="Ringkasan portofolio">
                 <div><strong data-countup={projects.length}>{projects.length}</strong><span>Proyek tercatat</span></div><div><strong data-countup={projectTech.length}>{projectTech.length}</strong><span>Teknologi tercatat</span></div><div><strong data-countup={portfolioPageCount}>{portfolioPageCount}</strong><span>Halaman portofolio</span></div><div><strong data-countup={storyChapterCount}>{storyChapterCount}</strong><span>Bab cerita</span></div><div><strong data-countup={members.length}>{members.length}</strong><span>Anggota kelas</span></div><div><strong data-countup={gallery.length}>{gallery.length}</strong><span>Foto galeri</span></div>
               </div>
               <div class="project-filters" role="group" aria-label="Filter kategori proyek">{['Semua', 'Automation', 'Frontend', 'Backend', 'Website'].map((filter) => <button type="button" data-project-filter={filter} class:list={{ active: filter === 'Semua' }} aria-pressed={filter === 'Semua' ? 'true' : 'false'}>{filter}</button>)}</div>
@@ -521,7 +521,7 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
       </footer>
 
       <div class="overlay" id="overlay" aria-hidden="true"></div>
-      <aside class="drawer" id="drawer" aria-label="Menu tambahan" aria-hidden="true">
+      <aside class="drawer" id="drawer" aria-label="Menu tambahan" aria-hidden="true" inert>
         <div class="dr-hdr"><div class="dr-title">Menu</div><button class="dr-close" type="button" data-action="close-menu" aria-label="Tutup menu"><Icon name="close" size={20} /></button></div>
         <div class="dr-section">
           <div class="dr-label">Navigasi utama</div>

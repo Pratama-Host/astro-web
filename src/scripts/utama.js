@@ -80,11 +80,13 @@ function initHamburger() {
   if (!btn || !nav) return;
 
   let isOpen = false;
+  nav.inert = true;
 
   function open() {
     isOpen = true;
-    btn.setAttribute("aria-expanded", "true");
+    nav.inert = false;
     nav.setAttribute("aria-hidden", "false");
+    btn.setAttribute("aria-expanded", "true");
     document.body.classList.add("menu-terbuka");
     document.body.style.overflow = "hidden";
     if (panel) enableFocusTrap(panel);
@@ -94,6 +96,7 @@ function initHamburger() {
     isOpen = false;
     btn.setAttribute("aria-expanded", "false");
     nav.setAttribute("aria-hidden", "true");
+    nav.inert = true;
     document.body.classList.remove("menu-terbuka");
     document.body.style.overflow = "";
     disableFocusTrap();

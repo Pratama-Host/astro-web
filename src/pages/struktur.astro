@@ -18,6 +18,7 @@ function getExtendedMemberData(nama) {
   if (!G.namaSiswa) return null;
   return G.namaSiswa.find((s) => s.nama.toLowerCase() === nama.toLowerCase()) || null;
 }
+const firstOrganizationPhoto = G.waliKelas?.foto || G.strukturOrg?.find((member) => Boolean(member.foto))?.foto || null;
 
 ---
 
@@ -44,7 +45,7 @@ function getExtendedMemberData(nama) {
             <div class="org-card reveal is-wali" tabindex="0" role="button" data-nama={G.waliKelas.nama} data-jabatan="Wali Kelas" data-foto={G.waliKelas.foto} data-desc={G.waliKelas.desc} aria-label={`Lihat detail ${G.waliKelas.nama}, Wali Kelas`}>
               <div class="avatar lg" style="margin-bottom: 8px;">
                 {G.waliKelas.foto ? (
-                  <img src={G.waliKelas.foto} alt={G.waliKelas.nama} loading="lazy" />
+                  <img src={G.waliKelas.foto} alt={G.waliKelas.nama} loading="eager" fetchpriority="high" decoding="async" />
                 ) : (
                   <span>{makeInitials(G.waliKelas.nama)}</span>
                 )}
@@ -68,7 +69,7 @@ function getExtendedMemberData(nama) {
                 <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+1) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
-                      <img src={foto} alt={m.nama} loading="lazy" />
+                      <img src={foto} alt={m.nama} loading={foto === firstOrganizationPhoto ? "eager" : "lazy"} fetchpriority={foto === firstOrganizationPhoto ? "high" : "auto"} decoding="async" />
                     ) : (
                       <span>{makeInitials(m.nama)}</span>
                     )}
@@ -94,7 +95,7 @@ function getExtendedMemberData(nama) {
                 <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+3) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
-                      <img src={foto} alt={m.nama} loading="lazy" />
+                      <img src={foto} alt={m.nama} loading={foto === firstOrganizationPhoto ? "eager" : "lazy"} fetchpriority={foto === firstOrganizationPhoto ? "high" : "auto"} decoding="async" />
                     ) : (
                       <span>{makeInitials(m.nama)}</span>
                     )}
@@ -120,7 +121,7 @@ function getExtendedMemberData(nama) {
                 <div class="org-card reveal" tabindex="0" role="button" data-nama={m.nama} data-jabatan={m.jabatan} data-foto={foto} data-desc={desc} aria-label={`Lihat detail ${m.nama}, ${m.jabatan}`} style={`--d: ${(i+7) * 0.15}s`}>
                    <div class="avatar lg" style="margin-bottom: 8px;">
                     {foto ? (
-                      <img src={foto} alt={m.nama} loading="lazy" />
+                      <img src={foto} alt={m.nama} loading={foto === firstOrganizationPhoto ? "eager" : "lazy"} fetchpriority={foto === firstOrganizationPhoto ? "high" : "auto"} decoding="async" />
                     ) : (
                       <span>{makeInitials(m.nama)}</span>
                     )}

@@ -8,6 +8,7 @@ import { initReveal, enableFocusTrap, disableFocusTrap } from "./alat.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   initGalleryImageLoading();
+  initGalleryProgressiveLoading();
   initGallery();
   initReveal();
   initGalleryLightbox();
@@ -16,8 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
 let carouselIndex = 0;
 let carouselItemsData = [];
 
-function initGalleryImageLoading() {
-  const images = document.querySelectorAll(".item-galeri img");
+function initGalleryImageLoading(root = document) {
+  const images = root.querySelectorAll(".item-galeri img");
   images.forEach((img) => {
     const show = () => img.classList.add("loaded");
 
@@ -28,6 +29,40 @@ function initGalleryImageLoading() {
       img.addEventListener("error", () => img.classList.add("loaded"), {
         once: true,
       });
+    }
+  });
+}
+
+
+function initGalleryProgressiveLoading() {
+  const grid = document.getElementById("grid-galeri");
+  const template = document.getElementById("gallery-more-template");
+  const button = document.getElementById("load-more-gallery");
+  const status = document.getElementById("gallery-load-more-status");
+  if (!grid || !template || !button) return;
+
+  const batchSize = 8;
+  button.addEventListener("click", () => {
+    let appended = 0;
+    const fragment = document.createDocumentFragment();
+    while (appended < batchSize && template.content.firstElementChild) {
+      fragment.appendChild(template.content.firstElementChild);
+      appended++;
+    }
+    if (!appended) {
+      button.hidden = true;
+      return;
+    }
+
+    const addedItems = Array.from(fragment.children);
+    grid.appendChild(fragment);
+    addedItems.forEach((item) => initGalleryImageLoading(item));
+    const remaining = template.content.children.length;
+    if (status) status.textContent = `${appended} foto ditambahkan. ${remaining} foto tersisa.`;
+    if (remaining === 0) {
+      button.hidden = true;
+      template.remove();
+      addedItems[addedItems.length - 1]?.focus();
     }
   });
 }

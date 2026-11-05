@@ -7,7 +7,7 @@
    ================================================================ */
 'use strict';
 
-const CACHE_NAME = 'tkj-xii9-v5';
+const CACHE_NAME = 'tkj-xii9-v6';
 const OFFLINE_URL = '/offline';
 const MAX_STATIC_CACHE_ENTRIES = 120;
 
