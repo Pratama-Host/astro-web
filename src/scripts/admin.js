@@ -719,17 +719,6 @@ async function loadContent() {
     ["desc", "desc"],
   ])
     writeIf(`c-wali-${id}`, wali[key]);
-  const masdo = c.masdo || {};
-  for (const [id, key] of [
-    ["nama", "nama"],
-    ["jabatan", "jabatan"],
-    ["foto", "foto"],
-  ])
-    writeIf(`c-masdo-${id}`, masdo[key]);
-  writeIf(
-    "c-masdo-skills",
-    Array.isArray(masdo.keahlian) ? masdo.keahlian.join(", ") : "",
-  );
   for (const [id, value] of [
     ["c-stats", c.stats || []],
     ["c-prestasi", c.prestasi || []],
@@ -778,15 +767,6 @@ $("content-form").addEventListener("submit", async (e) => {
       jabatan: $("c-wali-jabatan").value,
       foto: $("c-wali-foto").value,
       desc: $("c-wali-desc").value,
-    };
-    payload.masdo = {
-      nama: $("c-masdo-nama").value,
-      jabatan: $("c-masdo-jabatan").value,
-      foto: $("c-masdo-foto").value,
-      keahlian: $("c-masdo-skills")
-        .value.split(",")
-        .map((x) => x.trim())
-        .filter(Boolean),
     };
     payload.stats = readJsonField("c-stats", []);
     payload.prestasi = readJsonField("c-prestasi", []);
@@ -1357,7 +1337,7 @@ $("publish-developer-theme").addEventListener("click", async () => {
   } catch (error) {
     setStatus(
       "developer-theme-status",
-      `Publikasi belum tersedia: ${error.message}. Periksa migration Stage 3 Hardening pada database Preview terlebih dahulu.`,
+      `Publikasi belum tersedia: ${error.message}. Periksa migrations/0001_baseline.sql pada database terlebih dahulu.`,
     );
   } finally {
     button.disabled = false;

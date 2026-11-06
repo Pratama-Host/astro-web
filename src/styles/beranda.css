@@ -802,3 +802,15 @@
   color: var(--text-2);
   font-size: 0.88rem;
 }
+
+/* ── Visi, Misi & Prestasi ── */
+.about-motto { margin-top: 10px; color: var(--text-2, var(--text-1)); font-style: italic; }
+.about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 13px; margin-top: 28px; }
+.about-card { display: flex; flex-direction: column; gap: 10px; }
+.about-label { font-family: "Fira Code", monospace; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-1); }
+.about-text { line-height: 1.6; }
+.about-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 8px; line-height: 1.55; }
+.about-prestasi { list-style: none; padding-left: 0; }
+.about-prestasi li { display: flex; flex-direction: column; gap: 2px; }
+.about-prestasi-title { font-weight: 600; color: var(--text-1); }
+.about-prestasi-meta { font-size: 0.78rem; opacity: 0.75; }

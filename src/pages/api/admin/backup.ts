@@ -19,8 +19,6 @@ const TABLES = [
   'anggota', 'galeri', 'guru', 'skills', 'site_pages', 'site_page_drafts',
   'site_navigation', 'site_sections', 'media_assets', 'content_revisions', 'admin_audit_logs',
 ] as const;
-type BackupTable = typeof TABLES[number];
-
 function isSafeObjectPath(value: unknown): value is string {
   if (typeof value !== 'string' || !value || value.length > 500) return false;
   const parts = value.split('/');
@@ -125,7 +123,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const { data, error } = await db.rpc('export_tkj_cms_backup');
   if (error || !isPlainRecord(data)) {
-    return Response.json({ error: 'Ekspor backup gagal. Pastikan migration 20261103_stage3_hardening.sql sudah dijalankan.' }, { status: 503 });
+    return Response.json({ error: 'Ekspor backup gagal. Pastikan migrations/0001_baseline.sql sudah dijalankan.' }, { status: 503 });
   }
 
   const serialized = JSON.stringify(data, null, 2);

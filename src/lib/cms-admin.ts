@@ -125,13 +125,6 @@ export function validPublicUrl(value: unknown): string | null {
   }
 }
 
-/** Memvalidasi field URL HTTP/HTTPS yang boleh kosong. */
-export function isValidOptionalPublicUrl(value: unknown): boolean {
-  if (value === undefined || value === null) return true;
-  if (typeof value === 'string' && value.trim() === '') return true;
-  return validPublicUrl(value) !== null;
-}
-
 /** Referensi media: URL http(s) ATAU "storage://<path>" (di-resolve oleh data.ts). */
 export function validMediaRef(value: unknown): string | null {
   if (typeof value !== 'string') return null;

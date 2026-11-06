@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_page_drafts').select('*').eq('slug', slug).maybeSingle();
-  if (error) return Response.json({ error: 'Draft belum tersedia. Jalankan migration Stage 3.' }, { status: 503 });
+  if (error) return Response.json({ error: 'Draft belum tersedia. Jalankan migrations/0001_baseline.sql.' }, { status: 503 });
   return Response.json({ data: data || null }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
@@ -58,7 +58,7 @@ export const PUT: APIRoute = async ({ request }) => {
   };
   const now = new Date().toISOString();
   const { data, error } = await db.from('site_page_drafts').upsert({ slug, ...seo, content: body.content, updated_at: now }, { onConflict: 'slug' }).select().single();
-  if (error) return Response.json({ error: 'Draft gagal disimpan. Pastikan migration Stage 3 sudah dijalankan.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Draft gagal disimpan. Pastikan migrations/0001_baseline.sql sudah diterapkan.' }, { status: 500 });
   await logCmsAction(db, 'save-draft', 'site_page_drafts', slug, `Draft ${slug} disimpan`);
   return Response.json({ ok: true, data, message: 'Draft tersimpan. Halaman publik belum berubah.' }, { headers: { 'Cache-Control': 'no-store' } });
 };

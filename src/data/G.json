@@ -78,17 +78,6 @@
     "jabatan": "Wali Kelas XII-9 TKJ",
     "foto": "https://ui-avatars.com/api/?name=Dina+Sa'diyah&background=7f1d1d&color=fff&size=200&bold=true&font-size=0.33"
   },
-  "masdo": {
-    "nama": "Masdo Officials",
-    "jabatan": "Sudah Jadi Legenda",
-    "keahlian": [
-      "Web Development",
-      "Network Administration",
-      "Digital Marketing",
-      "Content Creation"
-    ],
-    "foto": "/assets/profil/profil-alfredo.webp"
-  },
   "guru": [
     {
       "nama": "Mr. Sudarto",
@@ -195,12 +184,12 @@
     {
       "nama": "Alif Harum Aji Pamungkas",
       "jabatan": "Ketua Kelas",
-      "foto": "/assets/profil/alip.webp"
+      "foto": "storage://anggota/alip.webp"
     },
     {
       "nama": "Alfredo Pratama",
       "jabatan": "Wakil Ketua",
-      "foto": "/assets/profil/profil-alfredo.webp"
+      "foto": "storage://anggota/profil-alfredo.webp"
     },
     {
       "nama": "Anggi Olivia Safitri",
@@ -263,11 +252,11 @@
     {
       "nama": "Alfredo Pratama",
       "nis": "5962",
-      "foto": "/assets/profil/profil-alfredo.webp",
+      "foto": "storage://anggota/profil-alfredo.webp",
       "desc": "Siswa XII TKJ",
-      "audio": "/assets/audio/videoplayback.weba",
+      "audio": "storage://assets-global/audio/videoplayback.weba",
       "namaAudio": "Alfredo Pratama",
-      "fotoAudio": "/assets/profil/profil-alfredo.webp",
+      "fotoAudio": "storage://anggota/profil-alfredo.webp",
       "descAudio": "ggdjsdjs dhks fgskd gsdfsfsdf ssf dsiegufwiegf ws dsgidgs dfsdgfis sdgfsidfgi sudgfsi sf sifi sdfis gdisgrieriw w",
       "social": {
         "instagram": "#"
@@ -276,11 +265,11 @@
     {
       "nama": "Alif Harum Aji Pamungkas",
       "nis": "5963",
-      "foto": "/assets/profil/alip.webp",
+      "foto": "storage://anggota/alip.webp",
       "desc": "Siswa XII TKJ",
       "audio": null,
       "namaAudio": "Alif Harum Aji Pamungkas",
-      "fotoAudio": "/assets/profil/alip.webp",
+      "fotoAudio": "storage://anggota/alip.webp",
       "descAudio": "Siswa XII TKJ",
       "social": {
         "instagram": "#"
@@ -289,11 +278,11 @@
     {
       "nama": "Alvina Ekawibawani",
       "nis": "5964",
-      "foto": "/assets/profil/profil-alvina.webp",
+      "foto": "storage://anggota/profil-alvina.webp",
       "desc": "Siswa XII TKJ",
       "audio": null,
       "namaAudio": "Alvina Ekawibawani",
-      "fotoAudio": "/assets/profil/profil-alvina.webp",
+      "fotoAudio": "storage://anggota/profil-alvina.webp",
       "descAudio": "Siswa XII TKJ",
       "social": {
         "instagram": "#"
@@ -393,11 +382,11 @@
     {
       "nama": "Asyifa Elfrida",
       "nis": "5973",
-      "foto": "/assets/profil/cute.webp",
+      "foto": "storage://anggota/cute.webp",
       "desc": "Siswa XII TKJ",
       "audio": null,
       "namaAudio": "Asyifa Elfrida",
-      "fotoAudio": "/assets/profil/cute.webp",
+      "fotoAudio": "storage://anggota/cute.webp",
       "descAudio": "Siswa XII TKJ",
       "social": {
         "instagram": "https://www.instagram.com/el___faa"
@@ -535,102 +524,102 @@
   ],
   "galeri": [
     {
-      "src": "/assets/kenangan/foto-kelas1.webp",
+      "src": "storage://galeri/foto-kelas1.webp",
       "caption": "Ahmad Andrean Pratama",
       "label": "Ahmad Andrean Pratama"
     },
     {
-      "src": "/assets/kenangan/foto-kelas2.webp",
+      "src": "storage://galeri/foto-kelas2.webp",
       "caption": "Alentian Vidyanata",
       "label": "Alentian Vidyanata"
     },
     {
-      "src": "/assets/kenangan/foto-lab1.webp",
+      "src": "storage://galeri/foto-lab1.webp",
       "caption": "Alfredo Pratama",
       "label": "Alfredo Pratama"
     },
     {
-      "src": "/assets/kenangan/foto-kelas3.webp",
+      "src": "storage://galeri/foto-kelas3.webp",
       "caption": "Alif Harum Aji Pamungkas",
       "label": "Alif Harum Aji Pamungkas"
     },
     {
-      "src": "/assets/kenangan/foto-cewe1.webp",
+      "src": "storage://galeri/foto-cewe1.webp",
       "caption": "Alvina Ekawibawani",
       "label": "Alvina Ekawibawani"
     },
     {
-      "src": "/assets/kenangan/foto-cewe2.webp",
+      "src": "storage://galeri/foto-cewe2.webp",
       "caption": "Anggi Olivia Safitri",
       "label": "Anggi Olivia Safitri"
     },
     {
-      "src": "/assets/kenangan/kenangan1.webp",
+      "src": "storage://galeri/kenangan1.webp",
       "caption": "Anggraini Nurul Amalia",
       "label": "Anggraini Nurul Amalia"
     },
     {
-      "src": "/assets/kenangan/kenangan2.webp",
+      "src": "storage://galeri/kenangan2.webp",
       "caption": "Anggun Febrita Lustia",
       "label": "Anggun Febrita Lustia"
     },
     {
-      "src": "/assets/kenangan/meme.jpeg",
+      "src": "storage://galeri/meme.jpeg",
       "caption": "Anka Juan Lianri",
       "label": "Anka Juan Lianri"
     },
     {
-      "src": "/assets/kenangan/kenangan4.webp",
+      "src": "storage://galeri/kenangan4.webp",
       "caption": "Annisa Zahrani",
       "label": "Annisa Zahrani"
     },
     {
-      "src": "/assets/kenangan/kenangan5.webp",
+      "src": "storage://galeri/kenangan5.webp",
       "caption": "Aprilia Kartika Sari",
       "label": "Aprilia Kartika Sari"
     },
     {
-      "src": "/assets/kenangan/kenangan6.webp",
+      "src": "storage://galeri/kenangan6.webp",
       "caption": "Apritha Arumdani",
       "label": "Apritha Arumdani"
     },
     {
-      "src": "/assets/kenangan/kenangan7.webp",
+      "src": "storage://galeri/kenangan7.webp",
       "caption": "Asyifa Elfrida",
       "label": "Asyifa Elfrida"
     },
     {
-      "src": "/assets/kenangan/kenangan8.webp",
+      "src": "storage://galeri/kenangan8.webp",
       "caption": "Aulia Abel Pratiwi",
       "label": "Aulia Abel Pratiwi"
     },
     {
-      "src": "/assets/kenangan/kenangan9.webp",
+      "src": "storage://galeri/kenangan9.webp",
       "caption": "Aulia Rahmadani",
       "label": "Aulia Rahmadani"
     },
     {
-      "src": "/assets/kenangan/kenangan10.webp",
+      "src": "storage://galeri/kenangan10.webp",
       "caption": "Ayshyva Sandrella",
       "label": "Ayshyva Sandrella"
     },
     {
-      "src": "/assets/kenangan/kenangan11.webp",
+      "src": "storage://galeri/kenangan11.webp",
       "caption": "Bela Ameliya",
       "label": "Bela Ameliya"
     },
     {
-      "src": "/assets/kenangan/kenangan12.webp",
+      "src": "storage://galeri/kenangan12.webp",
       "caption": "Belva Fedida Eka Callola",
       "label": "Belva Fedida Eka Callola"
     },
     {
-      "src": "/assets/kenangan/kenangan13.webp",
+      "src": "storage://galeri/kenangan13.webp",
       "caption": "Bilkis Keisa Duwi Pandriya",
       "label": "Bilkis Keisa Duwi Pandriya"
     },
     {
-      "src": "/assets/kenangan/meme2.jpeg",
+      "src": "storage://galeri/meme2.jpeg",
       "caption": "Chika Mutia Astri",
       "label": "Chika Mutia Astri"
     }

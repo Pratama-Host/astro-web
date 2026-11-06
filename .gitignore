@@ -10,3 +10,5 @@ dist/
 *.log
 .DS_Store
 assets.local-backup/
+*.bak
+*.bak.*

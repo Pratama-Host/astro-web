@@ -153,7 +153,7 @@ function initMembersInteractions() {
 
     const avatarEl = document.getElementById("modal-avatar");
     if (avatarEl) {
-      avatarEl.replaceChildren(renderAvatar(data, "lg"));
+      avatarEl.replaceChildren(renderAvatar(data));
       avatarEl.style.cursor = data.foto ? "pointer" : "default";
     }
 

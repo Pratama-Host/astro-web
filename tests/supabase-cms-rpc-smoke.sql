@@ -1,4 +1,4 @@
--- Run ONLY after migrations/0003_restore_cms_rpc_workflows.sql is deployed.
+-- Run ONLY after migrations/0001_baseline.sql is deployed.
 -- Entire smoke test is rollback-only. It temporarily writes test-shaped values to
 -- the existing /tkj page, its draft, site settings, revision history and audit log,
 -- then rolls everything back. Do not remove the final ROLLBACK.

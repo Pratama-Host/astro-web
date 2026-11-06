@@ -227,7 +227,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
     if (error) {
       await storage.remove([objectPath, ...(thumbnailPath ? [thumbnailPath] : [])]);
-      return Response.json({ error: 'Aset terunggah, tetapi pengaturan global gagal diperbarui secara transaksional. Pastikan migration 20261103_stage4_developer_and_global_asset.sql sudah dijalankan.' }, { status: 500 });
+      return Response.json({ error: 'Aset terunggah, tetapi pengaturan global gagal diperbarui secara transaksional. Pastikan migrations/0001_baseline.sql sudah dijalankan.' }, { status: 500 });
     }
   }
 

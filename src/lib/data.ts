@@ -1,8 +1,13 @@
 import fallbackData from '../data/G.json';
-import { getSupabaseAdmin, getStorageBucket } from './supabase';
+import { getSupabaseAdmin, getSupabasePublic, getStorageBucket } from './supabase';
 import { isAdminRequest } from './admin-auth';
 
 type JsonRecord = Record<string, any>;
+
+/** Fallback ke data bawaan tetap berjalan, tetapi penyebabnya harus terlihat di log Cloudflare. */
+function logDataError(scope: string, error: unknown) {
+  console.error(`[data:${scope}] Gagal membaca Supabase, memakai fallback:`, error instanceof Error ? error.message : 'unknown error');
+}
 
 function cloneFallback(client?: NonNullable<ReturnType<typeof getSupabaseAdmin>> | null): JsonRecord {
   const copy = JSON.parse(JSON.stringify(fallbackData)) as JsonRecord;
@@ -60,7 +65,7 @@ function resolveNestedStorageReferences(value: any, client: NonNullable<ReturnTy
   return value;
 }
 
-function mapMember(row: JsonRecord, client: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
+export function mapMember(row: JsonRecord, client: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
   return {
     nama: row.nama,
     nis: row.nis,
@@ -86,7 +91,7 @@ async function readSiteSettings(client: NonNullable<ReturnType<typeof getSupabas
 }
 
 export async function getSettings(): Promise<JsonRecord> {
-  const client = getSupabaseAdmin();
+  const client = getSupabasePublic();
   const fallback = cloneFallback(client);
   if (!client) return fallback;
   try {
@@ -94,7 +99,8 @@ export async function getSettings(): Promise<JsonRecord> {
     if (stored === undefined) return fallback;
     const resolved = resolveNestedStorageReferences(stored, client);
     return deepMerge(fallback, resolved);
-  } catch {
+  } catch (error) {
+    logDataError('getSettings', error);
     return fallback;
   }
 }
@@ -110,10 +116,11 @@ function isAuthorizedDraftPreview(request?: Request): boolean {
 
 export async function getPageSEO(pathname: string, request?: Request): Promise<JsonRecord> {
   const fallback: JsonRecord = {};
-  const client = getSupabaseAdmin();
+  const preview = isAuthorizedDraftPreview(request);
+  const client = preview ? getSupabaseAdmin() : getSupabasePublic();
   if (!client) return fallback;
   try {
-    if (isAuthorizedDraftPreview(request)) {
+    if (preview) {
       const { data: draft } = await client.from('site_page_drafts').select('title, description, og_image, noindex').eq('slug', pathname).maybeSingle();
       if (draft) {
         const seo = draft as JsonRecord;
@@ -125,23 +132,26 @@ export async function getPageSEO(pathname: string, request?: Request): Promise<J
     if (error || !data) return fallback;
     const resolvedImage = resolveStorageReference(data.og_image, client);
     return { ...data, og_image: resolvedImage || (String(data.og_image || '').startsWith('/assets/') ? null : data.og_image) };
-  } catch {
+  } catch (error) {
+    logDataError('getPageSEO', error);
     return fallback;
   }
 }
 
 export async function getPageContent(pathname: string, request?: Request): Promise<JsonRecord> {
-  const client = getSupabaseAdmin();
+  const preview = isAuthorizedDraftPreview(request);
+  const client = preview ? getSupabaseAdmin() : getSupabasePublic();
   if (!client) return {};
   try {
-    if (isAuthorizedDraftPreview(request)) {
+    if (preview) {
       const { data: draft } = await client.from('site_page_drafts').select('content').eq('slug', pathname).maybeSingle();
       if (draft?.content && typeof draft.content === 'object') return resolveNestedStorageReferences(draft.content, client) || {};
     }
     const { data, error } = await client.from('site_pages').select('content').eq('slug', pathname).maybeSingle();
     if (error || !data?.content || typeof data.content !== 'object') return {};
     return resolveNestedStorageReferences(data.content, client) || {};
-  } catch {
+  } catch (error) {
+    logDataError('getPageContent', error);
     return {};
   }
 }
@@ -157,65 +167,45 @@ const DEFAULT_NAVIGATION = [
 ];
 
 export async function getNavigation() {
-  const client = getSupabaseAdmin();
+  const client = getSupabasePublic();
   if (!client) return DEFAULT_NAVIGATION;
   try {
     const { data, error } = await client.from('site_navigation').select('id,label,href,icon,sort_order,enabled').eq('enabled', true).order('sort_order', { ascending: true });
     return error || !data?.length ? DEFAULT_NAVIGATION : data;
-  } catch {
+  } catch (error) {
+    logDataError('getNavigation', error);
     return DEFAULT_NAVIGATION;
   }
 }
 
 export async function getSections(pageSlug: string) {
-  const client = getSupabaseAdmin();
+  const client = getSupabasePublic();
   if (!client) return [];
   try {
     const { data, error } = await client.from('site_sections').select('section_key,sort_order,enabled').eq('page_slug', pageSlug).order('sort_order', { ascending: true });
     return error || !data ? [] : data;
-  } catch {
+  } catch (error) {
+    logDataError('getSections', error);
     return [];
   }
 }
 
-export async function getAnggota() {
-  const client = getSupabaseAdmin();
-  const fallback = cloneFallback(client);
-  if (!client) return fallback.namaSiswa;
-  try {
-    const { data, error } = await client.from('anggota').select('*').order('urutan', { ascending: true }).order('nama', { ascending: true });
-    if (error || !data) return fallback.namaSiswa;
-    return data.filter((row) => row.visible !== false).map((row) => mapMember(row, client));
-  } catch {
-    return fallback.namaSiswa;
-  }
-}
-
-export async function getGaleri() {
-  const client = getSupabaseAdmin();
-  const fallback = cloneFallback(client);
-  if (!client) return fallback.galeri;
-  try {
-    const { data, error } = await client.from('galeri').select('*').order('urutan', { ascending: true });
-    if (error || !data) return fallback.galeri;
-    return data.filter((row) => row.visible !== false).map((row) => ({
-      id: row.id,
-      src: resolveStorageReference(row.src, client),
-      caption: row.caption || '',
-      title: row.title || row.caption || '',
-      description: row.description || '',
-      category: row.category || 'Kegiatan',
-      taken_at: row.taken_at || null,
-      alt_text: row.alt_text || row.caption || 'Foto galeri TKJ XII-9',
-      urutan: row.urutan ?? 0,
-    })).filter((item) => item.src);
-  } catch {
-    return fallback.galeri;
-  }
+export function mapGalleryRow(row: JsonRecord, client: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
+  return {
+    id: row.id,
+    src: resolveStorageReference(row.src, client),
+    caption: row.caption || '',
+    title: row.title || row.caption || '',
+    description: row.description || '',
+    category: row.category || 'Kegiatan',
+    taken_at: row.taken_at || null,
+    alt_text: row.alt_text || row.caption || 'Foto galeri TKJ XII-9',
+    urutan: row.urutan ?? 0,
+  };
 }
 
 export async function getSiteData(): Promise<JsonRecord> {
-  const client = getSupabaseAdmin();
+  const client = getSupabasePublic();
   const fallback = cloneFallback(client);
   if (!client) return fallback;
   try {
@@ -235,13 +225,7 @@ export async function getSiteData(): Promise<JsonRecord> {
       result.strukturOrg = members.filter((member: JsonRecord) => member.jabatan).map((member: JsonRecord) => ({ nama: member.nama, jabatan: member.jabatan, foto: member.foto, desc: member.desc }));
     }
     if (!galleryResult.error && galleryResult.data) {
-      result.galeri = galleryResult.data.filter((row) => row.visible !== false).map((row) => ({
-        id: row.id,
-        src: resolveStorageReference(row.src, client),
-        caption: row.caption || '', title: row.title || row.caption || '',
-        description: row.description || '', category: row.category || 'Kegiatan',
-        taken_at: row.taken_at || null, alt_text: row.alt_text || row.caption || 'Foto galeri TKJ XII-9',
-      })).filter((item) => item.src);
+      result.galeri = galleryResult.data.filter((row) => row.visible !== false).map((row) => mapGalleryRow(row, client)).filter((item) => item.src);
     }
     if (!teachersResult.error && teachersResult.data) {
       result.guru = teachersResult.data.map((row) => ({ nama: row.nama, mapel: row.mapel, peran: row.peran, quote: row.quote, expertise: row.expertise || [] }));
@@ -250,7 +234,8 @@ export async function getSiteData(): Promise<JsonRecord> {
       result.skills = skillsResult.data.map((row) => ({ nama: row.nama, level: row.level, icon: row.icon, desc: row.deskripsi }));
     }
     return result;
-  } catch {
+  } catch (error) {
+    logDataError('getSiteData', error);
     return fallback;
   }
 }

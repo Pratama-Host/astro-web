@@ -56,7 +56,6 @@ export function pasangPendengarTema() {
 }
 
 export function mulaiTema() {
-  const root = document.documentElement;
   let saved = null;
   try { saved = localStorage.getItem("tkj-theme"); } catch {}
   if (!validThemes.includes(saved)) saved = defaultTheme;

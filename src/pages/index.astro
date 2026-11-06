@@ -20,6 +20,11 @@ function makeInitials(name = "") {
 
 const stats = G.stats || [];
 const guru = G.guru || [];
+const visi = typeof G.visi === "string" ? G.visi.trim() : "";
+const misi = Array.isArray(G.misi) ? G.misi.filter((item) => typeof item === "string" && item.trim()) : [];
+const prestasi = Array.isArray(G.prestasi) ? G.prestasi.filter((item) => item?.judul) : [];
+const motto = typeof G.motto === "string" ? G.motto.trim() : "";
+const hasAbout = Boolean(visi || misi.length || prestasi.length || motto);
 
 ---
 
@@ -120,6 +125,38 @@ const guru = G.guru || [];
       </div>
     </section>
     )}
+    <!-- Visi, Misi & Prestasi -->
+    {sectionVisible("about") && hasAbout && (
+    <section id="tentang-kelas" class="wadah reveal" aria-label="Visi, misi, dan prestasi kelas" style={`order:${sectionOrder("about",3)}`}>
+      <div class="sec-header">
+        <div class="sec-tag">Tentang Kelas</div>
+        <h2 class="sec-title">Visi, Misi & Prestasi</h2>
+        {motto && <p class="about-motto">“{motto}”</p>}
+      </div>
+      <div class="about-grid">
+        {(visi || misi.length > 0) && (
+          <div class="card card-accent-top about-card reveal">
+            {visi && (<><h3 class="about-label">Visi</h3><p class="about-text">{visi}</p></>)}
+            {misi.length > 0 && (<><h3 class="about-label">Misi</h3><ul class="about-list">{misi.map((item) => <li>{item}</li>)}</ul></>)}
+          </div>
+        )}
+        {prestasi.length > 0 && (
+          <div class="card card-accent-top about-card reveal">
+            <h3 class="about-label">Prestasi</h3>
+            <ul class="about-list about-prestasi">
+              {prestasi.map((item) => (
+                <li>
+                  <span class="about-prestasi-title">{item.judul}</span>
+                  <span class="about-prestasi-meta">{[item.tingkat, item.tahun].filter(Boolean).join(" · ")}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+    )}
+
   </main>
 
   <Footer />

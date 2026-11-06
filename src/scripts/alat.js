@@ -81,18 +81,6 @@ export function animateTyping(
   );
 }
 
-export function mulaiKetikHero() {
-  const el =
-    document.getElementById(
-      "slogan-pahlawan",
-    );
-  const text =
-    el?.dataset?.fallback ||
-    (el && el.textContent) ||
-    "";
-  animateTyping(el, text);
-}
-
 /* COUNTER ANIMATION */
 export function animateCounter(el, target, duration = 1200, suffix = "") {
   if (!el) return;
@@ -122,10 +110,7 @@ export function makeInitials(
 }
 
 /* RENDER AVATAR */
-export function renderAvatar(
-  member,
-  size = "lg",
-) {
+export function renderAvatar(member) {
   const fragment = document.createDocumentFragment();
   const nama = String(member?.nama || "");
   const foto = member?.foto;
@@ -500,9 +485,4 @@ export function initProgressBar() {
         },
       );
     });
-}
-
-/* CLOCK — Kini dikelola mandiri oleh src/components/GlobalClock.astro */
-export function mulaiJam() {
-  // Deprecated: GlobalClock.astro menangani jam & drag secara mandiri
 }

@@ -34,11 +34,6 @@ const replaceStorageReferences = (value) => {
   return storageReference(value);
 };
 const number = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
-const rowsSql = (rows, columns, conflict, updates) => {
-  if (!rows.length) return '-- Tidak ada data untuk tabel ini.\n';
-  const values = rows.map((row) => `(${columns.map((column) => column.sql(row)).join(', ')})`).join(',\n');
-  return `insert into public.${columns.table} (${columns.names.join(', ')})\nvalues\n${values}\non conflict (${conflict}) do update set ${updates};\n`;
-};
 
 const siteSettings = replaceStorageReferences({ ...data });
 for (const key of ['namaSiswa', 'strukturOrg', 'guru', 'skills', 'galeri']) delete siteSettings[key];
@@ -105,8 +100,6 @@ fs.mkdirSync(path.dirname(outputSql), { recursive: true });
 fs.writeFileSync(outputSql, sql, 'utf8');
 
 // Collect media literals from the canonical data source and remaining public/source files.
-// The retired duplicate config is documented in docs/AUDIT.md, not re-imported into the seed.
-const extensionPattern = /\.(?:svg|png|jpe?g|webp|gif|mp3|wav|ogg|m4a|weba|mp4|webm)$/i;
 const mediaReferences = new Map();
 const scanRoots = ['src', 'public'];
 const scanFile = (filePath) => {

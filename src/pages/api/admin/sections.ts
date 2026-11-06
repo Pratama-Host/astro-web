@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '../../../lib/supabase';
 
 export const prerender = false;
 const ALLOWED = new Set([
-  '/:hero', '/:stats', '/:teachers', '/anggota:list', '/galeri:featured', '/galeri:grid',
+  '/:hero', '/:stats', '/:teachers', '/:about', '/anggota:list', '/galeri:featured', '/galeri:grid',
   '/struktur:organization', '/keahlian:list', '/tkj:overview', '/tkj:subjects', '/tkj:curriculum', '/tkj:careers', '/tkj:tools',
   '/pengembang:story', '/pengembang:profile', '/pengembang:skills', '/pengembang:work',
   '/pengembang:motivation', '/pengembang:contact', '/pengembang:philosophy', '/pengembang:experience',
@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ request }) => {
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_sections').select('*').order('page_slug').order('sort_order');
-  if (error) return Response.json({ error: 'Section gagal dibaca. Jalankan migration CMS.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Section gagal dibaca. Jalankan migrations/0001_baseline.sql.' }, { status: 500 });
   return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 

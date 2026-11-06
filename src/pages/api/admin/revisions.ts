@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const slug = cleanText(url.searchParams.get('slug') || 'site-settings', 100);
   const { data, error } = await db.from('content_revisions').select('id,page_slug,version,seo,created_at').eq('page_slug', slug).order('version', { ascending: false }).limit(30);
-  if (error) return Response.json({ error: 'Riwayat versi belum tersedia. Jalankan migration CMS.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Riwayat versi belum tersedia. Jalankan migrations/0001_baseline.sql.' }, { status: 500 });
   return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
