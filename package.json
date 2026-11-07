@@ -38,7 +38,7 @@
   "homepage": "https://github.com/Pratama-Host/astro-web#readme",
   "dependencies": {
     "@astrojs/cloudflare": "14.4.4",
-    "@supabase/supabase-js": "2.118.0",
+    "@supabase/supabase-js": "2.119.0",
     "astro": "7.4.5"
   },
   "devDependencies": {
