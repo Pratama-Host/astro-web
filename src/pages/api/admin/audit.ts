@@ -18,6 +18,6 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (action) query = query.eq('action', action);
   if (q) query = query.ilike('summary', `%${q}%`);
   const { data, error, count } = await query;
-  if (error) return Response.json({ error: 'Audit log gagal dibaca. Jalankan migrations/0001_baseline.sql.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Audit log gagal dibaca. Jalankan supabase/migrations/20261106000100_baseline.sql.' }, { status: 500 });
   return Response.json({ data: data || [], count: count || 0, limit, offset, hasMore: offset + (data?.length || 0) < (count || 0) }, { headers: { 'Cache-Control': 'no-store' } });
 };

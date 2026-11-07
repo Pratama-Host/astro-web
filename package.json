@@ -1,7 +1,8 @@
 {
-  "name": "website",
+  "name": "astro-web",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
+  "description": "Website kelas TKJ XII-9 SMK Muhammadiyah Belitang dengan CMS admin (Astro SSR, Cloudflare Workers, Supabase).",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -21,8 +22,15 @@
     "type": "git",
     "url": "git+https://github.com/Pratama-Host/astro-web.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "astro",
+    "cloudflare-workers",
+    "supabase",
+    "cms",
+    "pwa",
+    "school"
+  ],
+  "author": "Pratama-Host",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Pratama-Host/astro-web/issues"

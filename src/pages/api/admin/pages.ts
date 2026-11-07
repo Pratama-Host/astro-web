@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ request }) => {
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_pages').select('*').order('slug');
-  if (error) return Response.json({ error: 'Metadata halaman gagal dibaca. Pastikan migrations/0001_baseline.sql sudah dijalankan.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Metadata halaman gagal dibaca. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.' }, { status: 500 });
   const pages = [...(data || [])];
   const existingIndex = pages.findIndex((page) => page.slug === '/pengembang');
   const fallbackDeveloper = {
@@ -84,6 +84,6 @@ export const PUT: APIRoute = async ({ request }) => {
     p_noindex: body.noindex === true,
     p_content: content,
   });
-  if (error) return Response.json({ error: 'Metadata halaman gagal disimpan secara konsisten. Pastikan migrations/0001_baseline.sql sudah diterapkan.', detail: error.message }, { status: 500 });
+  if (error) return Response.json({ error: 'Metadata halaman gagal disimpan secara konsisten. Pastikan supabase/migrations/20261106000100_baseline.sql sudah diterapkan.', detail: error.message }, { status: 500 });
   return Response.json({ ok: true, data: data?.data || data, revision_version: data?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
 };

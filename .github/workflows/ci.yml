@@ -22,6 +22,7 @@ jobs:
       - run: npm run build
         env:
           SUPABASE_URL: https://example.supabase.co
+          SUPABASE_ANON_KEY: ci-placeholder-anon-key
           SUPABASE_SERVICE_KEY: ci-placeholder-not-a-real-secret
           SUPABASE_STORAGE_BUCKET: astro
           ADMIN_PASSWORD: ci-placeholder-password

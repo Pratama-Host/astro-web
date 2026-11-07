@@ -10,8 +10,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sourcePath = path.join(root, 'src', 'data', 'G.json');
-const outputSql = path.join(root, 'migrations', 'seed.generated.sql');
-const outputManifest = path.join(root, 'migrations', 'media-manifest.json');
+const outputSql = path.join(root, 'supabase', 'seed', 'seed.generated.sql');
+const outputManifest = path.join(root, 'supabase', 'seed', 'media-manifest.json');
 const data = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
 
 const quote = (value) => value === null || value === undefined

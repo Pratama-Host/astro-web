@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-const sourceManifest = process.argv[2] || process.env.MEDIA_MANIFEST || 'migrations/media-manifest.json';
+const sourceManifest = process.argv[2] || process.env.MEDIA_MANIFEST || 'supabase/seed/media-manifest.json';
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_KEY;
 const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'astro';

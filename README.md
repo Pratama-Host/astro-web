@@ -295,12 +295,19 @@ astro-web/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml                 # CI: audit, check, test, build
-├── migrations/
-│   ├── 0001_baseline.sql          # Baseline schema + database routines
-│   ├── 0002_home_section_controls.sql
-│   ├── 0003_public_read_only_rls.sql
-│   ├── 0004_gallery_metadata_from_caption.sql
-│   └── 0005_public_section_visibility_metadata.sql
+├── docs/
+│   └── AUDIT.md                   # Laporan audit database dan keamanan
+├── supabase/
+│   ├── config.toml                # Konfigurasi Supabase CLI
+│   ├── migrations/                # Skema + policy (berstempel waktu, urut)
+│   │   ├── 20261106000100_baseline.sql
+│   │   ├── 20261106000200_home_section_controls.sql
+│   │   ├── 20261106000300_public_read_only_rls.sql
+│   │   ├── 20261106000400_gallery_metadata_from_caption.sql
+│   │   └── 20261106000500_public_section_visibility_metadata.sql
+│   ├── seed/                      # Hasil `npm run migrate:data` (ditinjau manual)
+│   └── smoke/
+│       └── cms-rpc-smoke.sql      # Smoke test RPC (rollback-only)
 ├── public/
 │   ├── icons/                     # PWA icons
 │   ├── audio-player.html
@@ -345,6 +352,8 @@ astro-web/
 │   │   ├── offline.astro
 │   │   └── 404.astro
 │   ├── scripts/                   # Interaksi client-side
+│   │   ├── admin.js               # Entry panel admin (memuat modul di admin/)
+│   │   └── admin/                 # Modul admin per fitur (core, shell, members, gallery, ...)
 │   ├── styles/                    # Stylesheet per halaman/komponen
 │   ├── env.d.ts
 │   └── middleware.ts              # Security headers + cache policy
@@ -353,9 +362,10 @@ astro-web/
 │   ├── cms-admin.test.ts
 │   ├── cms-admin-helpers.test.ts
 │   ├── data-mappers.test.ts
-│   ├── media-validation.test.ts
-│   └── supabase-cms-rpc-smoke.sql
+│   └── media-validation.test.ts
+├── .editorconfig
 ├── .env.example
+├── .gitattributes
 ├── .gitignore
 ├── .nvmrc
 ├── astro.config.mjs
@@ -370,13 +380,14 @@ astro-web/
 - `src/pages/`: routing dan komposisi halaman.
 - `src/components/`: komponen UI yang digunakan lintas halaman.
 - `src/layouts/`: kerangka halaman dan metadata global.
-- `src/scripts/`: perilaku browser, interaksi, dan enhancement antarmuka.
+- `src/scripts/`: perilaku browser, interaksi, dan enhancement antarmuka. Panel admin dipecah per fitur di `src/scripts/admin/`; `admin.js` hanya entry point.
 - `src/styles/`: gaya visual global dan spesifik halaman.
 - `src/lib/`: aturan aplikasi, akses data, autentikasi, validasi, dan helper.
 - `src/data/`: data fallback dan konfigurasi konten lokal.
-- `migrations/`: perubahan skema, policy, serta baseline database.
+- `supabase/migrations/`: perubahan skema, policy, serta baseline database (nama berstempel waktu, sesuai Supabase CLI).
+- `supabase/seed/`: keluaran `npm run migrate:data` (seed SQL dan manifest media), sengaja di luar `migrations/` agar tidak ikut dijalankan otomatis.
 - `scripts/`: utilitas migrasi data dan upload berkas.
-- `tests/`: unit test dan smoke test SQL.
+- `tests/`: unit test Vitest. Smoke test SQL ada di `supabase/smoke/cms-rpc-smoke.sql`.
 
 ---
 
@@ -526,7 +537,7 @@ RLS aktif pada tabel yang diaudit. Policy publik mengatur tabel mana yang boleh 
 - Metadata section perlu dapat dibaca meskipun `enabled=false`, agar halaman publik mengetahui section yang harus disembunyikan.
 - Tabel internal seperti draft, revisi, audit, dan percobaan login tidak dibuka untuk pembacaan publik.
 
-Rincian policy final harus dilihat pada `migrations/0001_baseline.sql` dan `migrations/0003_public_read_only_rls.sql` sampai `0005_public_section_visibility_metadata.sql`.
+Rincian policy final harus dilihat pada `supabase/migrations/20261106000100_baseline.sql` dan `supabase/migrations/20261106000300_public_read_only_rls.sql` sampai `supabase/migrations/20261106000500_public_section_visibility_metadata.sql`.
 
 > [!WARNING]
 > Jangan menyelesaikan masalah `permission denied` dengan memberi akses publik secara menyeluruh. Periksa tabel, operasi, role, dan kolom yang benar-benar diperlukan. Jangan membuat policy `USING (true)` pada tabel yang mengandung draft, audit, login, atau metadata internal tanpa analisis risiko.
@@ -576,8 +587,8 @@ npm run media:upload
 
 Script migrasi menghasilkan:
 
-- `migrations/seed.generated.sql`
-- `migrations/media-manifest.json`
+- `supabase/seed/seed.generated.sql`
+- `supabase/seed/media-manifest.json`
 
 `migrate-data.mjs` **hanya menghasilkan file**, tidak menghubungkan diri ke Supabase, tidak menjalankan SQL, dan tidak mengunggah berkas. `upload-media.mjs` baru melakukan upload dan membutuhkan kredensial server serta manifest yang valid.
 
@@ -830,15 +841,15 @@ Jika deployment baru menimbulkan regresi:
 
 ## 🧱 Migrasi Database
 
-Semua file SQL aplikasi berada di `migrations/`.
+Semua file migrasi SQL berada di `supabase/migrations/`; seed dan manifest hasil generate berada di `supabase/seed/`.
 
 | File | Tujuan | Catatan |
 | --- | --- | --- |
-| `0001_baseline.sql` | Baseline skema, index, constraint, RLS, routine/RPC, dan konfigurasi Storage yang direkonstruksi dari database aktif. | Untuk menyiapkan project baru; jangan dijalankan sembarangan pada database produksi yang sudah berisi data. |
-| `0002_home_section_controls.sql` | Menambahkan kontrol section beranda: hero, stats, teachers, about. | Aditif dan memakai `ON CONFLICT DO NOTHING`. |
-| `0003_public_read_only_rls.sql` | Policy pembacaan publik untuk data yang memang ditampilkan. | Tidak membuat policy mutasi publik. |
-| `0004_gallery_metadata_from_caption.sql` | Mengisi title dan alt text galeri yang kosong dari caption. | Mempertahankan nilai yang sudah ada. |
-| `0005_public_section_visibility_metadata.sql` | Mengizinkan pembacaan metadata visibilitas section. | Dibutuhkan agar halaman publik mengetahui status section `enabled=false`. |
+| `supabase/migrations/20261106000100_baseline.sql` | Baseline skema, index, constraint, RLS, routine/RPC, dan konfigurasi Storage yang direkonstruksi dari database aktif. | Untuk menyiapkan project baru; jangan dijalankan sembarangan pada database produksi yang sudah berisi data. |
+| `supabase/migrations/20261106000200_home_section_controls.sql` | Menambahkan kontrol section beranda: hero, stats, teachers, about. | Aditif dan memakai `ON CONFLICT DO NOTHING`. |
+| `supabase/migrations/20261106000300_public_read_only_rls.sql` | Policy pembacaan publik untuk data yang memang ditampilkan. | Tidak membuat policy mutasi publik. |
+| `supabase/migrations/20261106000400_gallery_metadata_from_caption.sql` | Mengisi title dan alt text galeri yang kosong dari caption. | Mempertahankan nilai yang sudah ada. |
+| `supabase/migrations/20261106000500_public_section_visibility_metadata.sql` | Mengizinkan pembacaan metadata visibilitas section. | Dibutuhkan agar halaman publik mengetahui status section `enabled=false`. |
 
 ### Aturan migrasi
 
@@ -855,7 +866,7 @@ Semua file SQL aplikasi berada di `migrations/`.
 Alur tingkat tinggi untuk instalasi baru:
 
 1. Buat project Supabase baru.
-2. Tinjau `migrations/0001_baseline.sql` dan terapkan pada project kosong yang memang disiapkan untuk repository ini.
+2. Tinjau `supabase/migrations/20261106000100_baseline.sql` dan terapkan pada project kosong yang memang disiapkan untuk repository ini.
 3. Terapkan `0002` sampai `0005` secara berurutan.
 4. Siapkan environment variables untuk aplikasi.
 5. Buat data awal dari `G.json` bila memang diperlukan.
@@ -865,8 +876,8 @@ Alur tingkat tinggi untuk instalasi baru:
    npm run migrate:data
    ```
 
-7. Tinjau `migrations/seed.generated.sql` sebelum menjalankannya melalui SQL Editor.
-8. Siapkan object Storage berdasarkan `migrations/media-manifest.json`.
+7. Tinjau `supabase/seed/seed.generated.sql` sebelum menjalankannya melalui SQL Editor.
+8. Siapkan object Storage berdasarkan `supabase/seed/media-manifest.json`.
 9. Jalankan upload media bila sumber berkas tersedia:
 
    ```bash
@@ -876,7 +887,7 @@ Alur tingkat tinggi untuk instalasi baru:
 10. Deploy aplikasi dan lakukan smoke test.
 
 > [!WARNING]
-> `migrations/0001_baseline.sql` direkonstruksi dari introspeksi database live. Walaupun file ditulis dengan guard tertentu, baseline ini belum boleh dianggap sebagai jaminan migrasi universal untuk setiap project Supabase. Uji lebih dahulu pada project disposable sebelum digunakan untuk provisioning baru. Pada database produksi yang saat ini sudah berjalan, jangan mengulang baseline.
+> `supabase/migrations/20261106000100_baseline.sql` direkonstruksi dari introspeksi database live. Walaupun file ditulis dengan guard tertentu, baseline ini belum boleh dianggap sebagai jaminan migrasi universal untuk setiap project Supabase. Uji lebih dahulu pada project disposable sebelum digunakan untuk provisioning baru. Pada database produksi yang saat ini sudah berjalan, jangan mengulang baseline.
 
 ---
 
@@ -1069,7 +1080,6 @@ Folder `tests/` memuat pengujian untuk area berikut:
 | `cms-admin-helpers.test.ts` | Sanitasi teks, record, dan batas request. |
 | `data-mappers.test.ts` | Pemetaan data anggota/galeri dan resolusi media. |
 | `media-validation.test.ts` | Pemeriksaan signature dan validasi media. |
-| `supabase-cms-rpc-smoke.sql` | Smoke test fungsi/RPC Supabase dengan pendekatan rollback-only. |
 
 Jalankan:
 

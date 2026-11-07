@@ -1,0 +1,5 @@
+# Konfigurasi Supabase CLI. Baseline ditujukan untuk project baru; jangan dijalankan pada database berisi data.
+project_id = "astro"
+
+[db]
+major_version = 17

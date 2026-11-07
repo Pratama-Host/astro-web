@@ -31,6 +31,7 @@ export function getSupabasePublic(): SupabaseClient | null {
   const anonKey = process.env.SUPABASE_ANON_KEY?.trim();
 
   if (!url || !anonKey) {
+    console.warn('[supabase] SUPABASE_URL/SUPABASE_ANON_KEY belum diisi: halaman publik memakai data fallback G.json.');
     publicClient = null;
     return publicClient;
   }

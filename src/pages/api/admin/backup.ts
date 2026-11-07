@@ -123,7 +123,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const { data, error } = await db.rpc('export_tkj_cms_backup');
   if (error || !isPlainRecord(data)) {
-    return Response.json({ error: 'Ekspor backup gagal. Pastikan migrations/0001_baseline.sql sudah dijalankan.' }, { status: 503 });
+    return Response.json({ error: 'Ekspor backup gagal. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.' }, { status: 503 });
   }
 
   const serialized = JSON.stringify(data, null, 2);

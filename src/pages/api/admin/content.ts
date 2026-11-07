@@ -101,6 +101,6 @@ export const PUT: APIRoute = async ({ request }) => {
     return Response.json({ ok: true, data: current, updated_at: currentRow?.updated_at || null, unchanged: true }, { headers: { 'Cache-Control': 'no-store' } });
   }
   const { data: saved, error } = await db.rpc('patch_tkj_cms_site_settings', { p_patch: touched });
-  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Pastikan migrations/0001_baseline.sql sudah dijalankan.', detail: error.message }, { status: 500 });
+  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.', detail: error.message }, { status: 500 });
   return Response.json({ ok: true, data: saved?.data || touched, updated_at: saved?.updated_at || new Date().toISOString(), revision_version: saved?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
 };

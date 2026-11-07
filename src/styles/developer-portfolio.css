@@ -3442,3 +3442,114 @@ a {
     transition: none !important;
   }
 }
+
+/* ===== digabung dari developer-ui-refresh.css (urutan cascade dipertahankan) ===== */
+/* Accessibility and responsive safety layer for the intentionally distinct
+   developer portfolio visual identity. Avoids overriding its brutalist theme. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--dev-highlight, #ffd700);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.22);
+}
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+img,
+video,
+iframe {
+  max-width: 100%;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button {
+  touch-action: manipulation;
+}
+.skip-to-main:focus {
+  z-index: 10000;
+}
+.draft-preview {
+  width: min(calc(100% - 24px), 900px);
+}
+@media (max-width: 540px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap {
+    width: 100%;
+  }
+  .navbar {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===== digabung dari developer-finish.css (urutan cascade dipertahankan) ===== */
+/* Portfolio detail pass: keep the editorial/brutalist identity, improve fit. */
+html {
+  scroll-padding-top: 88px;
+}
+body {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+:where(button, a, input, select, textarea) {
+  touch-action: manipulation;
+}
+:where(button, input, select, textarea):disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+:where(img, video, iframe, svg, canvas) {
+  max-width: 100%;
+}
+:where(pre, code) {
+  overflow-wrap: anywhere;
+}
+:where(section, article, [id]) {
+  scroll-margin-top: 86px;
+}
+:where(button, a, input, select, textarea):focus-visible {
+  outline-offset: 4px;
+}
+@media (max-width: 680px) {
+  .wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .navbar {
+    max-width: 100%;
+  }
+  .draft-preview {
+    margin-top: max(8px, env(safe-area-inset-top));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -32,7 +32,7 @@ export const POST: APIRoute = async ({ request }) => {
     p_ip_hash: ipHash, p_limit: 5, p_window_seconds: 300,
   });
   if (rateLimitError || typeof allowed !== 'boolean') {
-    return Response.json({ error: 'Perlindungan login belum tersedia. Pastikan migrations/0001_baseline.sql sudah diterapkan.' }, { status: 503 });
+    return Response.json({ error: 'Perlindungan login belum tersedia. Pastikan supabase/migrations/20261106000100_baseline.sql sudah diterapkan.' }, { status: 503 });
   }
   if (!allowed) {
     return Response.json({ error: 'Terlalu banyak percobaan login. Coba lagi setelah 5 menit.' }, {

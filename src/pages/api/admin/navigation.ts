@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ request }) => {
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_navigation').select('*').order('sort_order');
-  if (error) return Response.json({ error: 'Navigasi gagal dibaca. Jalankan migrations/0001_baseline.sql.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Navigasi gagal dibaca. Jalankan supabase/migrations/20261106000100_baseline.sql.' }, { status: 500 });
   return Response.json({ data: data || [], snapshot: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 

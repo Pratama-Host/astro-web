@@ -12,13 +12,13 @@ Payload mentah tidak dimasukkan ke ZIP karena berisi data personal siswa dan log
 
 ## A. Rekonstruksi `migrations/`
 
-**Status: SEBAGIAN.** `migrations/0001_baseline.sql` direkonstruksi dari introspeksi database aktif dan definisi fungsi live. File mencakup 13 tabel beserta kolom, PK/unique/check constraints, index, RLS, sembilan policy, 12 fungsi/RPC dan privilege fungsi, serta bucket `astro`. Snapshot live: 24 constraints, 33 index, 0 view publik, 0 trigger aplikasi pada `public`, dan 12 fungsi `public`. Baseline ditujukan untuk project Supabase kosong dan **tidak dijalankan pada database aktif**.
+**Status: SEBAGIAN.** `supabase/migrations/20261106000100_baseline.sql` direkonstruksi dari introspeksi database aktif dan definisi fungsi live. File mencakup 13 tabel beserta kolom, PK/unique/check constraints, index, RLS, sembilan policy, 12 fungsi/RPC dan privilege fungsi, serta bucket `astro`. Snapshot live: 24 constraints, 33 index, 0 view publik, 0 trigger aplikasi pada `public`, dan 12 fungsi `public`. Baseline ditujukan untuk project Supabase kosong dan **tidak dijalankan pada database aktif**.
 
 Supabase Storage mempunyai trigger internal yang dikelola Supabase pada `storage.buckets`/`storage.objects` (antara lain `enforce_bucket_name_length_trigger`, `enforce_versioning_status_transition`, `protect_active_lifecycle_states`, `protect_bucket_control_insert`, `protect_bucket_control_update`, `protect_bucket_control_update_role`, `protect_buckets_delete`, `wake_lifecycle_on_policy_write`, `wake_lifecycle_on_versioning_enable`, `protect_objects_delete`, `update_objects_updated_at`). Trigger sistem tersebut tidak dibuat ulang oleh migration aplikasi. Tidak ada custom trigger pada `public` dan tidak ada view publik.
 
 File tambahan `0002`–`0005` mencatat perubahan yang diterapkan ke database aktif. Riwayat migrasi Supabase memuat 12 migrasi lama ditambah empat migrasi baru. Nama rujukan lama yang diminta untuk diselaraskan tidak ditemukan lagi dalam pencarian source/tests/README.
 
-**Risiko/batas verifikasi:** baseline dibandingkan secara struktural terhadap metadata dan definisi fungsi live, tetapi tidak diuji dari nol pada database disposable. Jangan jalankan `0001_baseline.sql` pada database yang sudah berisi tabel/data; gunakan hanya untuk project baru.
+**Risiko/batas verifikasi:** baseline dibandingkan secara struktural terhadap metadata dan definisi fungsi live, tetapi tidak diuji dari nol pada database disposable. Jangan jalankan `supabase/migrations/20261106000100_baseline.sql` pada database yang sudah berisi tabel/data; gunakan hanya untuk project baru.
 
 ## B. Kesesuaian kode dan database
 
@@ -58,7 +58,7 @@ Koreksi hitung aset fallback: perhitungan ulang terhadap ZIP input menunjukkan *
 
 ## Perubahan file utama
 
-- `migrations/0001_baseline.sql` sampai `0005_public_section_visibility_metadata.sql`.
+- `supabase/migrations/20261106000100_baseline.sql` sampai `supabase/migrations/20261106000500_public_section_visibility_metadata.sql`.
 - `src/lib/supabase.ts`: client publik berbasis `SUPABASE_ANON_KEY`; client admin tetap service-role.
 - `src/lib/data.ts`: pembacaan normal memakai anon/RLS; preview draft hanya memakai service-role setelah otorisasi admin.
 - `.env.example`, `src/env.d.ts`, `README.md`: dokumentasi variable anon baru.
@@ -238,5 +238,5 @@ ROLLBACK;
 1. Buka Cloudflare Dashboard → Workers & Pages → worker proyek ini → Settings → Variables and Secrets.
 2. Tambahkan `SUPABASE_ANON_KEY` dengan publishable/anon key dari proyek Supabase yang sama. `SUPABASE_URL` harus menunjuk proyek itu.
 3. Pastikan `SUPABASE_SERVICE_KEY`, `ADMIN_PASSWORD`, dan `ADMIN_SESSION_SECRET` tetap tersimpan sebagai secret server-side. Jangan memasukkan nilainya ke file atau frontend.
-4. Deploy ZIP setelah meninjau hasilnya. Jangan jalankan `0001_baseline.sql` pada database aktif; migrasi `0002`–`0005` sudah diterapkan ke database yang diaudit.
+4. Deploy ZIP setelah meninjau hasilnya. Jangan jalankan `supabase/migrations/20261106000100_baseline.sql` pada database aktif; migrasi `0002`–`0005` sudah diterapkan ke database yang diaudit.
 5. Setelah deploy, cek beranda, anggota, galeri, guru, skills, SEO, lalu login admin dan toggle section Visi/Misi/Prestasi.
