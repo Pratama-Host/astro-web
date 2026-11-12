@@ -42,6 +42,17 @@
   gap: 10px;
 }
 
+.brand-link {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  gap: 2px;
+}
+
+.brand-link:hover .brand-name {
+  color: var(--accent);
+}
+
 .brand-badge {
   width: 48px;
   height: 48px;
@@ -106,6 +117,68 @@
 }
 
 /* ================================================================
+   DESKTOP NAVIGATION
+   ================================================================ */
+.nav-desktop {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+
+.tautan-nav-desktop {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-decoration: none;
+  transition: all 0.2s var(--ease-in-out);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.tautan-nav-desktop .nav-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-3);
+  transition: color 0.2s;
+}
+
+.tautan-nav-desktop:hover {
+  color: var(--text-1);
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.tautan-nav-desktop:hover .nav-icon {
+  color: var(--accent);
+}
+
+.tautan-nav-desktop.aktif {
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.25);
+  font-weight: 700;
+}
+
+.tautan-nav-desktop.aktif .nav-icon {
+  color: var(--accent);
+}
+
+@media (min-width: 960px) {
+  .nav-desktop {
+    display: flex;
+  }
+
+  .hamburger-tombol {
+    display: none !important;
+  }
+}
+
+/* ================================================================
    GLOBAL CLOCK
    ================================================================ */
 #global-clock {
@@ -130,10 +203,10 @@
   animation: clockPulseAdvanced 3s ease-in-out infinite;
   z-index: 99989;
   position: fixed !important;
-  left: 12px !important;
-  top: 12px !important;
+  left: 20px !important;
+  bottom: 20px !important;
+  top: auto !important;
   right: auto !important;
-  bottom: auto !important;
   cursor: move;
   user-select: none;
   -webkit-user-select: none;

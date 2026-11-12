@@ -212,7 +212,23 @@
 
 @media (min-width: 768px) {
    .members-grid {
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      width: 100%;
+      gap: 18px;
+      overflow-x: visible;
+      overflow-y: visible;
+      padding: 10px 0 24px;
+   }
+
+   .members-prev,
+   .members-next {
+      display: none !important;
+   }
+
+   .member-card {
+      width: 100%;
+      min-width: 0;
    }
 }
 
@@ -410,5 +426,195 @@
 }
 
 .halaman-anggota {
-   padding-top: calc(var(--top-h) + 20px);
+   padding-top: 20px;
 }
+
+/* ================================================================
+   KONTROL FILTER, PENCARIAN & MODE TAMPILAN
+   ================================================================ */
+.member-controls-panel {
+   display: flex;
+   flex-direction: column;
+   gap: 14px;
+   margin-bottom: 24px;
+}
+
+.member-controls-panel .bungkus-pencarian {
+   margin-bottom: 0;
+}
+
+.member-filter-row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   flex-wrap: wrap;
+   gap: 12px;
+}
+
+.member-filter-pills {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   overflow-x: auto;
+   padding-bottom: 4px;
+   scrollbar-width: none;
+}
+
+.member-filter-pills::-webkit-scrollbar {
+   display: none;
+}
+
+.filter-pill {
+   background: var(--surface);
+   border: 1px solid var(--border);
+   color: var(--text-2);
+   padding: 6px 14px;
+   border-radius: var(--radius-full);
+   font-size: var(--text-xs);
+   font-weight: 600;
+   cursor: pointer;
+   white-space: nowrap;
+   transition: all 0.2s ease;
+   font-family: inherit;
+}
+
+.filter-pill:hover {
+   border-color: var(--accent);
+   color: var(--text-1);
+}
+
+.filter-pill.active {
+   background: rgba(var(--accent-rgb), 0.15);
+   border-color: var(--accent);
+   color: var(--accent);
+   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2);
+}
+
+.member-controls-right {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.member-sort-box {
+   position: relative;
+}
+
+.member-sort-select {
+   background: var(--surface);
+   border: 1px solid var(--border);
+   color: var(--text-1);
+   padding: 6px 12px;
+   border-radius: var(--radius-s);
+   font-size: var(--text-xs);
+   cursor: pointer;
+   outline: none;
+   font-family: inherit;
+   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.member-sort-select:focus {
+   border-color: var(--accent);
+   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
+}
+
+.member-view-toggle {
+   display: inline-flex;
+   background: var(--surface);
+   border: 1px solid var(--border);
+   border-radius: var(--radius-s);
+   overflow: hidden;
+}
+
+.view-btn {
+   background: transparent;
+   border: none;
+   color: var(--text-3);
+   padding: 6px 10px;
+   cursor: pointer;
+   font-size: 14px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: all 0.2s;
+}
+
+.view-btn:hover {
+   color: var(--text-1);
+}
+
+.view-btn.active {
+   background: rgba(var(--accent-rgb), 0.2);
+   color: var(--accent);
+}
+
+/* ================================================================
+   COMPACT LIST VIEW (MODE DAFTAR RINGKAS)
+   ================================================================ */
+.members-grid.is-compact-view {
+   display: flex !important;
+   flex-direction: column !important;
+   gap: 10px !important;
+   padding: 10px 0 !important;
+}
+
+.members-grid.is-compact-view .member-card {
+   display: flex !important;
+   flex-direction: row !important;
+   align-items: center !important;
+   justify-content: flex-start !important;
+   text-align: left !important;
+   width: 100% !important;
+   min-width: 0 !important;
+   padding: 12px 18px !important;
+   border-radius: var(--radius-s) !important;
+   gap: 16px;
+}
+
+.members-grid.is-compact-view .member-card .avatar {
+   margin: 0 !important;
+   width: 44px !important;
+   height: 44px !important;
+   flex-shrink: 0 !important;
+}
+
+.members-grid.is-compact-view .member-card-info {
+   display: flex;
+   flex-direction: row;
+   align-items: center;
+   justify-content: space-between;
+   flex: 1;
+   gap: 12px;
+   min-width: 0;
+}
+
+.members-grid.is-compact-view .member-card-name {
+   margin-bottom: 0 !important;
+   font-size: var(--text-base) !important;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+}
+
+.members-grid.is-compact-view .member-card-role {
+   margin-bottom: 0 !important;
+   color: var(--text-3) !important;
+   font-size: 0.8rem !important;
+}
+
+.members-grid.is-compact-view .member-card-nis {
+   margin-left: auto;
+   flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+   .members-grid.is-compact-view .member-card-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+   }
+   .members-grid.is-compact-view .member-card-nis {
+      margin-left: 0;
+   }
+}
+

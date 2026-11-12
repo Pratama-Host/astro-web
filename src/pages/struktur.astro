@@ -2,6 +2,7 @@
 import Icon from '../components/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Footer from '../components/Footer.astro';
 import { getPageContext } from '../lib/data';
 import '../styles/struktur.css';
@@ -28,6 +29,7 @@ const firstOrganizationPhoto = G.waliKelas?.foto || G.strukturOrg?.find((member)
   description="Bagan kepengurusan dan struktur organisasi kelas TKJ XII-9 SMK Muhammadiyah Belitang periode 2026/2027."
 >
   <Header />
+  <Breadcrumbs items={[{ label: 'Struktur Organisasi' }]} />
   <main id="main-content" tabindex="-1">
     <div class="wadah">
       <div class="sec-head reveal">

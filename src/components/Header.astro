@@ -3,11 +3,19 @@ import ThemeToggle from './ThemeToggle.astro';
 import CanvasToggle from './CanvasToggle.astro';
 import AudioToggle from './AudioToggle.astro';
 import HamburgerMenu from './HamburgerMenu.astro';
-import { getSettings } from '../lib/data';
-const settings = await getSettings();
+import Icon from './Icon.astro';
+import { getSettings, getNavigation } from '../lib/data';
+
+const [settings, navItems] = await Promise.all([
+  getSettings(),
+  getNavigation()
+]);
+
 const logoUrl = settings.media?.logo_url || settings.media?.alternate_logo_url || null;
 const classYear = settings.tahunAjaran || '2026/2027';
 const className = settings.namaKelas || 'XII-9';
+const currentPath = Astro.url.pathname;
+const activeNav = navItems.filter((item) => item.enabled !== false);
 ---
 
 <header class="bilah-atas" role="banner">
@@ -23,13 +31,30 @@ const className = settings.namaKelas || 'XII-9';
         aria-label="Klik untuk memperbesar logo"
       />
     ) : (
-      <div class="brand-badge" aria-hidden="true">XII9</div>
+      <a href="/" class="brand-badge" aria-label={`Beranda TKJ ${className}`}>XII9</a>
     )}
-    <div>
+    <a href="/" class="brand-link" aria-label={`Beranda TKJ ${className}`}>
       <div class="brand-name">TKJ {className}</div>
       <div class="brand-year mono">{classYear}</div>
-    </div>
+    </a>
   </div>
+
+  <nav class="nav-desktop" aria-label="Navigasi utama">
+    {activeNav.map((item) => {
+      const isCurrent = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+      return (
+        <a
+          href={item.href}
+          class:list={['tautan-nav-desktop', { aktif: isCurrent }]}
+          aria-current={isCurrent ? 'page' : undefined}
+        >
+          <span class="nav-icon"><Icon name={item.icon || 'fa-link'} size={15} /></span>
+          <span>{item.label}</span>
+        </a>
+      );
+    })}
+  </nav>
+
   <div class="aksi-bilah-atas">
     <ThemeToggle />
     <CanvasToggle />

@@ -2,6 +2,7 @@
 import Icon from '../components/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Footer from '../components/Footer.astro';
 import { getPageContext } from '../lib/data';
 import '../styles/keahlian.css';
@@ -30,8 +31,9 @@ function getLevelText(level: number) {
   description="Bidang keahlian teknis jaringan komputer, server Linux, pemrograman web, dan keamanan siber yang dikuasai siswa TKJ XII-9."
 >
   <Header />
+  <Breadcrumbs items={[{ label: 'Keahlian & Kompetensi' }]} />
   <main id="main-content" tabindex="-1">
-    
+    <div class="wadah">
       <div class="sec-head">
         <div class="sec-tag">{skillEyebrow}</div>
         <h1 class="sec-title">{skillHeadline}</h1>
@@ -71,7 +73,7 @@ function getLevelText(level: number) {
           <p class="content-empty-state" role="status">Data keahlian belum ditambahkan.</p>
         )
       )}
-    
+    </div>
   </main>
   <Footer />
 

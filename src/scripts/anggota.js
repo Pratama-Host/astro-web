@@ -78,27 +78,71 @@ function initMembersInteractions() {
 
   const totalSiswa = G?.namaSiswa?.length || cards.length;
 
+  // Filter, Search, Sort & View State
+  let currentFilter = "all";
+  let currentSort = "default";
+  let currentQuery = "";
+
+  function applyFiltersAndSort() {
+    let matchCount = 0;
+
+    cards.forEach((card) => {
+      const name = card.dataset.nama || card.querySelector(".member-card-name")?.textContent || "";
+      const nis = card.dataset.nis || "";
+      const role = card.dataset.role || card.querySelector(".member-card-role")?.textContent || "";
+      const isOrg = card.dataset.isOrg === "true";
+      const hasPhoto = card.dataset.hasPhoto === "true";
+      const hasAudio = card.dataset.hasAudio === "true";
+
+      const searchable = `${name} ${nis} ${role}`.toLocaleLowerCase("id-ID");
+      const matchSearch = !currentQuery || searchable.includes(currentQuery);
+
+      let matchFilter = true;
+      if (currentFilter === "pengurus") matchFilter = isOrg;
+      else if (currentFilter === "foto") matchFilter = hasPhoto;
+      else if (currentFilter === "audio") matchFilter = hasAudio;
+
+      const visible = matchSearch && matchFilter;
+      card.style.display = visible ? "" : "none";
+      if (visible) matchCount++;
+    });
+
+    const sortedCards = [...cards].sort((a, b) => {
+      if (currentSort === "name-asc") {
+        return (a.dataset.nama || "").localeCompare(b.dataset.nama || "", "id");
+      }
+      if (currentSort === "name-desc") {
+        return (b.dataset.nama || "").localeCompare(a.dataset.nama || "", "id");
+      }
+      if (currentSort === "nis-asc") {
+        return (Number(a.dataset.nis) || 0) - (Number(b.dataset.nis) || 0);
+      }
+      if (currentSort === "nis-desc") {
+        return (Number(b.dataset.nis) || 0) - (Number(a.dataset.nis) || 0);
+      }
+      return (Number(a.dataset.urutan) || 0) - (Number(b.dataset.urutan) || 0);
+    });
+
+    sortedCards.forEach((card) => grid.appendChild(card));
+
+    if (countEl) {
+      if (currentQuery || currentFilter !== "all") {
+        countEl.textContent = `Menampilkan ${matchCount} dari ${totalSiswa} anggota`;
+      } else {
+        countEl.textContent = `Semua ${totalSiswa} anggota`;
+      }
+    }
+    emptyState.hidden = matchCount > 0;
+    emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan filter atau pencarian." : "Belum ada data anggota yang ditampilkan.";
+    grid.setAttribute("aria-label", `Daftar anggota kelas (${matchCount} ditampilkan)`);
+    clearBtn?.classList.toggle("terlihat", currentQuery.length > 0);
+  }
+
   // Search Logic
   if (search) {
     search.addEventListener("input", () => {
-      const q = search.value.toLowerCase().trim();
-      let matchCount = 0;
-
-      cards.forEach((card) => {
-        const name = card.querySelector(".member-card-name")?.textContent || "";
-        const nis = card.dataset.nis || "";
-        const role = card.querySelector(".member-card-role")?.textContent || "";
-        const searchable = `${name} ${nis} ${role}`.toLocaleLowerCase("id-ID");
-        const match = !q || searchable.includes(q);
-        card.style.display = match ? "" : "none";
-        if (match) matchCount++;
-      });
-
-      if (countEl) countEl.textContent = q ? `Menampilkan ${matchCount} dari ${totalSiswa} anggota` : `Semua ${totalSiswa} anggota`;
-      emptyState.hidden = matchCount > 0;
-      emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan pencarian." : "Belum ada data anggota yang ditampilkan.";
-      grid.setAttribute("aria-label", q ? `Hasil pencarian anggota: ${matchCount} ditemukan` : "Daftar anggota kelas");
-      clearBtn?.classList.toggle("terlihat", search.value.length > 0);
+      currentQuery = search.value.toLowerCase().trim();
+      applyFiltersAndSort();
     });
 
     document.addEventListener("keydown", (e) => {
@@ -113,13 +157,66 @@ function initMembersInteractions() {
   clearBtn?.addEventListener("click", () => {
     if (search) {
       search.value = "";
-      search.dispatchEvent(new Event("input"));
+      currentQuery = "";
+      applyFiltersAndSort();
       search.focus();
     }
   });
 
+  // Filter Pills Logic
+  const filterPills = document.querySelectorAll(".filter-pill");
+  filterPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      filterPills.forEach((p) => {
+        p.classList.remove("active");
+        p.setAttribute("aria-selected", "false");
+      });
+      pill.classList.add("active");
+      pill.setAttribute("aria-selected", "true");
+      currentFilter = pill.dataset.filter || "all";
+      applyFiltersAndSort();
+    });
+  });
+
+  // Sort Dropdown Logic
+  const sortSelect = document.getElementById("member-sort");
+  sortSelect?.addEventListener("change", () => {
+    currentSort = sortSelect.value || "default";
+    applyFiltersAndSort();
+  });
+
+  // View Mode Toggle (Grid vs List)
+  const viewGridBtn = document.getElementById("view-grid-btn");
+  const viewListBtn = document.getElementById("view-list-btn");
+
+  function setViewMode(mode) {
+    if (mode === "list") {
+      grid.classList.add("is-compact-view");
+      viewGridBtn?.classList.remove("active");
+      viewGridBtn?.setAttribute("aria-pressed", "false");
+      viewListBtn?.classList.add("active");
+      viewListBtn?.setAttribute("aria-pressed", "true");
+    } else {
+      grid.classList.remove("is-compact-view");
+      viewListBtn?.classList.remove("active");
+      viewListBtn?.setAttribute("aria-pressed", "false");
+      viewGridBtn?.classList.add("active");
+      viewGridBtn?.setAttribute("aria-pressed", "true");
+    }
+    try { localStorage.setItem("tkj-member-view", mode); } catch {}
+  }
+
+  try {
+    const savedView = localStorage.getItem("tkj-member-view");
+    if (savedView === "list") setViewMode("list");
+  } catch {}
+
+  viewGridBtn?.addEventListener("click", () => setViewMode("grid"));
+  viewListBtn?.addEventListener("click", () => setViewMode("list"));
+
   // Slider Logic
   grid.addEventListener("wheel", (e) => {
+    if (grid.scrollWidth <= grid.clientWidth + 2) return;
     if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
     grid.scrollBy({ left: e.deltaY > 0 ? 80 : -80, behavior: "smooth" });
   }, { passive: true });

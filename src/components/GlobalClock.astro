@@ -5,7 +5,7 @@
 <script>
   const el = document.getElementById('global-clock');
   if (el) {
-    function fmt(d) {
+    function fmt(d: Date) {
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
     function update() {

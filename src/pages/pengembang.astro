@@ -253,6 +253,9 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
       <header class="navbar">
         <a class="mobile-brand" href="#page-about" data-page="about" data-nav="about"><span class="mobile-monogram">{initials}</span><span class="mobile-page-name">{visiblePages.find((page) => page.id === initialPage)?.label || profileName}</span></a>
         <nav class="nav-links" aria-label="Navigasi portofolio">
+          <a class="nav-item back-home" href="/" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px" title="Kembali ke Beranda Website Kelas">
+            <span class="nav-ico"><Icon name="arrow" size={15} /></span>Website Kelas
+          </a>
           {mainNav.map((page) => (
             <button class:list={['nav-item', { on: page.id === initialPage }]} type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label} aria-current={page.id === initialPage ? 'page' : 'false'}>
               <span class="nav-ico"><Icon name={page.icon} size={17} /></span>{page.label}
@@ -533,6 +536,12 @@ const currentPageName = `${G.namaKelas || 'TKJ XII-9'} · ${G.namaSekolah || 'SM
           <div class="dr-label">Bab tambahan</div>
           <div class="dr-grid extra">
             {extraNav.map((page) => <button class="extra-btn" type="button" data-page={page.id} data-nav={page.id} data-nav-label={page.label}><span><Icon name={page.icon} size={17} /></span>{page.label}</button>)}
+          </div>
+        </div>
+        <div class="dr-section">
+          <div class="dr-label">Website Kelas</div>
+          <div class="dr-grid extra">
+            <a href="/" class="extra-btn" style="text-decoration:none;display:flex;align-items:center;gap:8px"><span><Icon name="arrow" size={17} /></span>Kembali ke Beranda</a>
           </div>
         </div>
         <div class="dr-section"><div class="dr-label">Motion language</div><div class="locked-theme"><span class="lock"><Icon name="sparkles" size={15} /></span>COMIC · PLAYFUL · SUBTLE</div></div>

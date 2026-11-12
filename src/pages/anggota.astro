@@ -2,6 +2,7 @@
 import Icon from '../components/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Footer from '../components/Footer.astro';
 import { getPageContext } from '../lib/data';
 import '../styles/anggota.css';
@@ -12,11 +13,20 @@ const cmsMemberEyebrow = pageContent.eyebrow || "Keluarga Besar";
 const cmsMemberHeadline = pageContent.headline || "Anggota Kelas";
 const cmsMemberIntro = pageContent.intro || "Daftar lengkap seluruh siswa-siswi kelas TKJ XII-9. Tekan";
 function makeInitials(name = "") {
-  return name.split(" ").slice(0, 2).map(w => w[0]?.toUpperCase() || "").join("");
+  return name.split(" ").slice(0, 2).map((w: string) => w[0]?.toUpperCase() || "").join("");
 }
 
-const siswa = G.namaSiswa || [];
-const firstMemberPhotoNis = siswa.find((member) => Boolean(member.foto))?.nis || null;
+interface MemberItem {
+  nama: string;
+  nis: string;
+  foto?: string | null;
+  audio?: string | null;
+  jabatan?: string | null;
+  [key: string]: any;
+}
+
+const siswa: MemberItem[] = (G.namaSiswa || []) as MemberItem[];
+const firstMemberPhotoNis = siswa.find((member: MemberItem) => Boolean(member.foto))?.nis || null;
 const totalSiswa = siswa.length;
 
 ---
@@ -26,6 +36,7 @@ const totalSiswa = siswa.length;
   description="Daftar lengkap seluruh siswa-siswi kelas TKJ XII-9 SMK Muhammadiyah Belitang beserta NIS, profil, dan informasi keanggotaan."
 >
   <Header />
+  <Breadcrumbs items={[{ label: 'Anggota Kelas' }]} />
   {membersVisible && (
   <main id="main-content" tabindex="-1" class="halaman-anggota">
       <div id="members-data" hidden data-json={JSON.stringify({ namaSiswa: siswa, strukturOrg: G.strukturOrg || [] })}></div>
@@ -48,28 +59,61 @@ const totalSiswa = siswa.length;
         </p>
       </div>
 
-      <!-- Search -->
-      <div class="bungkus-pencarian reveal" role="search">
-        <label for="member-search" class="sr-only">Cari anggota</label>
-        <div class="bilah-pencarian">
-          <Icon name="fa-search" />
-          <input
-            type="search"
-            id="member-search"
-            placeholder="Cari nama anggota..."
-            autocomplete="off"
-            aria-label="Cari anggota"
-            aria-controls="members-grid"
-            spellcheck="false"
-          />
-          <button
-            class="hapus-pencarian"
-            id="hapus-pencarian"
-            aria-label="Hapus pencarian"
-            type="button"
-          >
-            <Icon name="fa-times" />
-          </button>
+      <!-- Controls Panel (Search, Filter, Sort, View Toggle) -->
+      <div class="member-controls-panel reveal">
+        <div class="bungkus-pencarian" role="search">
+          <label for="member-search" class="sr-only">Cari anggota</label>
+          <div class="bilah-pencarian">
+            <Icon name="fa-search" />
+            <input
+              type="search"
+              id="member-search"
+              placeholder="Cari nama, NIS, atau jabatan..."
+              autocomplete="off"
+              aria-label="Cari anggota"
+              aria-controls="members-grid"
+              spellcheck="false"
+            />
+            <button
+              class="hapus-pencarian"
+              id="hapus-pencarian"
+              aria-label="Hapus pencarian"
+              type="button"
+            >
+              <Icon name="fa-times" />
+            </button>
+          </div>
+        </div>
+
+        <div class="member-filter-row">
+          <div class="member-filter-pills" role="tablist" aria-label="Filter kategori">
+            <button type="button" class="filter-pill active" data-filter="all" role="tab" aria-selected="true">Semua</button>
+            <button type="button" class="filter-pill" data-filter="pengurus" role="tab" aria-selected="false">Pengurus Kelas</button>
+            <button type="button" class="filter-pill" data-filter="foto" role="tab" aria-selected="false">Foto Asli</button>
+            <button type="button" class="filter-pill" data-filter="audio" role="tab" aria-selected="false">Voice Note</button>
+          </div>
+
+          <div class="member-controls-right">
+            <div class="member-sort-box">
+              <label for="member-sort" class="sr-only">Urutkan Anggota</label>
+              <select id="member-sort" class="member-sort-select" aria-label="Urutkan anggota">
+                <option value="default">Urutan Presensi</option>
+                <option value="name-asc">Nama (A - Z)</option>
+                <option value="name-desc">Nama (Z - A)</option>
+                <option value="nis-asc">NIS (Terkecil)</option>
+                <option value="nis-desc">NIS (Terbesar)</option>
+              </select>
+            </div>
+
+            <div class="member-view-toggle" role="group" aria-label="Mode Tampilan">
+              <button type="button" class="view-btn active" id="view-grid-btn" data-view="grid" title="Tampilan Grid (Kartu Foto)" aria-label="Tampilan Grid" aria-pressed="true">
+                <Icon name="fa-table-cells-large" />
+              </button>
+              <button type="button" class="view-btn" id="view-list-btn" data-view="list" title="Tampilan Ringkas (Daftar List)" aria-label="Tampilan Ringkas" aria-pressed="false">
+                <Icon name="fa-list" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -81,14 +125,30 @@ const totalSiswa = siswa.length;
           <Icon name="fa-chevron-left" />
         </button>
         <div class="members-grid" id="members-grid" aria-label="Daftar anggota kelas">
-          {siswa.map((member, i) => {
+          {siswa.map((member: MemberItem, i: number) => {
              let jabatanText = "Anggota";
-             const orgMember = G.strukturOrg?.find(s => s.nama === member.nama);
+             const orgMember = (G.strukturOrg as Array<{ nama: string; jabatan?: string }> | undefined)?.find((s) => s.nama === member.nama);
              if (orgMember && orgMember.jabatan) {
                jabatanText = orgMember.jabatan;
              }
+             const isOrg = Boolean(orgMember && orgMember.jabatan);
+             const hasPhoto = Boolean(member.foto);
+             const hasAudio = Boolean(member.audio);
              return (
-               <div class="card member-card card-accent-top reveal" data-nis={member.nis} style={`--d: ${(i % 5) * 0.05}s`} role="button" tabindex="0" aria-label={`Lihat detail ${member.nama}`}>
+               <div
+                 class="card member-card card-accent-top reveal"
+                 data-nis={member.nis}
+                 data-nama={member.nama}
+                 data-role={jabatanText}
+                 data-is-org={isOrg ? "true" : "false"}
+                 data-has-photo={hasPhoto ? "true" : "false"}
+                 data-has-audio={hasAudio ? "true" : "false"}
+                 data-urutan={i}
+                 style={`--d: ${(i % 5) * 0.05}s`}
+                 role="button"
+                 tabindex="0"
+                 aria-label={`Lihat detail ${member.nama}`}
+               >
                   <div class="avatar lg avatar-ring">
                     {member.foto ? (
                       <img
@@ -102,9 +162,11 @@ const totalSiswa = siswa.length;
                       <span>{makeInitials(member.nama)}</span>
                     )}
                   </div>
-                  <div class="member-card-name">{member.nama}</div>
-                  <div class="member-card-role" style="font-size: 0.75rem; color: var(--text-2); margin-bottom: 8px;">{jabatanText}</div>
-                  <div class="member-card-nis mono">{member.nis}</div>
+                  <div class="member-card-info">
+                    <div class="member-card-name">{member.nama}</div>
+                    <div class="member-card-role" style="font-size: 0.75rem; color: var(--text-2); margin-bottom: 8px;">{jabatanText}</div>
+                    <div class="member-card-nis mono">{member.nis}</div>
+                  </div>
                </div>
              )
           })}

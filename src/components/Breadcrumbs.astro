@@ -1,0 +1,53 @@
+---
+import Icon from './Icon.astro';
+
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items = [] } = Astro.props;
+const currentUrl = Astro.url.origin;
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Beranda",
+      "item": currentUrl
+    },
+    ...items.map((item, idx) => ({
+      "@type": "ListItem",
+      "position": idx + 2,
+      "name": item.label,
+      ...(item.href ? { "item": `${currentUrl}${item.href}` } : {})
+    }))
+  ]
+};
+---
+
+<nav class="jejak-navigasi wadah" aria-label="Jejak navigasi">
+  <a href="/">Beranda</a>
+  {items.map((item, idx) => {
+    const isLast = idx === items.length - 1;
+    return (
+      <>
+        <Icon name="fa-chevron-right" size="10" />
+        {isLast || !item.href ? (
+          <span class="bc-current" aria-current="page">{item.label}</span>
+        ) : (
+          <a href={item.href}>{item.label}</a>
+        )}
+      </>
+    );
+  })}
+</nav>
+
+<script type="application/ld+json" set:html={JSON.stringify(schemaData)} />

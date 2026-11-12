@@ -30,9 +30,18 @@ const socialLinks = platforms.flatMap((platform) => {
   return href ? [{ ...platform, href }] : [];
 });
 
-const footerLinks = Array.isArray(G.footer?.links) ? G.footer.links.filter((item) => item?.enabled !== false && typeof item.href === 'string' && item.href.startsWith('/') && !item.href.startsWith('//')) : [
-  { href: '/tkj', label: 'Info TKJ' }, { href: '/pengembang', label: 'Tentang' }, 
-];
+interface FooterLink {
+  href: string;
+  label: string;
+  enabled?: boolean;
+}
+
+const footerLinks: FooterLink[] = Array.isArray(G.footer?.links)
+  ? (G.footer.links as FooterLink[]).filter((item: FooterLink) => item?.enabled !== false && typeof item.href === 'string' && item.href.startsWith('/') && !item.href.startsWith('//'))
+  : [
+      { href: '/tkj', label: 'Info TKJ' },
+      { href: '/pengembang', label: 'Tentang' },
+    ];
 ---
 
 <footer class="kaki-strip wadah" role="contentinfo">

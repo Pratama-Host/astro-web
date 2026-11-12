@@ -2,6 +2,7 @@
 import Icon from '../components/Icon.astro';
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Footer from '../components/Footer.astro';
 import { getPageContext } from '../lib/data';
 import '../styles/tkj.css';
@@ -21,8 +22,9 @@ const tkj = G.tkj;
   description="Informasi program keahlian TKJ, mata pelajaran, alur kurikulum, prospek karir lulusan, dan alat bantu Subnet Calculator online."
 >
   <Header />
+  <Breadcrumbs items={[{ label: 'Info Jurusan TKJ' }]} />
   <main id="main-content" tabindex="-1">
-    
+    <div class="wadah">
       <!-- Hero TKJ -->
       {sectionVisible("overview") && (
       <div class="tkj-hero reveal" style={`--d:0s;order:${sectionOrder("overview",0)}`} >
@@ -175,7 +177,7 @@ const tkj = G.tkj;
         </>
         )}
       </div>
-    
+    </div>
   </main>
   <Footer />
 
