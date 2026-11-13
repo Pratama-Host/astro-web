@@ -1,0 +1,72 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Footer from '../components/Footer.astro';
+import { getPublicAnnouncements, isAnnouncementLive, splitAgenda } from '../lib/announcements';
+
+const { announcements, agenda } = await getPublicAnnouncements();
+const now = new Date();
+const live = announcements.filter((item) => isAnnouncementLive(item, now));
+const { upcoming, past } = splitAgenda(agenda, now);
+const fmt = new Intl.DateTimeFormat('id-ID', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Asia/Jakarta' });
+const fmtDate = new Intl.DateTimeFormat('id-ID', { dateStyle: 'long', timeZone: 'Asia/Jakarta' });
+---
+
+<Layout
+  title="Pengumuman & Agenda Kelas XII-9 TKJ — SMK Muhammadiyah Belitang"
+  description="Pengumuman terbaru dan agenda kegiatan kelas TKJ XII-9 SMK Muhammadiyah Belitang."
+>
+  <Header />
+  <Breadcrumbs items={[{ label: 'Pengumuman & Agenda' }]} />
+  <main id="main-content" tabindex="-1">
+    <div class="sec-head">
+      <div class="sec-tag">Informasi Kelas</div>
+      <h1 class="sec-title">Pengumuman & Agenda</h1>
+      <p class="deskripsi-seksi">Informasi terbaru untuk siswa dan wali. Waktu ditampilkan dalam WIB.</p>
+    </div>
+
+    <section aria-labelledby="pengumuman-title">
+      <h2 id="pengumuman-title" class="sec-title">Pengumuman</h2>
+      {live.length === 0 ? <p role="status">Belum ada pengumuman aktif.</p> : (
+        <ul class="card-list" style="list-style:none;padding:0;display:grid;gap:12px">
+          {live.map((item) => (
+            <li class="card">
+              <div class="chip">{item.category}{item.pinned ? ' · Disematkan' : ''}</div>
+              <h3>{item.title}</h3>
+              {item.publish_at && <time datetime={item.publish_at}>{fmtDate.format(new Date(item.publish_at))}</time>}
+              {item.body && <p style="white-space:pre-line">{item.body}</p>}
+              {item.link_url && <p><a href={item.link_url} rel="noopener noreferrer" target="_blank">Buka tautan</a></p>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <section aria-labelledby="agenda-title">
+      <h2 id="agenda-title" class="sec-title">Agenda Mendatang</h2>
+      {upcoming.length === 0 ? <p role="status">Belum ada agenda mendatang.</p> : (
+        <ul class="card-list" style="list-style:none;padding:0;display:grid;gap:12px">
+          {upcoming.map((event) => (
+            <li class="card">
+              <div class="chip">{event.category}</div>
+              <h3>{event.title}</h3>
+              <time datetime={event.starts_at}>{fmt.format(new Date(event.starts_at))}</time>
+              {event.location && <p>Lokasi: {event.location}</p>}
+              {event.description && <p style="white-space:pre-line">{event.description}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {past.length > 0 && (
+        <details>
+          <summary>Agenda yang sudah lewat</summary>
+          <ul style="list-style:none;padding:0">
+            {past.map((event) => <li>{fmtDate.format(new Date(event.starts_at))} — {event.title}</li>)}
+          </ul>
+        </details>
+      )}
+    </section>
+  </main>
+  <Footer />
+</Layout>

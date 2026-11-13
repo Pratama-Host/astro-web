@@ -35,6 +35,12 @@ describe('data mappers', () => {
     expect(member.visible).toBe(true);
   });
 
+  it('never exposes NIS in the public member mapper', () => {
+    const member = mapMember({ nama: 'Siswa', nis: '12345' }, client);
+    expect(member).not.toHaveProperty('nis');
+    expect(JSON.stringify(member)).not.toContain('12345');
+  });
+
   it('does not return retired local member asset paths', () => {
     const member = mapMember({ nama: 'Siswa', foto_url: '/assets/profil/old.webp' }, client);
     expect(member.foto).toBeNull();

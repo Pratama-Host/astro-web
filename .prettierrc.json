@@ -1,9 +1,0 @@
-{
-  "plugins": ["/data/data/com.termux/files/usr/lib/node_modules/prettier-plugin-astro/dist/index.js"],
-  "overrides": [
-    {
-      "files": "*.astro",
-      "options": { "parser": "astro" }
-    }
-  ]
-}

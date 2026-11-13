@@ -1,6 +1,7 @@
 import fallbackData from '../data/G.json';
 import { getSupabaseAdmin, getSupabasePublic, getStorageBucket } from './supabase';
 import { isAdminRequest } from './admin-auth';
+import { PUBLIC_GALLERY_COLUMNS, PUBLIC_MEMBER_COLUMNS, SHOW_MEMBER_NIS, stripPrivateMemberFields } from './public-data-policy';
 
 type JsonRecord = Record<string, any>;
 
@@ -28,6 +29,7 @@ function cloneFallback(client?: NonNullable<ReturnType<typeof getSupabaseAdmin>>
     return value;
   };
   const cleaned = resolveFallbackAssets(copy) as JsonRecord;
+  if (Array.isArray(cleaned.namaSiswa)) cleaned.namaSiswa = cleaned.namaSiswa.map(stripPrivateMemberFields);
   if (Array.isArray(cleaned.galeri)) cleaned.galeri = cleaned.galeri.filter((item: JsonRecord) => item?.src);
   return cleaned;
 }
@@ -68,7 +70,7 @@ function resolveNestedStorageReferences(value: any, client: NonNullable<ReturnTy
 export function mapMember(row: JsonRecord, client: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
   return {
     nama: row.nama,
-    nis: row.nis,
+    ...(SHOW_MEMBER_NIS ? { nis: row.nis } : {}),
     kelas: row.kelas,
     jabatan: row.jabatan || null,
     foto: resolveStorageReference(row.foto_url, client),
@@ -211,8 +213,8 @@ export async function getSiteData(): Promise<JsonRecord> {
   try {
     const [storedSettings, membersResult, galleryResult, teachersResult, skillsResult] = await Promise.all([
       readSiteSettings(client),
-      client.from('anggota').select('*').order('urutan', { ascending: true }).order('nama', { ascending: true }),
-      client.from('galeri').select('*').order('urutan', { ascending: true }),
+      client.from('anggota').select(PUBLIC_MEMBER_COLUMNS).order('urutan', { ascending: true }).order('nama', { ascending: true }),
+      client.from('galeri').select(PUBLIC_GALLERY_COLUMNS).order('urutan', { ascending: true }),
       client.from('guru').select('nama, mapel, peran, quote, expertise, urutan').order('urutan', { ascending: true }),
       client.from('skills').select('nama, level, icon, deskripsi, urutan').order('urutan', { ascending: true }),
     ]);

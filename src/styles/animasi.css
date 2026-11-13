@@ -590,27 +590,27 @@
   animation: memberCardSlideIn 0.4s ease-out backwards !important;
 }
 
-.member-card[data-nis]:nth-child(1) {
+.member-card[data-key]:nth-child(1) {
   animation-delay: 0s;
 }
 
-.member-card[data-nis]:nth-child(2) {
+.member-card[data-key]:nth-child(2) {
   animation-delay: 0.04s;
 }
 
-.member-card[data-nis]:nth-child(3) {
+.member-card[data-key]:nth-child(3) {
   animation-delay: 0.08s;
 }
 
-.member-card[data-nis]:nth-child(4) {
+.member-card[data-key]:nth-child(4) {
   animation-delay: 0.12s;
 }
 
-.member-card[data-nis]:nth-child(5) {
+.member-card[data-key]:nth-child(5) {
   animation-delay: 0.16s;
 }
 
-.member-card[data-nis]:nth-child(n + 6) {
+.member-card[data-key]:nth-child(n + 6) {
   animation-delay: 0.2s;
 }
 

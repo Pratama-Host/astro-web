@@ -6,6 +6,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Footer from '../components/Footer.astro';
 import { getPageContext } from '../lib/data';
 import '../styles/anggota.css';
+import { SHOW_MEMBER_NIS } from '../lib/public-data-policy';
 const { site: G, sections: sectionConfig, content: pageContent } = await getPageContext('/anggota', Astro.request);
 const membersVisible = sectionConfig.find((item) => item.section_key === 'list')?.enabled !== false;
 
@@ -18,7 +19,7 @@ function makeInitials(name = "") {
 
 interface MemberItem {
   nama: string;
-  nis: string;
+  nis?: string;
   foto?: string | null;
   audio?: string | null;
   jabatan?: string | null;
@@ -26,14 +27,14 @@ interface MemberItem {
 }
 
 const siswa: MemberItem[] = (G.namaSiswa || []) as MemberItem[];
-const firstMemberPhotoNis = siswa.find((member: MemberItem) => Boolean(member.foto))?.nis || null;
+const firstMemberPhotoIndex = siswa.findIndex((member: MemberItem) => Boolean(member.foto));
 const totalSiswa = siswa.length;
 
 ---
 
 <Layout
   title="Daftar Anggota Kelas XII-9 TKJ — SMK Muhammadiyah Belitang"
-  description="Daftar lengkap seluruh siswa-siswi kelas TKJ XII-9 SMK Muhammadiyah Belitang beserta NIS, profil, dan informasi keanggotaan."
+  description="Daftar lengkap seluruh siswa-siswi kelas TKJ XII-9 SMK Muhammadiyah Belitang beserta profil, dan informasi keanggotaan."
 >
   <Header />
   <Breadcrumbs items={[{ label: 'Anggota Kelas' }]} />
@@ -100,8 +101,8 @@ const totalSiswa = siswa.length;
                 <option value="default">Urutan Presensi</option>
                 <option value="name-asc">Nama (A - Z)</option>
                 <option value="name-desc">Nama (Z - A)</option>
-                <option value="nis-asc">NIS (Terkecil)</option>
-                <option value="nis-desc">NIS (Terbesar)</option>
+                {SHOW_MEMBER_NIS && <option value="nis-asc">NIS (Terkecil)</option>}
+                {SHOW_MEMBER_NIS && <option value="nis-desc">NIS (Terbesar)</option>}
               </select>
             </div>
 
@@ -137,7 +138,8 @@ const totalSiswa = siswa.length;
              return (
                <div
                  class="card member-card card-accent-top reveal"
-                 data-nis={member.nis}
+                 data-key={i}
+                 data-nis={SHOW_MEMBER_NIS ? member.nis : undefined}
                  data-nama={member.nama}
                  data-role={jabatanText}
                  data-is-org={isOrg ? "true" : "false"}
@@ -154,8 +156,8 @@ const totalSiswa = siswa.length;
                       <img
                         src={member.foto}
                         alt={member.nama}
-                        loading={member.nis === firstMemberPhotoNis ? "eager" : "lazy"}
-                        fetchpriority={member.nis === firstMemberPhotoNis ? "high" : "auto"}
+                        loading={i === firstMemberPhotoIndex ? "eager" : "lazy"}
+                        fetchpriority={i === firstMemberPhotoIndex ? "high" : "auto"}
                         decoding="async"
                       />
                     ) : (
@@ -165,7 +167,7 @@ const totalSiswa = siswa.length;
                   <div class="member-card-info">
                     <div class="member-card-name">{member.nama}</div>
                     <div class="member-card-role" style="font-size: 0.75rem; color: var(--text-2); margin-bottom: 8px;">{jabatanText}</div>
-                    <div class="member-card-nis mono">{member.nis}</div>
+                    {SHOW_MEMBER_NIS && <div class="member-card-nis mono">{member.nis}</div>}
                   </div>
                </div>
              )
@@ -188,7 +190,7 @@ const totalSiswa = siswa.length;
             <div class="member-modal-id">
               <h2 id="modal-name" class="modal-name"></h2>
               <div id="modal-role" class="modal-role chip"></div>
-              <div id="modal-nis" class="modal-nis mono"></div>
+              {SHOW_MEMBER_NIS && <div id="modal-nis" class="modal-nis mono"></div>}
             </div>
           </div>
 

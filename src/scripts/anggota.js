@@ -227,8 +227,8 @@ function initMembersInteractions() {
   // Modal Logic
   let currentAudioInstance = null;
 
-  function terbukaMemberModal(nis) {
-    const data = G.namaSiswa.find((s) => s.nis === nis);
+  function terbukaMemberModal(key) {
+    const data = G.namaSiswa[Number(key)];
     if (!data || !modal) return;
 
     if (currentAudioInstance) {
@@ -240,7 +240,7 @@ function initMembersInteractions() {
     const modalNis = document.getElementById("modal-nis");
     const modalDesc = document.getElementById("modal-desc");
     if (modalName) modalName.textContent = data.nama || "—";
-    if (modalNis) modalNis.textContent = `NIS: ${data.nis || ""}`;
+    if (modalNis && data.nis) modalNis.textContent = `NIS: ${data.nis || ""}`;
 
     const roleEl = document.getElementById("modal-role");
     if (roleEl) {
@@ -319,7 +319,7 @@ function initMembersInteractions() {
 
   grid.addEventListener("click", (e) => {
     const card = e.target.closest(".member-card");
-    if (card) terbukaMemberModal(card.dataset.nis);
+    if (card) terbukaMemberModal(card.dataset.key);
   });
 
   grid.addEventListener("keydown", (e) => {
@@ -327,7 +327,7 @@ function initMembersInteractions() {
       const card = e.target.closest(".member-card");
       if (card) {
         e.preventDefault();
-        terbukaMemberModal(card.dataset.nis);
+        terbukaMemberModal(card.dataset.key);
       }
     }
   });

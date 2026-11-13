@@ -3,7 +3,7 @@ import { getSiteOrigin } from '../lib/site-url';
 
 export const prerender = false;
 
-const ROUTES = ['/', '/anggota', '/galeri', '/struktur', '/keahlian', '/tkj', '/pengembang'];
+const ROUTES = ['/', '/anggota', '/galeri', '/struktur', '/keahlian', '/tkj', '/pengumuman', '/pengembang'];
 
 export const GET: APIRoute = ({ url }) => {
   const origin = getSiteOrigin(url.origin);

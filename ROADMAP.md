@@ -1,72 +1,41 @@
-# Roadmap & Status Pengembangan Website TKJ XII-9
-**SMK Muhammadiyah Belitang — Kelas XII Teknik Komputer dan Jaringan**
+# Roadmap Website TKJ XII-9
+**SMK Muhammadiyah Belitang — Kelas XII TKJ**
 
-> Dokumen ini diperbarui secara berkala sebagai panduan pengembangan dan serah terima (handover) antar developer maupun AI assistant.
+> Status dicatat berdasarkan kode di repositori. Angka build/test **harus diverifikasi ulang** di CI; jangan mengandalkan angka lama di dokumen.
 
----
+## Prinsip
+Satu pusat informasi kelas yang tepercaya dan mudah diperbarui, yang hanya menampilkan data yang disetujui untuk publik (lihat `docs/DATA-CLASSIFICATION.md`). Urutan kerja: privasi → keandalan rilis → konten akademik → pengalaman publik → PWA lanjutan.
 
-## 📌 Ringkasan Stack & Lingkungan Kerja
-- **Framework:** Astro 7.4.5 SSR (`@astrojs/cloudflare` v14.4.4)
-- **Backend & Storage:** Supabase (`@supabase/supabase-js` v2.118.0) dengan fallback otomatis ke `src/data/G.json`
-- **Testing:** Vitest 5.1.0 (`cmd.exe /c npm test`)
-- **Status Build:** `npm run check` (0 errors), `npm test` (29 passed), `npm run build` (Clean & verified)
+## Status fitur
 
----
+| Area | Status | Catatan |
+|---|---|---|
+| Halaman publik (beranda, anggota, struktur, keahlian, galeri, TKJ, pengembang) | Selesai | Filter/urut/mode tampilan di /anggota |
+| Breadcrumbs + JSON-LD | Selesai | |
+| CMS: anggota, galeri, media, konten, navigasi, section | Selesai | |
+| Draft, revisi, audit, backup/restore (RPC) | Selesai (kode) | Restore penuh belum diuji di lingkungan terpisah |
+| Auth admin: sesi HMAC, cek Origin, rate limit login | **Sudah diterapkan** | Bukan lagi "rencana"; ganti ke Supabase Auth hanya jika butuh multi-admin/peran/pencabutan sesi |
+| UI riwayat revisi + rollback | Sebagian | Endpoint `/api/admin/revisions` ada; periksa UI |
+| PWA dasar (manifest, service worker, offline) | Selesai | Lanjutan (sync/push) ditunda |
+| NIS di halaman publik | **Disembunyikan (default)** | Keputusan akhir pengelola kelas diperlukan |
+| Hardening grant/Storage | Migrasi ditulis, **belum diterapkan** | `20261109000100`, `20261109000200` |
+| Migrasi dari database kosong | Belum terbukti | Uji di proyek disposable |
+| Pengumuman/agenda, showcase proyek | Belum dibuat | |
 
-## ✅ Progres Terkini (Selesai Dikerjakan)
+## Antrean (urut prioritas)
+1. **Privasi:** putuskan kebijakan NIS & persetujuan foto/audio; terapkan migrasi grant setelah uji di staging; verifikasi HTML `/anggota` tanpa NIS.
+2. **Keandalan:** uji baseline dari DB kosong, backup + restore penuh (termasuk file Storage), smoke test pascarilis, pisahkan PR dependensi mayor.
+3. **Data layer:** petakan query per halaman, pagination anggota/galeri, pisahkan tipe publik vs CMS.
+4. **Modul konten pertama:** pengumuman + agenda (tabel sendiri, status draft/publish/arsip, RLS, fallback, test).
+5. **Showcase proyek TKJ:** dengan tinjauan agar tidak memuat kredensial/IP internal.
+6. **E2E, aksesibilitas, observabilitas; CSP bertahap (report-only dahulu).**
+7. **PWA lanjutan/push:** hanya jika kebutuhan terbukti dan ada pengelola pengirim.
 
-### 1. Fondasi & DX (Fase 1)
-- [x] Verifikasi Node.js v26.13.0, npm 11.20.0, dan integritas `package-lock.json`.
-- [x] Test suite ekspansi: `tests/data-navigation.test.ts` (total 29 unit test aktif dan lolos).
-- [x] Pembersihan type warnings TypeScript di komponen inti (`Layout.astro`, `Footer.astro`, `GlobalClock.astro`, `anggota.astro`).
+## Ditunda
+Migrasi auth besar tanpa kebutuhan jelas • push notification • refaktor CSS/JS total • banyak modul sekaligus • ubah strategi cache tanpa pengukuran • menjalankan baseline di DB aktif.
 
-### 2. Optimasi Desktop, SEO & Breadcrumbs (Fase 2 & 3)
-- [x] **Header Desktop:** Navigasi desktop lengkap (`.nav-desktop`) dengan auto-detect rute aktif dan brand link ke `/`.
-- [x] **Jam Global:** Pemindahan `GlobalClock` ke posisi desktop non-obstruktif di pojok kiri bawah.
-- [x] **Filter & Pencarian Anggota:**
-  - Input pencarian real-time nama, NIS, dan peran.
-  - Filter pills kategori: *Semua*, *Pengurus Kelas*, *Foto Asli*, *Voice Note*.
-  - Dropdown sortir: *Urutan Presensi*, *Nama (A - Z)*, *Nama (Z - A)*, *NIS (Terkecil/Terbesar)*.
-  - Mode tampilan toggle: *Grid View* (kartu foto) vs *Compact List View* (baris rapi) tersimpan di `localStorage`.
-- [x] **Breadcrumbs SEO:** Komponen `Breadcrumbs.astro` dengan metadata Schema.org `BreadcrumbList` (JSON-LD) aktif di halaman `/anggota`, `/struktur`, `/galeri`, `/keahlian`, dan `/tkj`.
-- [x] **Ikon Bawaan:** Tambahan path SVG untuk `grid`, `list`, dan `filter` di `Icon.astro`.
+## Definisi selesai fitur
+Validasi server, RLS diuji (anon/admin), tanpa kebocoran data pribadi, alur draft/publish/arsip, UI responsif + aksesibel, test relevan, SEO/sitemap/cache ditinjau, backup/rollback kompatibel, dokumen diperbarui setelah kode ada.
 
----
-
-## 🚀 Antrean Berikutnya (Next Tasks)
-
-### Fase 4 — Fitur Interaktif & Modul Akademik (TARGET BERIKUTNYA)
-1. **Mading Digital / Modul Pengumuman Kelas:**
-   - Menampilkan agenda ujian kompetensi, sertifikasi Mikrotik (MTCNA) / Cisco (CCNA), jadwal piket, dan pengumuman wali kelas.
-   - Menyediakan fallback data di `src/data/G.json` di bawah kunci `"pengumuman"` serta query Supabase jika tabel tersedia.
-2. **Agenda Akademik & Kalender Praktik:**
-   - Ringkasan tanggal penting semester, jadwal PKL (*Praktik Kerja Lapangan*), dan ujian kelulusan.
-3. **Showcase Proyek Praktikum TKJ:**
-   - Menampilkan portofolio karya konfigurasi lab siswa (Packet Tracer, Debian/Ubuntu Server, Mikrotik routing).
-
-### Fase 5 — Keamanan & CMS Hardening
-1. Otentikasi admin CMS berbasis JWT / Supabase Auth.
-2. Proteksi CSRF & Rate limiting pada endpoint `/api/admin/*`.
-3. Tampilan visual riwayat revisi dan tombol rollback instan.
-
-### Fase 6 — PWA & Mobile Experience
-1. Offline background synchronization.
-2. Web push notification untuk pengumuman mendesak.
-
----
-
-## 🤖 Handover Prompt (Salin untuk AI Lain)
-
-```markdown
-Lanjutkan pengembangan website kelas TKJ XII-9 SMK Muhammadiyah Belitang (Astro 7 SSR + Cloudflare Workers + Supabase).
-
-Status saat ini:
-- Fase 1, 2, dan 3 telah selesai (Header desktop, filter/sort/view-mode di /anggota, Breadcrumbs JSON-LD di semua sub-halaman, 29/29 tests pass).
-- File panduan lengkap ada di `ROADMAP.md` di root proyek.
-
-Tugas selanjutnya:
-Kerjakan **FASE 4: Modul Pengumuman / Mading Digital Kelas & Agenda Akademik**:
-- Buat komponen pengumuman kelas (ujian, sertifikasi Mikrotik/Cisco, agenda kelas).
-- Sertakan fallback di `src/data/G.json`.
-- Pastikan `npm test` dan `npm run build` tetap lolos 100%.
-```
+## Handover
+Baca `docs/AUDIT.md`, `docs/DATA-CLASSIFICATION.md`, dan tabel status di atas. Jalankan `npm ci && npm run check && npm test && npm run build` sebelum dan sesudah perubahan. Kerjakan item antrean nomor terkecil yang belum selesai.
