@@ -1,41 +1,41 @@
 # Roadmap Website TKJ XII-9
 **SMK Muhammadiyah Belitang — Kelas XII TKJ**
 
-> Status dicatat berdasarkan kode di repositori. Angka build/test **harus diverifikasi ulang** di CI; jangan mengandalkan angka lama di dokumen.
+> Status berikut memisahkan pekerjaan yang sudah diterapkan dan diuji dari pekerjaan yang masih memerlukan browser, CI, atau verifikasi infrastruktur.
 
 ## Prinsip
-Satu pusat informasi kelas yang tepercaya dan mudah diperbarui, yang hanya menampilkan data yang disetujui untuk publik (lihat `docs/DATA-CLASSIFICATION.md`). Urutan kerja: privasi → keandalan rilis → konten akademik → pengalaman publik → PWA lanjutan.
+Satu pusat informasi kelas yang mudah diperbarui, dengan akses publik hanya untuk konten yang memang diterbitkan. Urutan kerja: keamanan data → keandalan rilis → konten akademik → pengalaman publik → PWA lanjutan bila dibutuhkan.
 
 ## Status fitur
 
 | Area | Status | Catatan |
 |---|---|---|
-| Halaman publik (beranda, anggota, struktur, keahlian, galeri, TKJ, pengembang) | Selesai | Filter/urut/mode tampilan di /anggota |
-| Breadcrumbs + JSON-LD | Selesai | |
-| CMS: anggota, galeri, media, konten, navigasi, section | Selesai | |
-| Draft, revisi, audit, backup/restore (RPC) | Selesai (kode) | Restore penuh belum diuji di lingkungan terpisah |
-| Auth admin: sesi HMAC, cek Origin, rate limit login | **Sudah diterapkan** | Bukan lagi "rencana"; ganti ke Supabase Auth hanya jika butuh multi-admin/peran/pencabutan sesi |
-| UI riwayat revisi + rollback | Sebagian | Endpoint `/api/admin/revisions` ada; periksa UI |
-| PWA dasar (manifest, service worker, offline) | Selesai | Lanjutan (sync/push) ditunda |
-| NIS di halaman publik | **Disembunyikan (default)** | Keputusan akhir pengelola kelas diperlukan |
-| Hardening grant/Storage | Migrasi ditulis, **belum diterapkan** | `20261109000100`, `20261109000200` |
-| Migrasi dari database kosong | Belum terbukti | Uji di proyek disposable |
-| Pengumuman/agenda, showcase proyek | Belum dibuat | |
+| Halaman publik (beranda, anggota, struktur, keahlian, galeri, TKJ, pengembang) | Selesai | Perilaku publik perlu smoke test setelah setiap rilis. |
+| CMS anggota, galeri, media, konten, navigasi, section, tampilan | Selesai | Menggunakan API admin dan service-side Supabase client. |
+| Draft, revisi, audit, ekspor/pemulihan CMS | Selesai pada kode | Snapshot CMS pra-perubahan tersimpan di skema database privat; dump eksternal penuh dan backup Storage masih perlu prosedur terpisah. |
+| Auth admin: sesi HMAC, cek Origin, rate limit login | Sudah diterapkan | Tidak diubah dalam pekerjaan ini. |
+| UI riwayat revisi dan rollback | Sebagian | Endpoint tersedia; cek kelengkapan alur melalui browser. |
+| PWA dasar (manifest, service worker, offline) | Selesai | Sync/push ditunda sampai kebutuhan dan pengelolanya jelas. |
+| Hak akses database dan batas unggahan Storage | Diterapkan dan diverifikasi | Tiga migrasi diterapkan pada lingkungan pengembangan/pengujian aktif pada 13 November 2026. |
+| Pengumuman dan agenda | Skema, RLS, API, dan UI admin tersedia | Uji DB/RPC dan filter publik lolos; E2E browser dan tampilan lintas ukuran layar belum dijalankan. |
+| Migrasi project Supabase kosong | Belum terbukti penuh | Baseline direkonstruksi dari skema aktif; perlu uji pemulihan/provisioning terpisah. |
+| Restore eksternal dan objek Storage | Belum selesai | Snapshot CMS internal bukan backup PostgreSQL penuh atau backup file Storage. |
+| E2E browser dan rilis Cloudflare terbaru | Belum diverifikasi setelah perubahan UI | Tunggu hasil CI dan smoke test browser/deployment yang aktual. |
 
-## Antrean (urut prioritas)
-1. **Privasi:** putuskan kebijakan NIS & persetujuan foto/audio; terapkan migrasi grant setelah uji di staging; verifikasi HTML `/anggota` tanpa NIS.
-2. **Keandalan:** uji baseline dari DB kosong, backup + restore penuh (termasuk file Storage), smoke test pascarilis, pisahkan PR dependensi mayor.
-3. **Data layer:** petakan query per halaman, pagination anggota/galeri, pisahkan tipe publik vs CMS.
-4. **Modul konten pertama:** pengumuman + agenda (tabel sendiri, status draft/publish/arsip, RLS, fallback, test).
-5. **Showcase proyek TKJ:** dengan tinjauan agar tidak memuat kredensial/IP internal.
-6. **E2E, aksesibilitas, observabilitas; CSP bertahap (report-only dahulu).**
-7. **PWA lanjutan/push:** hanya jika kebutuhan terbukti dan ada pengelola pengirim.
+## Antrean berikutnya
+1. Jalankan CI untuk source terkini (`npm ci`, `npm run check`, `npm test`, `npm run build`) di runner Ubuntu.
+2. Uji CMS di browser: login/logout, buka modul pengumuman dan agenda, buat draft, ubah, terbitkan, arsipkan, dan periksa halaman publik.
+3. Verifikasi layout admin pada lebar ponsel, tablet, dan desktop serta navigasi keyboard.
+4. Selesaikan backup PostgreSQL eksternal dan pemindahan objek Storage, lalu lakukan uji restore pada lingkungan terpisah.
+5. Petakan query halaman dan tambahkan pagination untuk data yang berpotensi berkembang.
+6. Tambahkan E2E Playwright dan smoke test pascarilis; lanjutkan CSP Report-Only sebelum pengetatan.
+7. PWA lanjutan/push hanya jika kebutuhan sudah jelas dan ada pengelola pengirim.
 
 ## Ditunda
-Migrasi auth besar tanpa kebutuhan jelas • push notification • refaktor CSS/JS total • banyak modul sekaligus • ubah strategi cache tanpa pengukuran • menjalankan baseline di DB aktif.
+Migrasi autentikasi besar tanpa kebutuhan jelas • push notification • refaktor CSS/JS total • banyak modul sekaligus • perubahan strategi cache tanpa pengukuran.
 
 ## Definisi selesai fitur
-Validasi server, RLS diuji (anon/admin), tanpa kebocoran data pribadi, alur draft/publish/arsip, UI responsif + aksesibel, test relevan, SEO/sitemap/cache ditinjau, backup/rollback kompatibel, dokumen diperbarui setelah kode ada.
+Validasi server, RLS diuji sebagai anon dan server admin, alur draft/terbit/arsip, UI responsif dan aksesibel, tes relevan, SEO/cache ditinjau, backup/rollback sesuai cakupan, dan dokumentasi diperbarui.
 
 ## Handover
-Baca `docs/AUDIT.md`, `docs/DATA-CLASSIFICATION.md`, dan tabel status di atas. Jalankan `npm ci && npm run check && npm test && npm run build` sebelum dan sesudah perubahan. Kerjakan item antrean nomor terkecil yang belum selesai.
+Mulai dari `docs/RECONCILIATION-2026-11-13.md`, lalu baca `docs/DATA-CLASSIFICATION.md` untuk aturan pengelolaan data. Jangan menyatakan build, test, atau deploy berhasil sebelum log CI/Cloudflare terbaru tersedia.

@@ -427,6 +427,8 @@ Semua endpoint berikut berada di bawah `/api/admin/` dan diperiksa menggunakan s
 | `/api/admin/cms` | `GET` | Ringkasan data dan status CMS. |
 | `/api/admin/anggota` | `GET`, `POST`, `PUT`, `DELETE` | CRUD anggota. |
 | `/api/admin/gallery` | `GET`, `PUT`, `DELETE` | Membaca, memperbarui, dan menghapus record galeri. |
+| `/api/admin/announcements?type=announcements` | `GET`, `POST` | Daftar, buat, ubah, terbitkan, atau arsipkan pengumuman. |
+| `/api/admin/announcements?type=agenda` | `GET`, `POST` | Daftar, buat, ubah, terbitkan, atau arsipkan agenda. |
 | `/api/admin/media` | `GET`, `POST`, `PATCH`, `DELETE` | Media library dan operasi Storage terkait. |
 | `/api/admin/content` | `GET`, `PUT` | Pengaturan dan konten situs. |
 | `/api/admin/collections` | `GET`, `PUT` | Pengelolaan koleksi. |
@@ -456,6 +458,7 @@ Panel admin mendefinisikan tampilan berikut:
 | Dashboard | Ringkasan jumlah data dan aktivitas terakhir. |
 | Members | Data anggota, profil, foto, audio, skill, urutan, dan visibilitas. |
 | Gallery | Record koleksi foto dan metadata galeri. |
+| Announcements | Pengumuman dan agenda; status draft, terbit, dan arsip. |
 | Media | Library media, metadata, dan unggah aset. |
 | Content | Pengaturan konten utama website. |
 | Sections | Toggle tampil/sembunyi dan urutan section. |
@@ -472,6 +475,7 @@ Panel admin mendefinisikan tampilan berikut:
 - Data galeri disimpan pada `galeri`.
 - Data pengajar disimpan pada `guru`.
 - Data kompetensi disimpan pada `skills`.
+- Pengumuman disimpan pada `announcements`; agenda kegiatan pada `agenda_events`.
 - Pengaturan navigasi disimpan pada `site_navigation`.
 - Pengaturan section disimpan pada `site_sections`.
 - Konten halaman disimpan pada `site_pages`.
@@ -850,6 +854,10 @@ Semua file migrasi SQL berada di `supabase/migrations/`; seed dan manifest hasil
 | `supabase/migrations/20261106000300_public_read_only_rls.sql` | Policy pembacaan publik untuk data yang memang ditampilkan. | Tidak membuat policy mutasi publik. |
 | `supabase/migrations/20261106000400_gallery_metadata_from_caption.sql` | Mengisi title dan alt text galeri yang kosong dari caption. | Mempertahankan nilai yang sudah ada. |
 | `supabase/migrations/20261106000500_public_section_visibility_metadata.sql` | Mengizinkan pembacaan metadata visibilitas section. | Dibutuhkan agar halaman publik mengetahui status section `enabled=false`. |
+| `supabase/migrations/20261113130442_archive_tkj_cms_before_access_hardening.sql` | Menyimpan snapshot JSON CMS ke skema privat. | Bukan dump PostgreSQL eksternal atau backup object Storage. |
+| `supabase/migrations/20261113130505_restrict_anon_anggota_columns.sql` | Membatasi grant baca tabel anggota ke kolom yang diperlukan halaman. | Diterapkan pada lingkungan pengembangan/pengujian aktif pada 13 November 2026. |
+| `supabase/migrations/20261113130520_harden_grants_and_storage_limits.sql` | Mencabut hak mutasi publik dan membatasi upload bucket. | Maksimum 20 MiB dan MIME allowlist. |
+| `supabase/migrations/20261113130543_announcements_and_agenda.sql` | Membuat tabel dan RLS untuk pengumuman serta agenda. | Publik hanya membaca item dengan status terbit sesuai policy. |
 
 ### Aturan migrasi
 
@@ -887,7 +895,7 @@ Alur tingkat tinggi untuk instalasi baru:
 10. Deploy aplikasi dan lakukan smoke test.
 
 > [!WARNING]
-> `supabase/migrations/20261106000100_baseline.sql` direkonstruksi dari introspeksi database live. Walaupun file ditulis dengan guard tertentu, baseline ini belum boleh dianggap sebagai jaminan migrasi universal untuk setiap project Supabase. Uji lebih dahulu pada project disposable sebelum digunakan untuk provisioning baru. Pada database produksi yang saat ini sudah berjalan, jangan mengulang baseline.
+> `supabase/migrations/20261106000100_baseline.sql` direkonstruksi dari introspeksi database live. Walaupun file ditulis dengan guard tertentu, baseline ini belum boleh dianggap sebagai jaminan migrasi universal untuk setiap project Supabase. Uji lebih dahulu pada project disposable sebelum digunakan untuk provisioning baru. Pada database pengembangan/pengujian yang sudah berjalan, jangan mengulang baseline.
 
 ---
 

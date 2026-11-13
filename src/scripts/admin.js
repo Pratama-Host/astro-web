@@ -6,6 +6,7 @@ import { registry } from "./admin/core.js";
 import { checkSession } from "./admin/shell.js";
 import { loadMembers } from "./admin/members.js";
 import { loadGallery } from "./admin/gallery.js";
+import { loadAnnouncements } from "./admin/announcements.js";
 import { loadContent } from "./admin/content.js";
 import { loadCollections } from "./admin/collections.js";
 import { loadAppearance } from "./admin/appearance.js";
@@ -21,6 +22,7 @@ import "./admin/system.js";
 registry.loaders = {
   members: loadMembers,
   gallery: loadGallery,
+  announcements: loadAnnouncements,
   content: loadContent,
   collections: loadCollections,
   sections: loadSections,

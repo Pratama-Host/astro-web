@@ -38,6 +38,7 @@ import '../../styles/admin.css';
       <div class="nav-group">Konten website</div>
       <button type="button" class="nav-btn" data-view="members"><span class="ic">♙</span> Anggota</button>
       <button type="button" class="nav-btn" data-view="gallery"><span class="ic">▧</span> Galeri</button>
+      <button type="button" class="nav-btn" data-view="announcements"><span class="ic">◷</span> Pengumuman & agenda</button>
       <button type="button" class="nav-btn" data-view="content"><span class="ic">✎</span> Konten & profil</button>
       <button type="button" class="nav-btn" data-view="collections"><span class="ic">✦</span> Guru & keahlian</button>
       <button type="button" class="nav-btn" data-view="sections"><span class="ic">▤</span> Section halaman</button>
@@ -63,7 +64,7 @@ import '../../styles/admin.css';
         </div>
         <div class="grid two" style="margin-top:14px">
           <div class="panel"><div class="panel-head"><div><h2>Aktivitas terbaru</h2><p class="muted small">Riwayat perubahan yang tercatat di CMS.</p></div><button type="button" class="btn ghost small-btn" data-go="media">Media library</button></div><div id="activity-list" class="item-list"><div class="empty">Memuat aktivitas…</div></div></div>
-          <div class="panel"><h2>Pintasan pengelolaan</h2><p class="muted small">Buka modul yang ingin diperbarui.</p><div class="grid two" style="margin-top:14px"><button type="button" class="btn ghost" data-go="members">Kelola anggota</button><button type="button" class="btn ghost" data-go="gallery">Kelola galeri</button><button type="button" class="btn ghost" data-go="content">Edit konten</button><button type="button" class="btn ghost" data-go="appearance">Atur tampilan</button><button type="button" class="btn ghost" data-go="navigation">Atur navigasi</button><button type="button" class="btn ghost" data-go="seo">Pengaturan SEO</button></div><div class="notice" style="margin-top:16px">Status tersambung berarti endpoint admin berhasil membaca tabel CMS. Ukuran media dihitung dari metadata file yang tercatat, bukan kuota total bucket.</div><p id="dashboard-status" class="status" role="status" aria-live="polite" aria-atomic="true"></p></div>
+          <div class="panel"><h2>Pintasan pengelolaan</h2><p class="muted small">Buka modul yang ingin diperbarui.</p><div class="grid two" style="margin-top:14px"><button type="button" class="btn ghost" data-go="members">Kelola anggota</button><button type="button" class="btn ghost" data-go="gallery">Kelola galeri</button><button type="button" class="btn ghost" data-go="announcements">Pengumuman & agenda</button><button type="button" class="btn ghost" data-go="content">Edit konten</button><button type="button" class="btn ghost" data-go="appearance">Atur tampilan</button><button type="button" class="btn ghost" data-go="navigation">Atur navigasi</button><button type="button" class="btn ghost" data-go="seo">Pengaturan SEO</button></div><div class="notice" style="margin-top:16px">Status tersambung berarti endpoint admin berhasil membaca tabel CMS. Ukuran media dihitung dari metadata file yang tercatat, bukan kuota total bucket.</div><p id="dashboard-status" class="status" role="status" aria-live="polite" aria-atomic="true"></p></div>
         </div>
       </section>
 
@@ -88,6 +89,46 @@ import '../../styles/admin.css';
         <div class="view-intro"><h2>Manajemen galeri</h2><p>Upload beberapa foto sekaligus, atur caption, judul, kategori, tanggal dokumentasi, visibilitas, dan urutan.</p></div>
         <div class="panel"><h2>Tambah foto galeri</h2><form id="gallery-upload-form" class="grid"><div class="grid two"><div class="field"><label for="gallery-files">Pilih foto (bisa beberapa)</label><input id="gallery-files" type="file" accept="image/*" multiple required /></div><div class="field"><label for="gallery-caption-default">Caption awal (opsional)</label><input id="gallery-caption-default" maxlength="240" placeholder="Kegiatan kelas..." /></div></div><button class="btn" id="gallery-upload-button" type="submit">Upload foto ke galeri</button><p id="gallery-upload-status" class="status" role="status" aria-live="polite" aria-atomic="true"></p></form></div>
         <div class="panel"><div class="panel-head"><div><h2>Semua foto</h2><p class="muted small" id="gallery-count">Memuat galeri…</p></div><button type="button" class="btn ghost small-btn" id="refresh-gallery">Muat ulang</button></div><div id="gallery-grid" class="media-grid"></div></div>
+      </section>
+
+      <section id="view-announcements" class="view">
+        <div class="view-intro"><h2>Pengumuman & agenda kelas</h2><p>Buat informasi kelas, jadwalkan waktu terbit, dan kelola kegiatan. Konten berstatus draft atau arsip tidak tampil pada halaman publik.</p></div>
+        <div class="panel">
+          <div class="panel-head"><div><h2>Pilih jenis konten</h2><p class="muted small">Kedua jenis konten disimpan terpisah dan memiliki daftar masing-masing.</p></div></div>
+          <div class="toolbar" role="group" aria-label="Jenis konten">
+            <button type="button" class="btn" id="announcement-kind-news" aria-pressed="true">Pengumuman</button>
+            <button type="button" class="btn ghost" id="announcement-kind-agenda" aria-pressed="false">Agenda kegiatan</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2 id="announcement-form-title">Buat pengumuman</h2><p class="muted small">Simpan sebagai draft terlebih dahulu, lalu ubah status menjadi Terbit setelah siap.</p></div><span id="announcement-form-mode" class="badge">Item baru</span></div>
+          <form id="announcement-form" class="grid">
+            <input type="hidden" id="announcement-id" />
+            <div class="grid two">
+              <div class="field"><label for="announcement-title">Judul *</label><input id="announcement-title" maxlength="160" required /></div>
+              <div class="field"><label for="announcement-category">Kategori</label><input id="announcement-category" maxlength="60" value="Kelas" /></div>
+              <div class="field"><label for="announcement-status-select">Status</label><select id="announcement-status-select"><option value="draft">Draft</option><option value="published">Terbit</option><option value="archived">Arsip</option></select></div>
+            </div>
+            <div class="field"><label id="announcement-body-label" for="announcement-body">Isi pengumuman</label><textarea id="announcement-body" maxlength="5000" placeholder="Tuliskan informasi yang perlu diketahui kelas…"></textarea></div>
+            <div id="announcement-only-fields" class="grid two">
+              <div class="field"><label for="announcement-publish-at">Jadwalkan terbit (opsional)</label><input id="announcement-publish-at" type="datetime-local" /></div>
+              <div class="field"><label for="announcement-expires-at">Sembunyikan setelah (opsional)</label><input id="announcement-expires-at" type="datetime-local" /></div>
+              <div class="field"><label for="announcement-link-url">Tautan tambahan (opsional)</label><input id="announcement-link-url" type="url" placeholder="https://…" /></div>
+              <label class="checkline" style="align-self:end"><input id="announcement-pinned" type="checkbox" /> Sematkan di bagian atas</label>
+            </div>
+            <div id="agenda-only-fields" class="grid two" hidden>
+              <div class="field"><label for="agenda-starts-at">Waktu mulai *</label><input id="agenda-starts-at" type="datetime-local" required /></div>
+              <div class="field"><label for="agenda-ends-at">Waktu selesai (opsional)</label><input id="agenda-ends-at" type="datetime-local" /></div>
+              <div class="field"><label for="agenda-location">Lokasi (opsional)</label><input id="agenda-location" maxlength="160" placeholder="Ruang kelas, aula, laboratorium…" /></div>
+            </div>
+            <div class="form-actions"><button class="btn" id="announcement-save" type="submit">Simpan pengumuman</button><button class="btn ghost" id="announcement-reset" type="button">Batal / item baru</button><button class="btn ghost small-btn" id="announcement-refresh" type="button">Muat ulang daftar</button></div>
+            <p id="announcement-status" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div><h2 id="announcement-list-title">Daftar pengumuman</h2><p class="muted small" id="announcement-count">Memuat data…</p></div></div>
+          <div id="announcement-list" class="item-list"><div class="empty">Memuat konten…</div></div>
+        </div>
       </section>
 
       <section id="view-content" class="view">

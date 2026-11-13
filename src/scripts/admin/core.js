@@ -43,6 +43,7 @@ export const viewTitles = {
   dashboard: ["Dashboard", "Ringkasan kondisi website TKJ XII-9."],
   members: ["Anggota", "Kelola data anggota dan struktur organisasi."],
   gallery: ["Galeri", "Kelola dokumentasi dan foto kelas."],
+  announcements: ["Pengumuman & agenda", "Kelola informasi kelas dan jadwal kegiatan."],
   content: [
     "Konten & profil",
     "Identitas, hero, visi-misi, wali kelas, developer, dan konten TKJ.",
