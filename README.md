@@ -1374,3 +1374,8 @@ Teknologi pihak ketiga tetap tunduk pada lisensi masing-masing, termasuk Astro, 
 _Dibangun untuk mendokumentasikan perjalanan, bukan sekadar menampilkan halaman._
 
 </div>
+
+
+### Navigasi pengumuman
+
+Halaman `/pengumuman` ditambahkan ke navigasi publik. `getNavigation()` menyertakan tautan default apabila belum ada baris navigasi dengan href `/pengumuman`; menu yang sudah ada dan sengaja dinonaktifkan tetap dihormati. Untuk menyimpan tautan sebagai item yang dapat dikelola dari CMS, terapkan migrasi `supabase/migrations/20261113211300_add_announcements_navigation.sql`.

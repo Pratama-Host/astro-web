@@ -1,77 +1,42 @@
-﻿/* ================================================================
-   halaman/anggota/gaya.css — TKJ XI-9 | Members Page
+/* ================================================================
+   MEMBER GRID — responsif, tanpa carousel horizontal
    ================================================================ */
-.members-slider-container {
+.halaman-anggota .members-slider-container {
    position: relative;
+   display: block;
+   width: 100%;
+   min-width: 0;
+}
+
+.halaman-anggota .members-grid {
+   display: grid;
+   grid-template-columns: repeat(2, minmax(0, 1fr));
+   align-items: stretch;
+   width: 100%;
+   min-width: 0;
+   box-sizing: border-box;
+   gap: 14px;
+   padding: 12px 0 24px;
+   overflow-x: visible;
+   overflow-y: visible;
+}
+
+.halaman-anggota .members-grid .member-card {
    display: flex;
+   flex-direction: column;
    align-items: center;
-}
-
-.members-grid {
-   display: flex;
-   gap: 16px;
-   padding: 20px;
-   overflow-x: auto;
-   overflow-y: hidden;
-   scroll-behavior: smooth;
-   scrollbar-width: none;
-   -ms-overflow-style: none;
-}
-
-.members-grid::-webkit-scrollbar {
-   display: none;
-}
-
-.members-prev,
-.members-next {
-   position: absolute;
-   top: 50%;
-   transform: translateY(-50%);
-   background: rgba(0, 0, 0, 0.5);
-   color: white;
-   border: none;
-   border-radius: 50%;
-   width: 40px;
-   height: 40px;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   cursor: pointer;
-   z-index: 10;
-   transition: background 0.2s;
-}
-
-.members-prev:hover,
-.members-next:hover {
-   background: rgba(0, 0, 0, 0.7);
-}
-
-.members-prev {
-   left: 10px;
-}
-
-.members-next {
-   right: 10px;
-}
-
-@media (max-width: 768px) {
-
-   .members-prev,
-   .members-next {
-      display: none;
-   }
-}
-
-.member-card {
+   justify-content: flex-start;
+   gap: 10px;
+   box-sizing: border-box;
+   width: 100%;
+   min-width: 0;
+   min-height: 170px;
+   padding: 16px 12px;
+   position: relative;
    text-align: center;
-   padding: 20px 14px 16px;
-   cursor: default;
-   position: relative;
-   perspective: 600px;
-   flex: 0 0 auto;
-   width: 180px;
-   min-width: 180px;
+   cursor: pointer;
    overflow: hidden;
+   perspective: 600px;
 }
 
 .member-card-inner {
@@ -81,33 +46,35 @@
    transform-style: preserve-3d;
 }
 
-@media (hover: hover) {
-   .member-card:hover .member-card-inner {
-      transform: translateY(-6px);
-   }
-
-   .member-card:hover {
-      transform: none;
-      box-shadow: 0 8px 24px var(--glow);
-   }
+.halaman-anggota .members-grid .member-card .avatar {
+   flex: 0 0 auto;
+   width: 58px;
+   height: 58px;
+   margin: 0 auto 4px;
 }
 
-.member-card:active .member-card-inner {
-   transform: scale(0.97);
-   transition: transform 0.1s ease;
+.halaman-anggota .members-grid .member-card-info {
+   width: 100%;
+   min-width: 0;
 }
 
-.member-card .avatar {
-   margin: 0 auto 12px;
-}
-
-.member-card-name {
+.halaman-anggota .members-grid .member-card-name {
    font-weight: 700;
    font-size: var(--text-sm);
    color: var(--text-1);
    margin-bottom: 4px;
-   line-height: 1.3;
+   line-height: 1.35;
+   overflow-wrap: anywhere;
+   word-break: normal;
    transition: color var(--trans);
+}
+
+.halaman-anggota .members-grid .member-card-role {
+   font-size: 0.75rem;
+   color: var(--text-2);
+   margin-bottom: 0;
+   line-height: 1.35;
+   overflow-wrap: anywhere;
 }
 
 .member-card-nis {
@@ -121,13 +88,6 @@
    padding: 2px 8px;
    letter-spacing: 0.08em;
    transition: background 0.25s, border-color 0.25s;
-}
-
-@media (hover: hover) {
-   .member-card:hover .member-card-nis {
-      background: rgba(var(--accent-rgb), 0.15);
-      border-color: var(--accent);
-   }
 }
 
 .member-card::after {
@@ -148,87 +108,62 @@
    transition: transform 0.35s ease, filter 0.45s ease;
 }
 
-.member-card:hover .avatar img {
-   filter: hue-rotate(20deg) saturate(1.08) contrast(1.02);
-   transform: translateX(2px);
-   animation: memberGlitch 0.8s linear infinite;
-}
-
-.member-card-audio-btn {
-   display: block;
-   margin-top: 12px;
-   padding: 8px 12px;
-   background: rgba(var(--accent-rgb), 0.1);
-   border: 1px solid var(--border-mid);
-   border-radius: var(--radius-s);
-   color: var(--accent);
-   cursor: pointer;
-   font-size: var(--text-sm);
-   transition: background 0.25s, border-color 0.25s, transform 0.15s ease;
-   width: 100%;
-}
-
-.member-card-audio-btn:hover {
-   background: rgba(var(--accent-rgb), 0.18);
-   border-color: var(--accent);
-}
-
-.member-card-audio-btn:active {
-   transform: scale(0.95);
-}
-
-@media (max-width: 640px) {
-   .member-card {
-      width: 160px;
-      min-width: 160px;
+@media (hover: hover) {
+   .member-card:hover .member-card-inner {
+      transform: translateY(-4px);
+   }
+   .member-card:hover {
+      box-shadow: 0 8px 24px var(--glow);
+   }
+   .member-card:hover .avatar img {
+      filter: saturate(1.06) contrast(1.02);
+      transform: scale(1.04);
+   }
+   .member-card:hover .member-card-nis {
+      background: rgba(var(--accent-rgb), 0.15);
+      border-color: var(--accent);
    }
 }
 
-@media (max-width: 460px) {
-   .member-card {
-      width: 140px;
-      min-width: 140px;
-   }
+.member-card:active .member-card-inner {
+   transform: scale(0.98);
+   transition: transform 0.1s ease;
 }
 
-@media (max-width: 640px) {
-   .members-grid {
+/* Satu kolom hanya pada layar yang sangat sempit. */
+@media (max-width: 359px) {
+   .halaman-anggota .members-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 10px;
+   }
+   .halaman-anggota .members-grid .member-card {
+      min-height: 96px;
       flex-direction: row;
-      overflow-x: auto;
+      justify-content: flex-start;
+      text-align: left;
+      padding: 12px 14px;
    }
-
-   .member-card {
-      width: 200px;
-      min-width: 200px;
+   .halaman-anggota .members-grid .member-card .avatar {
+      width: 48px;
+      height: 48px;
+      margin: 0;
+   }
+   .halaman-anggota .members-grid .member-card-info {
+      flex: 1;
+      text-align: left;
    }
 }
 
-@media (max-width: 460px) {
-   .member-card {
-      width: 180px;
-      min-width: 180px;
+/* Tablet dan desktop mendapat kolom tambahan tanpa mengubah urutan baca. */
+@media (min-width: 760px) {
+   .halaman-anggota .members-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
    }
 }
-
-@media (min-width: 768px) {
-   .members-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      width: 100%;
-      gap: 18px;
-      overflow-x: visible;
-      overflow-y: visible;
-      padding: 10px 0 24px;
-   }
-
-   .members-prev,
-   .members-next {
-      display: none !important;
-   }
-
-   .member-card {
-      width: 100%;
-      min-width: 0;
+@media (min-width: 1120px) {
+   .halaman-anggota .members-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
    }
 }
 
@@ -430,7 +365,7 @@
 }
 
 /* ================================================================
-   KONTROL FILTER, PENCARIAN & MODE TAMPILAN
+   KONTROL PENCARIAN, PENGURUTAN & MODE TAMPILAN
    ================================================================ */
 .member-controls-panel {
    display: flex;
@@ -438,73 +373,28 @@
    gap: 14px;
    margin-bottom: 24px;
 }
-
-.member-controls-panel .bungkus-pencarian {
-   margin-bottom: 0;
-}
-
+.member-controls-panel .bungkus-pencarian { margin-bottom: 0; }
 .member-filter-row {
    display: flex;
    align-items: center;
-   justify-content: space-between;
+   justify-content: flex-end;
    flex-wrap: wrap;
    gap: 12px;
 }
-
-.member-filter-pills {
-   display: flex;
-   align-items: center;
-   gap: 8px;
-   overflow-x: auto;
-   padding-bottom: 4px;
-   scrollbar-width: none;
-}
-
-.member-filter-pills::-webkit-scrollbar {
-   display: none;
-}
-
-.filter-pill {
-   background: var(--surface);
-   border: 1px solid var(--border);
-   color: var(--text-2);
-   padding: 6px 14px;
-   border-radius: var(--radius-full);
-   font-size: var(--text-xs);
-   font-weight: 600;
-   cursor: pointer;
-   white-space: nowrap;
-   transition: all 0.2s ease;
-   font-family: inherit;
-}
-
-.filter-pill:hover {
-   border-color: var(--accent);
-   color: var(--text-1);
-}
-
-.filter-pill.active {
-   background: rgba(var(--accent-rgb), 0.15);
-   border-color: var(--accent);
-   color: var(--accent);
-   box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.2);
-}
-
 .member-controls-right {
    display: flex;
    align-items: center;
+   justify-content: flex-end;
    gap: 10px;
+   width: 100%;
 }
-
-.member-sort-box {
-   position: relative;
-}
-
+.member-sort-box { position: relative; }
 .member-sort-select {
+   max-width: 100%;
    background: var(--surface);
    border: 1px solid var(--border);
    color: var(--text-1);
-   padding: 6px 12px;
+   padding: 8px 12px;
    border-radius: var(--radius-s);
    font-size: var(--text-xs);
    cursor: pointer;
@@ -512,25 +402,23 @@
    font-family: inherit;
    transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .member-sort-select:focus {
    border-color: var(--accent);
    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
-
 .member-view-toggle {
    display: inline-flex;
+   flex: 0 0 auto;
    background: var(--surface);
    border: 1px solid var(--border);
    border-radius: var(--radius-s);
    overflow: hidden;
 }
-
 .view-btn {
    background: transparent;
    border: none;
    color: var(--text-3);
-   padding: 6px 10px;
+   padding: 8px 11px;
    cursor: pointer;
    font-size: 14px;
    display: flex;
@@ -538,27 +426,21 @@
    justify-content: center;
    transition: all 0.2s;
 }
-
-.view-btn:hover {
-   color: var(--text-1);
-}
-
+.view-btn:hover { color: var(--text-1); }
 .view-btn.active {
    background: rgba(var(--accent-rgb), 0.2);
    color: var(--accent);
 }
 
-/* ================================================================
-   COMPACT LIST VIEW (MODE DAFTAR RINGKAS)
-   ================================================================ */
-.members-grid.is-compact-view {
-   display: flex !important;
-   flex-direction: column !important;
-   gap: 10px !important;
-   padding: 10px 0 !important;
+/* Mode ringkas tetap dua kolom; tiap kartu horizontal dan teks dapat membungkus. */
+.halaman-anggota .members-grid.is-compact-view {
+   display: grid !important;
+   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+   gap: 12px !important;
+   padding: 12px 0 24px !important;
+   overflow: visible !important;
 }
-
-.members-grid.is-compact-view .member-card {
+.halaman-anggota .members-grid.is-compact-view .member-card {
    display: flex !important;
    flex-direction: row !important;
    align-items: center !important;
@@ -566,55 +448,57 @@
    text-align: left !important;
    width: 100% !important;
    min-width: 0 !important;
-   padding: 12px 18px !important;
+   min-height: 88px !important;
+   padding: 12px !important;
    border-radius: var(--radius-s) !important;
-   gap: 16px;
+   gap: 10px !important;
 }
-
-.members-grid.is-compact-view .member-card .avatar {
+.halaman-anggota .members-grid.is-compact-view .member-card .avatar {
    margin: 0 !important;
    width: 44px !important;
    height: 44px !important;
-   flex-shrink: 0 !important;
+   flex: 0 0 44px !important;
 }
-
-.members-grid.is-compact-view .member-card-info {
+.halaman-anggota .members-grid.is-compact-view .member-card-info {
    display: flex;
-   flex-direction: row;
-   align-items: center;
-   justify-content: space-between;
+   flex-direction: column;
+   align-items: flex-start;
+   justify-content: center;
    flex: 1;
-   gap: 12px;
+   gap: 4px;
    min-width: 0;
+   text-align: left;
 }
-
-.members-grid.is-compact-view .member-card-name {
-   margin-bottom: 0 !important;
-   font-size: var(--text-base) !important;
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
+.halaman-anggota .members-grid.is-compact-view .member-card-name {
+   margin: 0 !important;
+   width: 100%;
+   font-size: var(--text-sm) !important;
+   line-height: 1.3;
+   white-space: normal !important;
+   overflow: visible !important;
+   text-overflow: clip !important;
+   overflow-wrap: anywhere;
 }
-
-.members-grid.is-compact-view .member-card-role {
-   margin-bottom: 0 !important;
+.halaman-anggota .members-grid.is-compact-view .member-card-role {
+   margin: 0 !important;
+   width: 100%;
    color: var(--text-3) !important;
-   font-size: 0.8rem !important;
+   font-size: 0.76rem !important;
+   line-height: 1.3;
+   overflow-wrap: anywhere;
 }
-
-.members-grid.is-compact-view .member-card-nis {
-   margin-left: auto;
-   flex-shrink: 0;
-}
-
-@media (max-width: 600px) {
-   .members-grid.is-compact-view .member-card-info {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-   }
-   .members-grid.is-compact-view .member-card-nis {
-      margin-left: 0;
+@media (max-width: 359px) {
+   .halaman-anggota .members-grid.is-compact-view {
+      grid-template-columns: minmax(0, 1fr) !important;
    }
 }
-
+@media (min-width: 760px) {
+   .halaman-anggota .members-grid.is-compact-view {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+   }
+}
+@media (min-width: 1120px) {
+   .halaman-anggota .members-grid.is-compact-view {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+   }
+}

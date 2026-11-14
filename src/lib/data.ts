@@ -158,7 +158,25 @@ export async function getPageContent(pathname: string, request?: Request): Promi
   }
 }
 
-const DEFAULT_NAVIGATION = [
+type NavigationItem = {
+  id: string;
+  label: string;
+  href: string;
+  icon: string;
+  sort_order: number;
+  enabled: boolean;
+};
+
+const ANNOUNCEMENTS_NAVIGATION: NavigationItem = {
+  id: 'pengumuman',
+  label: 'Pengumuman',
+  href: '/pengumuman',
+  icon: 'fa-bullhorn',
+  sort_order: 7,
+  enabled: true,
+};
+
+const DEFAULT_NAVIGATION: NavigationItem[] = [
   { id: 'home', label: 'Home', href: '/', icon: 'fa-house', sort_order: 0, enabled: true },
   { id: 'developer', label: 'Developer', href: '/pengembang', icon: 'fa-code', sort_order: 1, enabled: true },
   { id: 'struktur', label: 'Struktur', href: '/struktur', icon: 'fa-sitemap', sort_order: 2, enabled: true },
@@ -166,14 +184,43 @@ const DEFAULT_NAVIGATION = [
   { id: 'keahlian', label: 'Skills', href: '/keahlian', icon: 'fa-code', sort_order: 4, enabled: true },
   { id: 'galeri', label: 'Galeri', href: '/galeri', icon: 'fa-images', sort_order: 5, enabled: true },
   { id: 'tkj', label: 'TKJ', href: '/tkj', icon: 'fa-network-wired', sort_order: 6, enabled: true },
+  ANNOUNCEMENTS_NAVIGATION,
 ];
 
-export async function getNavigation() {
-  const client = getSupabasePublic();
+/** Pastikan tautan publik pengumuman tersedia, tanpa menimpa menu CMS yang sudah dikonfigurasi. */
+export function ensureAnnouncementsNavigation(items: NavigationItem[]): NavigationItem[] {
+  const enabled = items.filter((item) => item.enabled !== false);
+  const hasAnnouncementsEntry = items.some(
+    (item) => item.href === ANNOUNCEMENTS_NAVIGATION.href,
+  );
+
+  if (!hasAnnouncementsEntry) {
+    const nextOrder = enabled.reduce(
+      (max, item) => Math.max(max, Number(item.sort_order) || 0),
+      -1,
+    ) + 1;
+    const safeId = items.some((item) => item.id === ANNOUNCEMENTS_NAVIGATION.id)
+      ? 'pengumuman-link'
+      : ANNOUNCEMENTS_NAVIGATION.id;
+    enabled.push({ ...ANNOUNCEMENTS_NAVIGATION, id: safeId, sort_order: nextOrder });
+  }
+
+  return enabled.length ? enabled : DEFAULT_NAVIGATION;
+}
+
+export async function getNavigation(): Promise<NavigationItem[]> {
+  // SSR dapat memakai client server-side untuk melihat flag enabled=false yang
+  // disembunyikan policy publik. Fallback publik tetap tersedia bila service key
+  // tidak disetel; query hanya mengambil kolom navigasi yang aman.
+  const client = getSupabaseAdmin() ?? getSupabasePublic();
   if (!client) return DEFAULT_NAVIGATION;
   try {
-    const { data, error } = await client.from('site_navigation').select('id,label,href,icon,sort_order,enabled').eq('enabled', true).order('sort_order', { ascending: true });
-    return error || !data?.length ? DEFAULT_NAVIGATION : data;
+    const { data, error } = await client
+      .from('site_navigation')
+      .select('id,label,href,icon,sort_order,enabled')
+      .order('sort_order', { ascending: true });
+    if (error || !data?.length) return DEFAULT_NAVIGATION;
+    return ensureAnnouncementsNavigation(data as NavigationItem[]);
   } catch (error) {
     logDataError('getNavigation', error);
     return DEFAULT_NAVIGATION;

@@ -60,7 +60,7 @@ const totalSiswa = siswa.length;
         </p>
       </div>
 
-      <!-- Controls Panel (Search, Filter, Sort, View Toggle) -->
+      <!-- Kontrol pencarian, pengurutan, dan mode tampilan -->
       <div class="member-controls-panel reveal">
         <div class="bungkus-pencarian" role="search">
           <label for="member-search" class="sr-only">Cari anggota</label>
@@ -69,7 +69,7 @@ const totalSiswa = siswa.length;
             <input
               type="search"
               id="member-search"
-              placeholder="Cari nama, NIS, atau jabatan..."
+              placeholder="Cari nama atau jabatan..."
               autocomplete="off"
               aria-label="Cari anggota"
               aria-controls="members-grid"
@@ -87,13 +87,6 @@ const totalSiswa = siswa.length;
         </div>
 
         <div class="member-filter-row">
-          <div class="member-filter-pills" role="tablist" aria-label="Filter kategori">
-            <button type="button" class="filter-pill active" data-filter="all" role="tab" aria-selected="true">Semua</button>
-            <button type="button" class="filter-pill" data-filter="pengurus" role="tab" aria-selected="false">Pengurus Kelas</button>
-            <button type="button" class="filter-pill" data-filter="foto" role="tab" aria-selected="false">Foto Asli</button>
-            <button type="button" class="filter-pill" data-filter="audio" role="tab" aria-selected="false">Voice Note</button>
-          </div>
-
           <div class="member-controls-right">
             <div class="member-sort-box">
               <label for="member-sort" class="sr-only">Urutkan Anggota</label>
@@ -101,8 +94,6 @@ const totalSiswa = siswa.length;
                 <option value="default">Urutan Presensi</option>
                 <option value="name-asc">Nama (A - Z)</option>
                 <option value="name-desc">Nama (Z - A)</option>
-                {SHOW_MEMBER_NIS && <option value="nis-asc">NIS (Terkecil)</option>}
-                {SHOW_MEMBER_NIS && <option value="nis-desc">NIS (Terbesar)</option>}
               </select>
             </div>
 
@@ -122,9 +113,6 @@ const totalSiswa = siswa.length;
         Semua {totalSiswa} anggota
       </div>
       <div class="members-slider-container">
-        <button class="members-prev" aria-label="Anggota sebelumnya">
-          <Icon name="fa-chevron-left" />
-        </button>
         <div class="members-grid" id="members-grid" aria-label="Daftar anggota kelas">
           {siswa.map((member: MemberItem, i: number) => {
              let jabatanText = "Anggota";
@@ -132,9 +120,6 @@ const totalSiswa = siswa.length;
              if (orgMember && orgMember.jabatan) {
                jabatanText = orgMember.jabatan;
              }
-             const isOrg = Boolean(orgMember && orgMember.jabatan);
-             const hasPhoto = Boolean(member.foto);
-             const hasAudio = Boolean(member.audio);
              return (
                <div
                  class="card member-card card-accent-top reveal"
@@ -142,9 +127,6 @@ const totalSiswa = siswa.length;
                  data-nis={SHOW_MEMBER_NIS ? member.nis : undefined}
                  data-nama={member.nama}
                  data-role={jabatanText}
-                 data-is-org={isOrg ? "true" : "false"}
-                 data-has-photo={hasPhoto ? "true" : "false"}
-                 data-has-audio={hasAudio ? "true" : "false"}
                  data-urutan={i}
                  style={`--d: ${(i % 5) * 0.05}s`}
                  role="button"
@@ -173,9 +155,6 @@ const totalSiswa = siswa.length;
              )
           })}
         </div>
-        <button class="members-next" aria-label="Anggota berikutnya">
-          <Icon name="fa-chevron-right" />
-        </button>
       </div>
 
       <!-- Member Modal -->

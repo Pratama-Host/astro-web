@@ -3,6 +3,9 @@
 Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
 ## [Unreleased]
+- Perbaikan deklarasi navigasi pengumuman agar tidak terduplikasi.
+- Penyesuaian layout anggota responsif dua kolom pada ponsel dan penghapusan filter yang tidak digunakan.
+- Perbaikan helper endpoint modul CMS pengumuman dan agenda.
 
 ### Added
 - Bagian beranda "Visi, Misi & Prestasi" (dapat disembunyikan/diurutkan dari admin).
@@ -26,3 +29,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
 ### Removed
 - Kode mati: skrip/stylesheet tidak terpakai, fungsi data duplikat, field `masdo`.
+
+
+## Perbaikan UI anggota dan pengumuman
+- Mengganti jalur kartu anggota horizontal menjadi grid responsif: dua kolom pada ponsel normal, satu kolom hanya pada layar sangat sempit, dan tiga/empat kolom untuk layar lebih besar.
+- Menghapus filter kategori yang tidak dipakai dan navigasi slider horizontal.
+- Memperbaiki helper endpoint di modul admin pengumuman agar permintaan GET/POST memakai `/api/admin/announcements?type=...`.
+- Menambahkan tautan Pengumuman ke fallback navigasi publik dan migrasi idempotent untuk menu yang dikelola CMS.

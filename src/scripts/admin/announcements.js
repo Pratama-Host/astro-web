@@ -8,6 +8,7 @@ const state = {
 };
 
 const isAgenda = () => state.kind === "agenda";
+const endpoint = () => `/api/admin/announcements?type=${state.kind}`;
 const statusLabels = {
   draft: "Draft",
   published: "Terbit",

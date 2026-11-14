@@ -17,14 +17,15 @@ Satu pusat informasi kelas yang mudah diperbarui, dengan akses publik hanya untu
 | UI riwayat revisi dan rollback | Sebagian | Endpoint tersedia; cek kelengkapan alur melalui browser. |
 | PWA dasar (manifest, service worker, offline) | Selesai | Sync/push ditunda sampai kebutuhan dan pengelolanya jelas. |
 | Hak akses database dan batas unggahan Storage | Diterapkan dan diverifikasi | Tiga migrasi diterapkan pada lingkungan pengembangan/pengujian aktif pada 13 November 2026. |
-| Pengumuman dan agenda | Skema, RLS, API, dan UI admin tersedia | Uji DB/RPC dan filter publik lolos; E2E browser dan tampilan lintas ukuran layar belum dijalankan. |
+| Pengumuman dan agenda | Skema, RLS, API, UI admin, dan menu publik tersedia pada source | Helper endpoint submit diperbaiki; menu publik punya fallback dan migrasi navigasi. Build/CI serta browser E2E untuk patch ini belum dijalankan. |
 | Migrasi project Supabase kosong | Belum terbukti penuh | Baseline direkonstruksi dari skema aktif; perlu uji pemulihan/provisioning terpisah. |
 | Restore eksternal dan objek Storage | Belum selesai | Snapshot CMS internal bukan backup PostgreSQL penuh atau backup file Storage. |
+| Grid anggota responsif dan kontrol pencarian | Source diperbarui | Dua kolom pada ponsel normal, satu kolom pada layar sangat sempit; filter kategori dan slider horizontal dihapus. Perlu cek visual setelah deploy. |
 | E2E browser dan rilis Cloudflare terbaru | Belum diverifikasi setelah perubahan UI | Tunggu hasil CI dan smoke test browser/deployment yang aktual. |
 
 ## Antrean berikutnya
 1. Jalankan CI untuk source terkini (`npm ci`, `npm run check`, `npm test`, `npm run build`) di runner Ubuntu.
-2. Uji CMS di browser: login/logout, buka modul pengumuman dan agenda, buat draft, ubah, terbitkan, arsipkan, dan periksa halaman publik.
+2. Uji halaman anggota dua kolom pada beberapa lebar Android, lalu uji CMS di browser: login/logout, buka modul pengumuman dan agenda, buat draft, ubah, terbitkan, arsipkan, dan periksa halaman publik.
 3. Verifikasi layout admin pada lebar ponsel, tablet, dan desktop serta navigasi keyboard.
 4. Selesaikan backup PostgreSQL eksternal dan pemindahan objek Storage, lalu lakukan uji restore pada lingkungan terpisah.
 5. Petakan query halaman dan tambahkan pagination untuk data yang berpotensi berkembang.

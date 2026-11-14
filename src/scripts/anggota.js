@@ -78,8 +78,7 @@ function initMembersInteractions() {
 
   const totalSiswa = G?.namaSiswa?.length || cards.length;
 
-  // Filter, Search, Sort & View State
-  let currentFilter = "all";
+  // Search, Sort & View State
   let currentSort = "default";
   let currentQuery = "";
 
@@ -88,21 +87,9 @@ function initMembersInteractions() {
 
     cards.forEach((card) => {
       const name = card.dataset.nama || card.querySelector(".member-card-name")?.textContent || "";
-      const nis = card.dataset.nis || "";
       const role = card.dataset.role || card.querySelector(".member-card-role")?.textContent || "";
-      const isOrg = card.dataset.isOrg === "true";
-      const hasPhoto = card.dataset.hasPhoto === "true";
-      const hasAudio = card.dataset.hasAudio === "true";
-
-      const searchable = `${name} ${nis} ${role}`.toLocaleLowerCase("id-ID");
-      const matchSearch = !currentQuery || searchable.includes(currentQuery);
-
-      let matchFilter = true;
-      if (currentFilter === "pengurus") matchFilter = isOrg;
-      else if (currentFilter === "foto") matchFilter = hasPhoto;
-      else if (currentFilter === "audio") matchFilter = hasAudio;
-
-      const visible = matchSearch && matchFilter;
+      const searchable = `${name} ${role}`.toLocaleLowerCase("id-ID");
+      const visible = !currentQuery || searchable.includes(currentQuery);
       card.style.display = visible ? "" : "none";
       if (visible) matchCount++;
     });
@@ -114,26 +101,20 @@ function initMembersInteractions() {
       if (currentSort === "name-desc") {
         return (b.dataset.nama || "").localeCompare(a.dataset.nama || "", "id");
       }
-      if (currentSort === "nis-asc") {
-        return (Number(a.dataset.nis) || 0) - (Number(b.dataset.nis) || 0);
-      }
-      if (currentSort === "nis-desc") {
-        return (Number(b.dataset.nis) || 0) - (Number(a.dataset.nis) || 0);
-      }
       return (Number(a.dataset.urutan) || 0) - (Number(b.dataset.urutan) || 0);
     });
 
     sortedCards.forEach((card) => grid.appendChild(card));
 
     if (countEl) {
-      if (currentQuery || currentFilter !== "all") {
+      if (currentQuery) {
         countEl.textContent = `Menampilkan ${matchCount} dari ${totalSiswa} anggota`;
       } else {
         countEl.textContent = `Semua ${totalSiswa} anggota`;
       }
     }
     emptyState.hidden = matchCount > 0;
-    emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan filter atau pencarian." : "Belum ada data anggota yang ditampilkan.";
+    emptyState.textContent = cards.length ? "Tidak ada anggota yang cocok dengan pencarian." : "Belum ada data anggota yang ditampilkan.";
     grid.setAttribute("aria-label", `Daftar anggota kelas (${matchCount} ditampilkan)`);
     clearBtn?.classList.toggle("terlihat", currentQuery.length > 0);
   }
@@ -161,21 +142,6 @@ function initMembersInteractions() {
       applyFiltersAndSort();
       search.focus();
     }
-  });
-
-  // Filter Pills Logic
-  const filterPills = document.querySelectorAll(".filter-pill");
-  filterPills.forEach((pill) => {
-    pill.addEventListener("click", () => {
-      filterPills.forEach((p) => {
-        p.classList.remove("active");
-        p.setAttribute("aria-selected", "false");
-      });
-      pill.classList.add("active");
-      pill.setAttribute("aria-selected", "true");
-      currentFilter = pill.dataset.filter || "all";
-      applyFiltersAndSort();
-    });
   });
 
   // Sort Dropdown Logic
@@ -213,16 +179,6 @@ function initMembersInteractions() {
 
   viewGridBtn?.addEventListener("click", () => setViewMode("grid"));
   viewListBtn?.addEventListener("click", () => setViewMode("list"));
-
-  // Slider Logic
-  grid.addEventListener("wheel", (e) => {
-    if (grid.scrollWidth <= grid.clientWidth + 2) return;
-    if (Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
-    grid.scrollBy({ left: e.deltaY > 0 ? 80 : -80, behavior: "smooth" });
-  }, { passive: true });
-
-  document.querySelector(".members-prev")?.addEventListener("click", () => grid.scrollBy({ left: -200, behavior: "smooth" }));
-  document.querySelector(".members-next")?.addEventListener("click", () => grid.scrollBy({ left: 200, behavior: "smooth" }));
 
   // Modal Logic
   let currentAudioInstance = null;

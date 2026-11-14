@@ -75,3 +75,15 @@ Log GitHub Actions yang pernah diberikan sebelumnya menunjukkan satu versi sourc
 3. Uji responsif pada lebar ponsel, tablet, dan desktop serta navigasi keyboard.
 4. Buat dump PostgreSQL eksternal dan backup objek Storage; lakukan restore di lingkungan terpisah.
 5. Tambahkan E2E otomatis dan smoke test setelah deployment Cloudflare.
+
+
+## Patch UI anggota dan menu pengumuman — source `2.zip`
+
+- `src/styles/anggota.css`: layout carousel horizontal diganti grid responsif; dua kolom mulai 360 px, satu kolom di bawah 360 px, tiga kolom mulai 760 px, dan empat kolom mulai 1120 px. Mode ringkas juga memakai dua kolom dan kartu horizontal.
+- `src/pages/anggota.astro` dan `src/scripts/anggota.js`: filter kategori yang tidak digunakan dan kontrol slider dihapus; pencarian, pengurutan nama, dan mode tampilan tetap tersedia.
+- `src/scripts/admin/announcements.js`: helper `endpoint()` didefinisikan untuk menunjuk ke `/api/admin/announcements?type=announcements|agenda`. Ini memperbaiki ReferenceError `endpoint is not defined` pada submit.
+- `src/lib/data.ts`: menu Pengumuman ditambahkan ke default navigation dan akan dilengkapi jika baris konfigurasi publik belum ada; baris yang sengaja disabled tetap dihormati jika terbaca.
+- `supabase/migrations/20261113211300_add_announcements_navigation.sql`: migrasi idempotent menambahkan item Pengumuman agar menu juga muncul di pengelolaan navigasi CMS.
+- `tests/data-navigation.test.ts`: tes regresi untuk menu Pengumuman pada fallback, konfigurasi yang sudah ada, dan item yang dinonaktifkan.
+
+Validasi yang dijalankan pada patch ini: `node --check` seluruh file `.js`/`.mjs`; pemeriksaan ID admin unik dan referensi DOM; pemeriksaan statis helper endpoint, CSS grid, filter/slider yang dihapus, dan file migrasi. `npm ci` tidak selesai pada lingkungan kerja ini: Node tersedia `v22.16.0` sedangkan proyek meminta `>=22.23.4`; registry npm juga mengalami `EAI_AGAIN`. Karena dependency tidak terpasang penuh, `astro check`, Vitest, dan build belum dijalankan untuk patch ini. Tidak ada migrasi yang diterapkan pada database selama patch UI ini.
