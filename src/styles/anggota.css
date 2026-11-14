@@ -1,5 +1,5 @@
 /* ================================================================
-   MEMBER GRID — responsif, tanpa carousel horizontal
+   MEMBER CAROUSEL — horizontal swipe on phones, responsive grid on desktop
    ================================================================ */
 .halaman-anggota .members-slider-container {
    position: relative;
@@ -9,26 +9,38 @@
 }
 
 .halaman-anggota .members-grid {
-   display: grid;
-   grid-template-columns: repeat(2, minmax(0, 1fr));
+   display: flex;
+   flex-direction: row;
    align-items: stretch;
+   gap: 14px;
    width: 100%;
    min-width: 0;
    box-sizing: border-box;
-   gap: 14px;
-   padding: 12px 0 24px;
-   overflow-x: visible;
-   overflow-y: visible;
+   padding: 12px 12px 24px;
+   overflow-x: auto;
+   overflow-y: hidden;
+   scroll-snap-type: x mandatory;
+   scroll-padding-inline: 12px;
+   scroll-behavior: smooth;
+   scrollbar-width: none;
+   -ms-overflow-style: none;
+   -webkit-overflow-scrolling: touch;
+   overscroll-behavior-x: contain;
+}
+
+.halaman-anggota .members-grid::-webkit-scrollbar {
+   display: none;
 }
 
 .halaman-anggota .members-grid .member-card {
    display: flex;
+   flex: 0 0 clamp(168px, 47vw, 190px);
    flex-direction: column;
    align-items: center;
    justify-content: flex-start;
    gap: 10px;
    box-sizing: border-box;
-   width: 100%;
+   width: clamp(168px, 47vw, 190px);
    min-width: 0;
    min-height: 170px;
    padding: 16px 12px;
@@ -37,6 +49,7 @@
    cursor: pointer;
    overflow: hidden;
    perspective: 600px;
+   scroll-snap-align: start;
 }
 
 .member-card-inner {
@@ -59,6 +72,7 @@
 }
 
 .halaman-anggota .members-grid .member-card-name {
+   width: 100%;
    font-weight: 700;
    font-size: var(--text-sm);
    color: var(--text-1);
@@ -130,41 +144,68 @@
    transition: transform 0.1s ease;
 }
 
-/* Satu kolom hanya pada layar yang sangat sempit. */
-@media (max-width: 359px) {
+/* Pada layar desktop, carousel berubah menjadi grid yang mengisi ruang tersedia. */
+@media (min-width: 768px) {
    .halaman-anggota .members-grid {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      padding: 12px 0 24px;
+      overflow: visible;
+      scroll-snap-type: none;
    }
+
    .halaman-anggota .members-grid .member-card {
-      min-height: 96px;
-      flex-direction: row;
-      justify-content: flex-start;
-      text-align: left;
-      padding: 12px 14px;
-   }
-   .halaman-anggota .members-grid .member-card .avatar {
-      width: 48px;
-      height: 48px;
-      margin: 0;
-   }
-   .halaman-anggota .members-grid .member-card-info {
-      flex: 1;
-      text-align: left;
+      width: 100%;
+      min-width: 0;
+      min-height: 180px;
+      flex: initial;
+      scroll-snap-align: none;
    }
 }
 
-/* Tablet dan desktop mendapat kolom tambahan tanpa mengubah urutan baca. */
-@media (min-width: 760px) {
-   .halaman-anggota .members-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-   }
+/* Tombol geser tersedia pada tablet kecil; ponsel memakai gesture swipe. */
+.halaman-anggota .members-prev,
+.halaman-anggota .members-next {
+   position: absolute;
+   top: 50%;
+   z-index: 5;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 38px;
+   height: 38px;
+   border: 1px solid var(--border-mid);
+   border-radius: 50%;
+   background: rgba(8, 8, 18, 0.82);
+   color: var(--text-1);
+   cursor: pointer;
+   transform: translateY(-50%);
+   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
 }
-@media (min-width: 1120px) {
-   .halaman-anggota .members-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-   }
+.halaman-anggota .members-prev { left: 2px; }
+.halaman-anggota .members-next { right: 2px; }
+.halaman-anggota .members-prev[hidden],
+.halaman-anggota .members-next[hidden] { display: none !important; }
+.halaman-anggota .members-prev:hover,
+.halaman-anggota .members-next:hover {
+   border-color: var(--accent);
+   color: var(--accent);
+}
+@media (max-width: 639px), (min-width: 768px) {
+   .halaman-anggota .members-prev,
+   .halaman-anggota .members-next { display: none; }
+}
+
+/* Pada ponsel, petunjuk swipe membantu pengguna menemukan carousel horizontal. */
+.members-carousel-hint {
+   margin: -8px 12px 8px;
+   color: var(--text-3);
+   font-size: 0.75rem;
+   letter-spacing: 0.02em;
+}
+@media (min-width: 768px) {
+   .members-carousel-hint { display: none; }
 }
 
 /* WHATSAPP AUDIO PLAYER */
@@ -432,73 +473,67 @@
    color: var(--accent);
 }
 
-/* Mode ringkas tetap dua kolom; tiap kartu horizontal dan teks dapat membungkus. */
+/* ================================================================
+   COMPACT LIST VIEW — one vertical column, full-width horizontal rows
+   ================================================================ */
 .halaman-anggota .members-grid.is-compact-view {
-   display: grid !important;
-   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-   gap: 12px !important;
+   display: flex !important;
+   flex-direction: column !important;
+   align-items: stretch !important;
+   gap: 10px !important;
+   width: 100% !important;
    padding: 12px 0 24px !important;
    overflow: visible !important;
+   scroll-snap-type: none !important;
 }
 .halaman-anggota .members-grid.is-compact-view .member-card {
    display: flex !important;
+   flex: 0 0 auto !important;
    flex-direction: row !important;
    align-items: center !important;
    justify-content: flex-start !important;
    text-align: left !important;
    width: 100% !important;
    min-width: 0 !important;
-   min-height: 88px !important;
-   padding: 12px !important;
+   min-height: 82px !important;
+   padding: 12px 16px !important;
    border-radius: var(--radius-s) !important;
-   gap: 10px !important;
+   gap: 12px !important;
+   overflow: visible !important;
 }
 .halaman-anggota .members-grid.is-compact-view .member-card .avatar {
+   display: flex;
+   flex: 0 0 48px !important;
+   width: 48px !important;
+   height: 48px !important;
    margin: 0 !important;
-   width: 44px !important;
-   height: 44px !important;
-   flex: 0 0 44px !important;
 }
 .halaman-anggota .members-grid.is-compact-view .member-card-info {
-   display: flex;
-   flex-direction: column;
-   align-items: flex-start;
-   justify-content: center;
-   flex: 1;
-   gap: 4px;
-   min-width: 0;
-   text-align: left;
+   display: flex !important;
+   flex: 1 1 auto !important;
+   flex-direction: column !important;
+   align-items: flex-start !important;
+   justify-content: center !important;
+   gap: 4px !important;
+   min-width: 0 !important;
+   width: auto !important;
+   text-align: left !important;
 }
 .halaman-anggota .members-grid.is-compact-view .member-card-name {
+   width: 100% !important;
    margin: 0 !important;
-   width: 100%;
    font-size: var(--text-sm) !important;
-   line-height: 1.3;
+   line-height: 1.35 !important;
    white-space: normal !important;
    overflow: visible !important;
    text-overflow: clip !important;
-   overflow-wrap: anywhere;
+   overflow-wrap: anywhere !important;
 }
 .halaman-anggota .members-grid.is-compact-view .member-card-role {
+   width: 100% !important;
    margin: 0 !important;
-   width: 100%;
    color: var(--text-3) !important;
-   font-size: 0.76rem !important;
-   line-height: 1.3;
-   overflow-wrap: anywhere;
-}
-@media (max-width: 359px) {
-   .halaman-anggota .members-grid.is-compact-view {
-      grid-template-columns: minmax(0, 1fr) !important;
-   }
-}
-@media (min-width: 760px) {
-   .halaman-anggota .members-grid.is-compact-view {
-      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-   }
-}
-@media (min-width: 1120px) {
-   .halaman-anggota .members-grid.is-compact-view {
-      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-   }
+   font-size: 0.78rem !important;
+   line-height: 1.35 !important;
+   overflow-wrap: anywhere !important;
 }

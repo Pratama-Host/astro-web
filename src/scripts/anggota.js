@@ -154,16 +154,24 @@ function initMembersInteractions() {
   // View Mode Toggle (Grid vs List)
   const viewGridBtn = document.getElementById("view-grid-btn");
   const viewListBtn = document.getElementById("view-list-btn");
+  const previousMembersButton = document.querySelector(".members-prev");
+  const nextMembersButton = document.querySelector(".members-next");
 
   function setViewMode(mode) {
     if (mode === "list") {
       grid.classList.add("is-compact-view");
+      grid.scrollLeft = 0;
+      if (previousMembersButton) previousMembersButton.hidden = true;
+      if (nextMembersButton) nextMembersButton.hidden = true;
       viewGridBtn?.classList.remove("active");
       viewGridBtn?.setAttribute("aria-pressed", "false");
       viewListBtn?.classList.add("active");
       viewListBtn?.setAttribute("aria-pressed", "true");
     } else {
       grid.classList.remove("is-compact-view");
+      grid.scrollLeft = 0;
+      if (previousMembersButton) previousMembersButton.hidden = false;
+      if (nextMembersButton) nextMembersButton.hidden = false;
       viewListBtn?.classList.remove("active");
       viewListBtn?.setAttribute("aria-pressed", "false");
       viewGridBtn?.classList.add("active");
@@ -179,6 +187,16 @@ function initMembersInteractions() {
 
   viewGridBtn?.addEventListener("click", () => setViewMode("grid"));
   viewListBtn?.addEventListener("click", () => setViewMode("list"));
+
+  // Tombol carousel melengkapi gesture swipe pada layar sentuh.
+  const scrollMembers = (direction) => {
+    const firstCard = grid.querySelector(".member-card");
+    const cardWidth = firstCard?.getBoundingClientRect().width || 180;
+    const gap = Number.parseFloat(getComputedStyle(grid).columnGap) || 14;
+    grid.scrollBy({ left: direction * (cardWidth + gap), behavior: "smooth" });
+  };
+  previousMembersButton?.addEventListener("click", () => scrollMembers(-1));
+  nextMembersButton?.addEventListener("click", () => scrollMembers(1));
 
   // Modal Logic
   let currentAudioInstance = null;

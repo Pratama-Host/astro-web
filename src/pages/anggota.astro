@@ -98,10 +98,10 @@ const totalSiswa = siswa.length;
             </div>
 
             <div class="member-view-toggle" role="group" aria-label="Mode Tampilan">
-              <button type="button" class="view-btn active" id="view-grid-btn" data-view="grid" title="Tampilan Grid (Kartu Foto)" aria-label="Tampilan Grid" aria-pressed="true">
+              <button type="button" class="view-btn active" id="view-grid-btn" data-view="grid" title="Carousel kartu anggota" aria-label="Carousel kartu anggota" aria-pressed="true">
                 <Icon name="fa-table-cells-large" />
               </button>
-              <button type="button" class="view-btn" id="view-list-btn" data-view="list" title="Tampilan Ringkas (Daftar List)" aria-label="Tampilan Ringkas" aria-pressed="false">
+              <button type="button" class="view-btn" id="view-list-btn" data-view="list" title="Daftar anggota satu kolom" aria-label="Daftar anggota satu kolom" aria-pressed="false">
                 <Icon name="fa-list" />
               </button>
             </div>
@@ -112,8 +112,11 @@ const totalSiswa = siswa.length;
       <div class="members-count mono" id="member-count" aria-live="polite" aria-atomic="true">
         Semua {totalSiswa} anggota
       </div>
-      <div class="members-slider-container">
-        <div class="members-grid" id="members-grid" aria-label="Daftar anggota kelas">
+      <div class="members-slider-container" aria-label="Carousel anggota kelas">
+        <button type="button" class="members-prev" aria-label="Geser ke anggota sebelumnya">
+          <Icon name="fa-chevron-left" />
+        </button>
+        <div class="members-grid" id="members-grid" aria-label="Daftar anggota kelas" tabindex="0">
           {siswa.map((member: MemberItem, i: number) => {
              let jabatanText = "Anggota";
              const orgMember = (G.strukturOrg as Array<{ nama: string; jabatan?: string }> | undefined)?.find((s) => s.nama === member.nama);
@@ -155,7 +158,11 @@ const totalSiswa = siswa.length;
              )
           })}
         </div>
+        <button type="button" class="members-next" aria-label="Geser ke anggota berikutnya">
+          <Icon name="fa-chevron-right" />
+        </button>
       </div>
+      <p class="members-carousel-hint" aria-hidden="true">Geser ke samping untuk melihat anggota lainnya</p>
 
       <!-- Member Modal -->
       <div id="member-modal" class="member-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-name">

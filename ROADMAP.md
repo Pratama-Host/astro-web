@@ -40,3 +40,9 @@ Validasi server, RLS diuji sebagai anon dan server admin, alur draft/terbit/arsi
 
 ## Handover
 Mulai dari `docs/RECONCILIATION-2026-11-13.md`, lalu baca `docs/DATA-CLASSIFICATION.md` untuk aturan pengelolaan data. Jangan menyatakan build, test, atau deploy berhasil sebelum log CI/Cloudflare terbaru tersedia.
+
+
+## Catatan koreksi UI anggota
+- Mode kartu: carousel horizontal pada ponsel, grid responsif pada desktop.
+- Mode daftar: satu kolom vertikal, setiap kartu memanjang penuh.
+- Perubahan ini memulihkan perilaku carousel asli; tidak mengubah data anggota atau database.

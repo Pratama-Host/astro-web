@@ -4,7 +4,7 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
 ## [Unreleased]
 - Perbaikan deklarasi navigasi pengumuman agar tidak terduplikasi.
-- Penyesuaian layout anggota responsif dua kolom pada ponsel dan penghapusan filter yang tidak digunakan.
+- Pemulihan carousel horizontal anggota pada ponsel; mode daftar terpisah menjadi satu kolom vertikal.
 - Perbaikan helper endpoint modul CMS pengumuman dan agenda.
 
 ### Added
@@ -32,7 +32,15 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 
 
 ## Perbaikan UI anggota dan pengumuman
-- Mengganti jalur kartu anggota horizontal menjadi grid responsif: dua kolom pada ponsel normal, satu kolom hanya pada layar sangat sempit, dan tiga/empat kolom untuk layar lebih besar.
-- Menghapus filter kategori yang tidak dipakai dan navigasi slider horizontal.
+- Memulihkan carousel horizontal untuk mode kartu pada ponsel dengan scroll-snap dan gesture swipe; desktop memakai grid responsif.
+- Mode daftar memakai satu kolom penuh dengan kartu horizontal, avatar tetap utuh, dan nama dapat membungkus.
+- Menghapus filter kategori yang tidak dipakai, tetapi mempertahankan carousel dan kontrol gesernya.
 - Memperbaiki helper endpoint di modul admin pengumuman agar permintaan GET/POST memakai `/api/admin/announcements?type=...`.
 - Menambahkan tautan Pengumuman ke fallback navigasi publik dan migrasi idempotent untuk menu yang dikelola CMS.
+
+
+## Koreksi carousel anggota
+- Mengembalikan perilaku carousel horizontal pada layar ponsel; kartu dapat digeser menyamping dan snap ke awal kartu.
+- Memisahkan mode daftar menjadi satu kolom vertikal penuh, bukan dua kolom kartu.
+- Mengembalikan tombol geser untuk breakpoint tablet yang masih memakai carousel; ponsel menggunakan gesture swipe.
+- Mereset `scrollLeft` ketika mengganti mode untuk mencegah avatar terpotong akibat offset carousel sebelumnya.
