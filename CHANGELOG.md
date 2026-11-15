@@ -5,6 +5,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Cache TTL 3 detik + de-duplikasi untuk `getSettings` dan `getNavigation` (`src/lib/ttl-cache.ts`, dengan tes).
+- Guardrail CI `tests/css-quality.test.ts` (ratchet `!important`, font minimum, token kontras, struktur header/menu).
+- Kontrol animasi latar dan musik latar di menu hamburger untuk ponsel; dokumentasi `docs/UIUX-REFORM.md`.
+- Menambahkan `src/lib/color-contrast.ts` (+ tes) dan token `--accent-text`, `--on-accent`, `--btn-end` agar warna aksen dari CMS selalu memenuhi kontras WCAG AA (4,5:1) untuk teks dan tombol.
 - Memperluas export/restore backup CMS untuk `announcements` dan `agenda_events`, dengan kompatibilitas terhadap bundle v1 lama.
 - Menambahkan validator backup, regression tests, SQL smoke assertions, dan contract tests service worker.
 - Menambahkan bagian beranda "Visi, Misi & Prestasi" yang dapat diatur dari CMS.
@@ -12,6 +16,12 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 - Menambahkan dokumentasi rekonsiliasi database, backup/restore, dan status implementasi bertanggal.
 
 ### Changed
+- Logo header kini `<button>` sungguhan; label tombol menu berganti Buka/Tutup; animasi kanvas berhenti saat tab tersembunyi.
+- `<head>`: hapus `X-UA-Compatible`; `og:image`/`twitter:image` hanya dirender bila ada gambar.
+- Reformasi UI/UX: teks beraksen memakai `--accent-text`; teks di atas isian aksen memakai `--on-accent`; ukuran font minimum 12px (65 deklarasi di bawahnya dinaikkan); target sentuh kontrol header 44px; header ponsel sempit dirapatkan; `color-scheme` mengikuti tema; dukungan `prefers-contrast`.
+- Aksen bawaan tema terang diubah `#0d9488` → `#0f766e` (kontras 5,2:1); nilai yang sudah disimpan di CMS tidak diubah.
+- Google Fonts dimuat non-blocking; `theme-color` ikut berganti saat tema diganti.
+- Manifest PWA: `orientation` dibuat `any`, ikon `any` dan `maskable` dipisah, `id` ditambahkan.
 - CI menggunakan `npm run validate` setelah instalasi dependency berbasis lockfile (`npm ci`).
 - Memecah `admin.js` menjadi modul per fitur di `src/scripts/admin/`.
 - Menggabungkan stylesheet tambalan ke file induknya dengan urutan cascade yang dipertahankan.

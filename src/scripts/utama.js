@@ -87,6 +87,7 @@ function initHamburger() {
     nav.inert = false;
     nav.setAttribute("aria-hidden", "false");
     btn.setAttribute("aria-expanded", "true");
+    btn.setAttribute("aria-label", "Tutup menu");
     document.body.classList.add("menu-terbuka");
     document.body.style.overflow = "hidden";
     if (panel) enableFocusTrap(panel);
@@ -95,6 +96,7 @@ function initHamburger() {
   function close() {
     isOpen = false;
     btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-label", "Buka menu");
     nav.setAttribute("aria-hidden", "true");
     nav.inert = true;
     document.body.classList.remove("menu-terbuka");
@@ -121,6 +123,28 @@ function initHamburger() {
   // Escape key
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && isOpen) close();
+  });
+
+  // Kontrol tampilan di dalam menu (ponsel): meneruskan klik ke tombol header asli
+  // dan mencerminkan statusnya, sehingga logika animasi/audio tidak diduplikasi.
+  nav.querySelectorAll("[data-proxy-for]").forEach((proxy) => {
+    const source = document.getElementById(proxy.getAttribute("data-proxy-for"));
+    if (!source) {
+      proxy.hidden = true;
+      return;
+    }
+    const status = proxy.querySelector("[data-proxy-status]");
+    const sync = () => {
+      const on = source.classList.contains("aktif");
+      proxy.setAttribute("aria-pressed", String(on));
+      if (status) status.textContent = on ? "Aktif" : "Mati";
+    };
+    proxy.addEventListener("click", () => {
+      source.click();
+      sync();
+    });
+    new MutationObserver(sync).observe(source, { attributes: true, attributeFilter: ["class"] });
+    sync();
   });
 
   // Highlight link aktif berdasarkan URL saat ini
@@ -186,12 +210,7 @@ function initLogoLightbox() {
   };
 
   logo.addEventListener("click", open);
-  logo.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      open();
-    }
-  });
+  // <button> native: Enter/Spasi memicu "click" sehingga tidak perlu penangan keydown.
   closeBtn.addEventListener("click", close);
   lightbox.addEventListener("click", (e) => {
     if (e.target === lightbox) close();

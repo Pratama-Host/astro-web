@@ -19,5 +19,15 @@ const items = await getNavigation();
         <span>{item.label}</span>
       </a>
     ))}
+    <div class="pengaturan-menu-hamburger" role="group" aria-label="Pengaturan tampilan">
+      <button type="button" class="aksi-menu-hamburger" data-proxy-for="tombol-kanvas" aria-pressed="false">
+        <span>Animasi latar</span>
+        <span class="aksi-status" data-proxy-status>Mati</span>
+      </button>
+      <button type="button" class="aksi-menu-hamburger" data-proxy-for="tombol-audio" aria-pressed="false">
+        <span>Musik latar</span>
+        <span class="aksi-status" data-proxy-status>Mati</span>
+      </button>
+    </div>
   </div>
 </nav>

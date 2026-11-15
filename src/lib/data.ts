@@ -1,5 +1,6 @@
 import fallbackData from '../data/G.json';
 import { getSupabaseAdmin, getSupabasePublic, getStorageBucket } from './supabase';
+import { createTtlCache } from './ttl-cache';
 import { isAdminRequest } from './admin-auth';
 import { PUBLIC_GALLERY_COLUMNS, PUBLIC_MEMBER_COLUMNS, SHOW_MEMBER_NIS, stripPrivateMemberFields } from './public-data-policy';
 
@@ -97,19 +98,36 @@ async function readSiteSettings(client: NonNullable<ReturnType<typeof getSupabas
   return (data?.value || {}) as JsonRecord;
 }
 
+// Satu render halaman memanggil getSettings/getNavigation dari Layout, Header, dan HamburgerMenu.
+// Cache singkat (3 detik) + de-duplikasi menghindari query identik berulang; perubahan CMS tetap
+// tampil dalam hitungan detik, dan hasil fallback akibat error tidak pernah disimpan.
+const SHARED_DATA_TTL_MS = 3000;
+const settingsCache = createTtlCache<JsonRecord>(SHARED_DATA_TTL_MS);
+const navigationCache = createTtlCache<NavigationItem[]>(SHARED_DATA_TTL_MS);
+
+/** Membersihkan cache data bersama (dipakai tes dan setelah mutasi CMS). */
+export function resetSharedDataCache(): void {
+  settingsCache.clear();
+  navigationCache.clear();
+}
+
 export async function getSettings(): Promise<JsonRecord> {
   const client = getSupabasePublic();
   const fallback = cloneFallback(client);
   if (!client) return fallback;
-  try {
-    const stored = await readSiteSettings(client);
-    if (stored === undefined) return fallback;
-    const resolved = resolveNestedStorageReferences(stored, client);
-    return deepMerge(fallback, resolved);
-  } catch (error) {
-    logDataError('getSettings', error);
-    return fallback;
-  }
+  const settings = await settingsCache.get('site', async () => {
+    try {
+      const stored = await readSiteSettings(client);
+      if (stored === undefined) return { value: fallback, cacheable: false };
+      const resolved = resolveNestedStorageReferences(stored, client);
+      return { value: deepMerge(fallback, resolved) as JsonRecord, cacheable: true };
+    } catch (error) {
+      logDataError('getSettings', error);
+      return { value: fallback, cacheable: false };
+    }
+  });
+  // Salinan terpisah: pemanggil boleh memodifikasi hasil tanpa mencemari cache.
+  return structuredClone(settings);
 }
 
 function isAuthorizedDraftPreview(request?: Request): boolean {
@@ -221,20 +239,23 @@ export async function getNavigation(): Promise<NavigationItem[]> {
   // tidak disetel; query hanya mengambil kolom navigasi yang aman.
   const client = getSupabaseAdmin() ?? getSupabasePublic();
   if (!client) return DEFAULT_NAVIGATION;
-  try {
-    const { data, error } = await client
-      .from('site_navigation')
-      .select('id,label,href,icon,sort_order,enabled')
-      .order('sort_order', { ascending: true })
-      .limit(100);
-    if (error) logDataError('getNavigation', error);
-    if (data?.length === 100) console.warn('[data:getNavigation] batas navigasi tercapai; evaluasi pagination.');
-    if (error || !data?.length) return DEFAULT_NAVIGATION;
-    return ensureAnnouncementsNavigation(data as NavigationItem[]);
-  } catch (error) {
-    logDataError('getNavigation', error);
-    return DEFAULT_NAVIGATION;
-  }
+  const items = await navigationCache.get('nav', async () => {
+    try {
+      const { data, error } = await client
+        .from('site_navigation')
+        .select('id,label,href,icon,sort_order,enabled')
+        .order('sort_order', { ascending: true })
+        .limit(100);
+      if (error) logDataError('getNavigation', error);
+      if (data?.length === 100) console.warn('[data:getNavigation] batas navigasi tercapai; evaluasi pagination.');
+      if (error || !data?.length) return { value: DEFAULT_NAVIGATION, cacheable: false };
+      return { value: ensureAnnouncementsNavigation(data as NavigationItem[]), cacheable: true };
+    } catch (error) {
+      logDataError('getNavigation', error);
+      return { value: DEFAULT_NAVIGATION, cacheable: false };
+    }
+  });
+  return structuredClone(items);
 }
 
 export async function getSections(pageSlug: string) {

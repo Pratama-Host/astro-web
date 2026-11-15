@@ -52,8 +52,8 @@
 
 /* UTAMA */
 .tombol-utama {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: var(--text-1-inverse);
+  background: linear-gradient(135deg, var(--accent), var(--btn-end, var(--accent-2)));
+  color: var(--on-accent, var(--text-1-inverse));
   box-shadow: 0 3px 14px var(--glow);
 }
 @media (hover: hover) {
@@ -67,7 +67,7 @@
 /* GARIS */
 .tombol-garis {
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   border: 1px solid var(--border-mid);
 }
 @media (hover: hover) {
@@ -121,7 +121,7 @@
 @media (hover: hover) {
   .tombol-tema:hover {
     background: var(--accent) !important;
-    color: var(--text-1-inverse) !important;
+    color: var(--on-accent, var(--text-1-inverse)) !important;
     border-color: transparent !important;
     box-shadow: 0 0 12px var(--glow) !important;
     transform: scale(1.08) rotate(10deg) !important;
@@ -169,7 +169,7 @@
 @media (hover: hover) {
   .tombol-audio:hover {
     background: var(--accent) !important;
-    color: var(--text-1-inverse) !important;
+    color: var(--on-accent, var(--text-1-inverse)) !important;
     border-color: transparent !important;
     box-shadow: 0 0 12px var(--glow) !important;
     transform: scale(1.08) rotate(10deg) !important;
@@ -197,7 +197,7 @@
 }
 @media (hover: hover) {
   .share-tombol:hover {
-    color: var(--accent);
+    color: var(--accent-text, var(--accent));
     border-color: var(--accent);
     background: rgba(var(--accent-rgb), 0.06);
   }
@@ -224,7 +224,7 @@
 }
 @media (hover: hover) {
   #replay-intro-tombol:hover {
-    color: var(--accent);
+    color: var(--accent-text, var(--accent));
     border-color: var(--accent);
   }
 }
@@ -235,7 +235,7 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   color: white;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 500;
   padding: 4px 8px;
   cursor: pointer;

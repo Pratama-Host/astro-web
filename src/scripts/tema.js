@@ -27,6 +27,10 @@ export function perbaruiIkonTombol(t) {
 export function terapkanTema(t, persist = true) {
   const root = document.documentElement;
   root.setAttribute("data-theme", t);
+  // Sinkronkan warna bilah browser/PWA dengan tema aktif.
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+  if (meta && bg) meta.setAttribute("content", bg);
   if (persist) { try { localStorage.setItem("tkj-theme", t); } catch {} }
   perbaruiIkonTombol(t);
   const tombol = ambilTombolTema();

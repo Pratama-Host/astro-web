@@ -21,15 +21,14 @@ const activeNav = navItems.filter((item) => item.enabled !== false);
 <header class="bilah-atas" role="banner">
   <div class="brand-bilah-atas">
     {logoUrl ? (
-      <img
-        id="brand-logo"
-        src={logoUrl}
-        alt={`Logo TKJ ${className}`}
-        class="brand-badge brand-logo"
-        role="button"
-        tabindex="0"
-        aria-label="Klik untuk memperbesar logo"
-      />
+      <button type="button" id="brand-logo" class="brand-logo-btn" aria-label="Perbesar logo">
+        <img
+          src={logoUrl}
+          alt=""
+          class="brand-badge brand-logo"
+          decoding="async"
+        />
+      </button>
     ) : (
       <a href="/" class="brand-badge" aria-label={`Beranda TKJ ${className}`}>XII9</a>
     )}

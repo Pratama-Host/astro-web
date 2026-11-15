@@ -24,7 +24,7 @@
   font-family: "Fira Code", monospace;
   font-size: 8rem;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   opacity: 0.04;
   line-height: 1;
   pointer-events: none;
@@ -113,12 +113,12 @@
 @media (hover: hover) {
   .mapel-item:hover {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text, var(--accent));
   }
 }
 
 .mapel-item :is(i, svg) {
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   font-size: 0.8rem;
 }
 
@@ -155,7 +155,7 @@
   .karir-item:hover .karir-icon {
     background: rgba(var(--accent-rgb), 0.15);
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text, var(--accent));
   }
 }
 
@@ -168,7 +168,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   font-size: 0.85rem;
   flex-shrink: 0;
 }
@@ -220,7 +220,7 @@
 .kur-item h4 {
   font-family: "Fira Code", monospace;
   font-size: var(--text-xs);
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   margin-bottom: 3px;
   letter-spacing: 0.06em;
 }

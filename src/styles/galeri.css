@@ -110,7 +110,7 @@
 
 .keterangan-galeri span {
   font-family: "Fira Code", monospace;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.95);
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -283,7 +283,7 @@
 .carousel-3d-prev:hover,
 .carousel-3d-next:hover {
   background: var(--primary);
-  color: white;
+  color: var(--on-accent, white);
   border-color: var(--primary);
   transform: scale(1.1);
 }

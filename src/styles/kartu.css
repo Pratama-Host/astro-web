@@ -134,7 +134,7 @@
   padding: 3px 9px;
   border-radius: 20px;
   background: rgba(var(--accent-rgb), 0.1);
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   border: 1px solid var(--border-mid);
   letter-spacing: 0.04em;
 }
@@ -230,11 +230,11 @@
 }
 .prestasi-badge {
   font-family: "Fira Code", monospace;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   padding: 3px 9px;
   border-radius: 20px;
   background: rgba(var(--accent-rgb), 0.08);
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
   border: 1px solid var(--border-mid);
   white-space: nowrap;
   flex-shrink: 0;
@@ -250,7 +250,7 @@
 }
 .prestasi-tingkat {
   font-family: "Fira Code", monospace;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   padding: 2px 8px;
   border-radius: 20px;
   border: 1px solid var(--border);

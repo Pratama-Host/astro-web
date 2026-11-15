@@ -1,4 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// CI mengisi SUPABASE_* dengan nilai placeholder, sehingga client dianggap terkonfigurasi
+// dan query menggantung ke host palsu. Test fallback harus deterministik tanpa jaringan.
+vi.mock('../src/lib/supabase', () => ({
+  getSupabaseAdmin: () => null,
+  getSupabasePublic: () => null,
+  getStorageBucket: () => 'astro',
+}));
+
 import { ensureAnnouncementsNavigation, getNavigation, getSections } from '../src/lib/data';
 
 describe('navigation and site sections fallback', () => {

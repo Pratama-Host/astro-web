@@ -199,9 +199,20 @@ function mulaiKanvasJaringan() {
     gambarKanvas();
     rafId = requestAnimationFrame(jalankan);
   }
+  // Hemat baterai/CPU: hentikan animasi saat tab tidak terlihat, lanjutkan saat kembali.
+  const penanganVisibilitas = () => {
+    if (document.hidden) {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    } else if (running && !rafId) {
+      rafId = requestAnimationFrame(jalankan);
+    }
+  };
+  document.addEventListener("visibilitychange", penanganVisibilitas);
   function henti() {
     running = false;
     if (rafId) cancelAnimationFrame(rafId);
+    document.removeEventListener("visibilitychange", penanganVisibilitas);
     window.removeEventListener("resize", penanganUbahUkuran);
     themeObserver.disconnect();
     ctx.clearRect(0, 0, width, height);

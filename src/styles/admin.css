@@ -57,7 +57,7 @@ a {
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: #e68b94;
   font-weight: 750;
 }
@@ -246,12 +246,12 @@ a {
 }
 .brand small {
   color: var(--muted);
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
 }
 .nav-group {
   margin: 18px 8px 8px;
   color: #777f90;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-weight: 800;
@@ -354,7 +354,7 @@ td {
   font-size: 0.87rem;
 }
 th {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.09em;
   color: #9ca3af;
@@ -372,7 +372,7 @@ td .btn {
   border: 1px solid #3c4251;
   border-radius: 99px;
   padding: 4px 8px;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: #d4d4d8;
 }
 .badge.ok {
@@ -590,7 +590,7 @@ td .btn {
   overflow-wrap: anywhere;
 }
 .developer-theme-preview span {
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.14em;
   color: var(--preview-muted, #686868);
 }

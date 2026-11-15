@@ -127,7 +127,7 @@ button,
   border-radius: 999px;
   padding: 6px 12px;
   letter-spacing: 0.12em;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   background: rgba(var(--accent-rgb), 0.075);
 }
 .sec-tag::before,
@@ -257,7 +257,7 @@ iframe {
     height: 40px;
   }
   .brand-year {
-    font-size: 0.68rem;
+    font-size: var(--text-xs);
   }
   .aksi-bilah-atas {
     gap: 5px;
@@ -279,7 +279,7 @@ iframe {
     top: auto !important;
     bottom: max(12px, env(safe-area-inset-bottom)) !important;
     left: 10px !important;
-    font-size: 0.68rem;
+    font-size: var(--text-xs);
     padding: 6px 9px;
     opacity: 0.88;
   }
@@ -1089,5 +1089,127 @@ html[data-theme="blue"] .tombol-tema .i-blue,
 .tombol-audio:not(.aktif) .i-off,
 .alih-kanvas.aktif .i-on,
 .alih-kanvas:not(.aktif) .i-off { opacity: 1; transform: none; }
-.alih-kanvas.aktif { color: var(--accent) !important; border-color: var(--accent) !important; }
+.alih-kanvas.aktif { color: var(--accent-text, var(--accent)) !important; border-color: var(--accent) !important; }
 @media (prefers-reduced-motion: reduce) { .ikon-tumpuk > svg { transition: none; } }
+
+
+/* ================================================================
+   REFORMASI UI/UX — aksesibilitas & ergonomi sentuh
+   (dimuat paling akhir agar menang atas aturan !important lama)
+   ================================================================ */
+
+/* Kontrol bawaan browser (scrollbar, input, date picker) ikut tema aktif. */
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"],
+html[data-theme="blue"] { color-scheme: dark; }
+
+/* Target sentuh minimal 44px untuk kontrol di header pada layar sentuh. */
+@media (pointer: coarse) {
+  .tombol-tema,
+  .tombol-audio,
+  .hamburger-tombol {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  #back-to-top {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Header ponsel sempit: rapatkan jarak agar 4 kontrol 44px + brand tetap muat. */
+@media (max-width: 420px) {
+  .aksi-bilah-atas { gap: 6px; }
+  .brand-bilah-atas { min-width: 0; }
+  .brand-year { display: none; }
+  .brand-name {
+    max-width: 12ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 360px) and (pointer: coarse) {
+  .tombol-tema,
+  .tombol-audio,
+  .hamburger-tombol {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Mode kontras tinggi dari sistem operasi: perjelas batas dan fokus. */
+@media (prefers-contrast: more) {
+  :root { --border: rgba(255, 255, 255, 0.35); --border-mid: rgba(255, 255, 255, 0.55); }
+  html[data-theme="light"] { --border: rgba(0, 0, 0, 0.45); --border-mid: rgba(0, 0, 0, 0.65); }
+  :focus-visible { outline-width: 3px; outline-offset: 3px; }
+}
+
+/* Logo sebagai <button> sungguhan (dapat difokus, Enter/Spasi native). */
+.brand-logo-btn {
+  display: inline-flex;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-s);
+  cursor: zoom-in;
+  line-height: 0;
+}
+
+/* Kontrol tampilan di dalam menu hamburger (hanya ponsel; tombol header disembunyikan). */
+.pengaturan-menu-hamburger {
+  display: none;
+  margin: 8px 20px 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  gap: 10px;
+  flex-direction: column;
+}
+.aksi-menu-hamburger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 18px;
+  color: var(--text-1);
+  font: inherit;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  text-align: left;
+}
+.aksi-menu-hamburger .aksi-status {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  color: var(--text-2);
+  border: 1px solid var(--border-mid);
+}
+.aksi-menu-hamburger[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+.aksi-menu-hamburger[aria-pressed="true"] .aksi-status {
+  color: var(--on-accent, var(--text-1-inverse));
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (max-width: 480px) {
+  /* Header hanya memuat tema + menu; animasi & musik pindah ke dalam menu. */
+  .aksi-bilah-atas .alih-kanvas,
+  .aksi-bilah-atas .tombol-audio { display: none !important; }
+  .aksi-bilah-atas { gap: 10px; }
+  .pengaturan-menu-hamburger { display: flex; }
+  .brand-name { max-width: 16ch; }
+}

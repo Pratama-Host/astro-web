@@ -44,7 +44,7 @@
   padding: 32px 20px 20px;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
   font-family: "Fira Code", monospace;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.8);
@@ -84,7 +84,7 @@
     background: var(--accent);
     border-color: var(--accent);
     transform: translateY(-50%) scale(1.08);
-    color: #fff;
+    color: var(--on-accent, #fff);
   }
 }
 .navigasi-jendela:active {
@@ -96,7 +96,7 @@
   left: 50%;
   transform: translateX(-50%);
   font-family: "Fira Code", monospace;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   color: rgba(255, 255, 255, 0.5);
   letter-spacing: 0.12em;
   pointer-events: none;
@@ -124,7 +124,7 @@
   .tutup-jendela:hover {
     background: var(--accent);
     border-color: var(--accent);
-    color: #fff;
+    color: var(--on-accent, #fff);
     transform: rotate(90deg) scale(1.05);
   }
 }
@@ -182,7 +182,7 @@
 }
 .tutup-modal-anggota:hover {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border-color: transparent;
 }
 #modal-audio {
