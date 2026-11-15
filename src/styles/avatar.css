@@ -107,3 +107,8 @@
     transform: scale(0.95);
   }
 }
+
+#modal-avatar[aria-disabled="false"]:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 4px;
+}

@@ -5,6 +5,8 @@ import { PUBLIC_GALLERY_COLUMNS, PUBLIC_MEMBER_COLUMNS, SHOW_MEMBER_NIS, stripPr
 
 type JsonRecord = Record<string, any>;
 
+const PUBLIC_QUERY_LIMITS = { members: 500, gallery: 500, teachers: 100, skills: 200 } as const;
+
 /** Fallback ke data bawaan tetap berjalan, tetapi penyebabnya harus terlihat di log Cloudflare. */
 function logDataError(scope: string, error: unknown) {
   console.error(`[data:${scope}] Gagal membaca Supabase, memakai fallback:`, error instanceof Error ? error.message : 'unknown error');
@@ -88,7 +90,10 @@ export function mapMember(row: JsonRecord, client: NonNullable<ReturnType<typeof
 
 async function readSiteSettings(client: NonNullable<ReturnType<typeof getSupabaseAdmin>>) {
   const { data, error } = await client.from('site_settings').select('value').eq('key', 'site').maybeSingle();
-  if (error) return undefined;
+  if (error) {
+    logDataError('readSiteSettings', error);
+    return undefined;
+  }
   return (data?.value || {}) as JsonRecord;
 }
 
@@ -131,6 +136,7 @@ export async function getPageSEO(pathname: string, request?: Request): Promise<J
       }
     }
     const { data, error } = await client.from('site_pages').select('title, description, og_image, noindex').eq('slug', pathname).maybeSingle();
+    if (error) logDataError('getPageSEO', error);
     if (error || !data) return fallback;
     const resolvedImage = resolveStorageReference(data.og_image, client);
     return { ...data, og_image: resolvedImage || (String(data.og_image || '').startsWith('/assets/') ? null : data.og_image) };
@@ -150,6 +156,7 @@ export async function getPageContent(pathname: string, request?: Request): Promi
       if (draft?.content && typeof draft.content === 'object') return resolveNestedStorageReferences(draft.content, client) || {};
     }
     const { data, error } = await client.from('site_pages').select('content').eq('slug', pathname).maybeSingle();
+    if (error) logDataError('getPageContent', error);
     if (error || !data?.content || typeof data.content !== 'object') return {};
     return resolveNestedStorageReferences(data.content, client) || {};
   } catch (error) {
@@ -218,7 +225,10 @@ export async function getNavigation(): Promise<NavigationItem[]> {
     const { data, error } = await client
       .from('site_navigation')
       .select('id,label,href,icon,sort_order,enabled')
-      .order('sort_order', { ascending: true });
+      .order('sort_order', { ascending: true })
+      .limit(100);
+    if (error) logDataError('getNavigation', error);
+    if (data?.length === 100) console.warn('[data:getNavigation] batas navigasi tercapai; evaluasi pagination.');
     if (error || !data?.length) return DEFAULT_NAVIGATION;
     return ensureAnnouncementsNavigation(data as NavigationItem[]);
   } catch (error) {
@@ -231,7 +241,8 @@ export async function getSections(pageSlug: string) {
   const client = getSupabasePublic();
   if (!client) return [];
   try {
-    const { data, error } = await client.from('site_sections').select('section_key,sort_order,enabled').eq('page_slug', pageSlug).order('sort_order', { ascending: true });
+    const { data, error } = await client.from('site_sections').select('section_key,sort_order,enabled').eq('page_slug', pageSlug).order('sort_order', { ascending: true }).limit(100);
+    if (error) logDataError('getSections', error);
     return error || !data ? [] : data;
   } catch (error) {
     logDataError('getSections', error);
@@ -260,11 +271,19 @@ export async function getSiteData(): Promise<JsonRecord> {
   try {
     const [storedSettings, membersResult, galleryResult, teachersResult, skillsResult] = await Promise.all([
       readSiteSettings(client),
-      client.from('anggota').select(PUBLIC_MEMBER_COLUMNS).order('urutan', { ascending: true }).order('nama', { ascending: true }),
-      client.from('galeri').select(PUBLIC_GALLERY_COLUMNS).order('urutan', { ascending: true }),
-      client.from('guru').select('nama, mapel, peran, quote, expertise, urutan').order('urutan', { ascending: true }),
-      client.from('skills').select('nama, level, icon, deskripsi, urutan').order('urutan', { ascending: true }),
+      client.from('anggota').select(PUBLIC_MEMBER_COLUMNS).order('urutan', { ascending: true }).order('nama', { ascending: true }).limit(PUBLIC_QUERY_LIMITS.members),
+      client.from('galeri').select(PUBLIC_GALLERY_COLUMNS).order('urutan', { ascending: true }).limit(PUBLIC_QUERY_LIMITS.gallery),
+      client.from('guru').select('nama, mapel, peran, quote, expertise, urutan').order('urutan', { ascending: true }).limit(PUBLIC_QUERY_LIMITS.teachers),
+      client.from('skills').select('nama, level, icon, deskripsi, urutan').order('urutan', { ascending: true }).limit(PUBLIC_QUERY_LIMITS.skills),
     ]);
+    if (membersResult.error) logDataError('getSiteData:anggota', membersResult.error);
+    if (galleryResult.error) logDataError('getSiteData:galeri', galleryResult.error);
+    if (teachersResult.error) logDataError('getSiteData:guru', teachersResult.error);
+    if (skillsResult.error) logDataError('getSiteData:skills', skillsResult.error);
+    if (membersResult.data?.length === PUBLIC_QUERY_LIMITS.members) console.warn('[data:getSiteData] batas anggota publik tercapai; evaluasi pagination.');
+    if (galleryResult.data?.length === PUBLIC_QUERY_LIMITS.gallery) console.warn('[data:getSiteData] batas galeri publik tercapai; evaluasi pagination.');
+    if (teachersResult.data?.length === PUBLIC_QUERY_LIMITS.teachers) console.warn('[data:getSiteData] batas guru publik tercapai; evaluasi pagination.');
+    if (skillsResult.data?.length === PUBLIC_QUERY_LIMITS.skills) console.warn('[data:getSiteData] batas skills publik tercapai; evaluasi pagination.');
     const resolvedSettings = resolveNestedStorageReferences(storedSettings || {}, client);
     const result: JsonRecord = deepMerge(fallback, resolvedSettings);
 

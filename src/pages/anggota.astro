@@ -165,14 +165,14 @@ const totalSiswa = siswa.length;
       <p class="members-carousel-hint" aria-hidden="true">Geser ke samping untuk melihat anggota lainnya</p>
 
       <!-- Member Modal -->
-      <div id="member-modal" class="member-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-name">
+      <div id="member-modal" class="member-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-name" aria-describedby="modal-desc" inert>
         <div class="member-modal-content card">
           <button id="member-modal-tutup" class="member-modal-tutup" aria-label="Tutup detail">
             <Icon name="fa-times" />
           </button>
           
           <div class="member-modal-header">
-            <div id="modal-avatar" class="avatar lg avatar-ring" title="Klik untuk melihat foto asli"></div>
+            <div id="modal-avatar" class="avatar lg avatar-ring" role="button" tabindex="-1" aria-disabled="true" aria-label="Perbesar foto profil" title="Klik untuk melihat foto asli"></div>
             <div class="member-modal-id">
               <h2 id="modal-name" class="modal-name"></h2>
               <div id="modal-role" class="modal-role chip"></div>
@@ -194,7 +194,7 @@ const totalSiswa = siswa.length;
       </div>
 
       <!-- Photo Lightbox -->
-      <div id="member-photo-lightbox" class="foto-jendela" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Foto profil diperbesar">
+      <div id="member-photo-lightbox" class="foto-jendela" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Foto profil diperbesar" inert>
         <button id="member-photo-lightbox-tutup" class="tutup-foto-jendela" aria-label="Tutup foto">
           <Icon name="fa-times" />
         </button>

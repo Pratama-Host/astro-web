@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
-import { cleanText, isPlainRecord, isValidOptionalMediaRef, logCmsAction, readRequestBytes, validMediaRef } from '../../../lib/cms-admin';
+import { cleanText, isPlainRecord, isValidOptionalMediaRef, logCmsAction, purgePublicSiteCache, readRequestBytes, validMediaRef } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 
 export const prerender = false;
@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const { data, error } = await db.from('site_page_drafts').select('*').eq('slug', slug).maybeSingle();
-  if (error) return Response.json({ error: 'Draft belum tersedia. Jalankan supabase/migrations/20261106000100_baseline.sql.' }, { status: 503 });
+  if (error) return Response.json({ error: 'Draft belum tersedia. Periksa tabel draft dan migration CMS pada project yang terhubung.' }, { status: 503 });
   return Response.json({ data: data || null }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
@@ -58,7 +58,7 @@ export const PUT: APIRoute = async ({ request }) => {
   };
   const now = new Date().toISOString();
   const { data, error } = await db.from('site_page_drafts').upsert({ slug, ...seo, content: body.content, updated_at: now }, { onConflict: 'slug' }).select().single();
-  if (error) return Response.json({ error: 'Draft gagal disimpan. Pastikan supabase/migrations/20261106000100_baseline.sql sudah diterapkan.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Draft gagal disimpan. Periksa tabel draft dan migration CMS pada project yang terhubung.' }, { status: 500 });
   await logCmsAction(db, 'save-draft', 'site_page_drafts', slug, `Draft ${slug} disimpan`);
   return Response.json({ ok: true, data, message: 'Draft tersimpan. Halaman publik belum berubah.' }, { headers: { 'Cache-Control': 'no-store' } });
 };
@@ -86,7 +86,8 @@ export const POST: APIRoute = async ({ request }) => {
   const { data, error } = await db.rpc('publish_tkj_cms_draft', { p_slug: slug });
   if (error) {
     const status = error.code === 'P0002' ? 404 : error.code === '22023' ? 400 : 500;
-    return Response.json({ error: status === 404 ? 'Draft untuk halaman ini tidak ditemukan.' : 'Publikasi gagal; draft dan halaman publik tidak diubah.', detail: error.message }, { status });
+    return Response.json({ error: status === 404 ? 'Draft untuk halaman ini tidak ditemukan.' : 'Publikasi gagal; draft dan halaman publik tidak diubah.' }, { status });
   }
+  await purgePublicSiteCache();
   return Response.json({ ok: true, data, message: 'Draft berhasil dipublikasikan dan snapshot riwayat dibuat dalam satu transaksi.' }, { headers: { 'Cache-Control': 'no-store' } });
 };

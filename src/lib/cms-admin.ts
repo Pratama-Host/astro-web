@@ -199,7 +199,7 @@ export function validInternalHref(value: unknown): string | null {
   if (!href.startsWith('/') || href.startsWith('//') || href.includes('\\') || /[\r\n]/.test(href)) return null;
   if (/^\/(?:api\/admin|pengembang\/admin)(?:\/|$)/i.test(href)) return null;
   const pathname = href.split(/[?#]/, 1)[0];
-  const allowedPaths = new Set(['/', '/pengembang', '/struktur', '/anggota', '/keahlian', '/galeri', '/tkj', '/404', '/offline']);
+  const allowedPaths = new Set(['/', '/pengembang', '/struktur', '/anggota', '/keahlian', '/galeri', '/tkj', '/pengumuman', '/404', '/offline']);
   if (!allowedPaths.has(pathname)) return null;
   return href;
 }

@@ -225,7 +225,11 @@ function initMembersInteractions() {
     const avatarEl = document.getElementById("modal-avatar");
     if (avatarEl) {
       avatarEl.replaceChildren(renderAvatar(data));
-      avatarEl.style.cursor = data.foto ? "pointer" : "default";
+      const canOpenPhoto = Boolean(data.foto && URLValidator.isSafe(data.foto));
+      avatarEl.style.cursor = canOpenPhoto ? "pointer" : "default";
+      avatarEl.setAttribute("aria-disabled", String(!canOpenPhoto));
+      avatarEl.tabIndex = canOpenPhoto ? 0 : -1;
+      avatarEl.setAttribute("aria-label", canOpenPhoto ? `Perbesar foto profil ${data.nama || "anggota"}` : "Foto profil tidak tersedia");
     }
 
     if (modalDesc) modalDesc.textContent = data.desc || "";
@@ -267,6 +271,7 @@ function initMembersInteractions() {
       }
     }
 
+    modal.inert = false;
     modal.classList.add("terbuka");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -275,9 +280,12 @@ function initMembersInteractions() {
   }
 
   function tutupMemberModal() {
+    // Escape is global; never pop another component's focus trap when this dialog is closed.
+    if (!modal?.classList.contains("terbuka")) return;
     if (photoLightbox?.classList.contains("terbuka")) {
       photoLightbox.classList.remove("terbuka");
       photoLightbox.setAttribute("aria-hidden", "true");
+      photoLightbox.inert = true;
       photoLightboxImg?.removeAttribute("src");
       disableFocusTrap();
     }
@@ -287,6 +295,7 @@ function initMembersInteractions() {
     }
     modal?.classList.remove("terbuka");
     modal?.setAttribute("aria-hidden", "true");
+    if (modal) modal.inert = true;
     document.body.style.overflow = "";
     disableFocusTrap();
   }
@@ -331,18 +340,28 @@ function initMembersInteractions() {
     if (!photoLightbox?.classList.contains("terbuka")) return;
     photoLightbox.classList.remove("terbuka");
     photoLightbox.setAttribute("aria-hidden", "true");
+    photoLightbox.inert = true;
     if (photoLightboxImg) photoLightboxImg.removeAttribute("src");
     // Parent member dialog remains open underneath the photo overlay.
     document.body.style.overflow = modal?.classList.contains("terbuka") ? "hidden" : "";
     disableFocusTrap();
   }
 
-  document.getElementById("modal-avatar")?.addEventListener("click", () => {
+  const modalAvatar = document.getElementById("modal-avatar");
+  modalAvatar?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (modalAvatar.getAttribute("aria-disabled") !== "true") modalAvatar.click();
+    }
+  });
+  modalAvatar?.addEventListener("click", () => {
+    if (modalAvatar.getAttribute("aria-disabled") === "true") return;
     const name = document.getElementById("modal-name")?.textContent;
     const data = G.namaSiswa.find((s) => s.nama === name);
     if (!data?.foto || !URLValidator.isSafe(data.foto)) return;
     if (photoLightbox && photoLightboxImg) {
       photoLightboxImg.src = data.foto;
+      photoLightbox.inert = false;
       photoLightbox.classList.add("terbuka");
       photoLightbox.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";

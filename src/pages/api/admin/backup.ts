@@ -8,16 +8,19 @@ import {
   readRequestBytes,
   validInternalHref,
   validPublicUrl,
+  purgePublicSiteCache,
 } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
+import { normalizeBackupSections, validateAgendaBackupRows, validateAnnouncementBackupRows } from '../../../lib/backup-validation';
 
 export const prerender = false;
 
 const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
 const MAX_ROWS_PER_TABLE = 100_000;
 const TABLES = [
-  'anggota', 'galeri', 'guru', 'skills', 'site_pages', 'site_page_drafts',
-  'site_navigation', 'site_sections', 'media_assets', 'content_revisions', 'admin_audit_logs',
+  'anggota', 'galeri', 'guru', 'skills', 'announcements', 'agenda_events',
+  'site_pages', 'site_page_drafts', 'site_navigation', 'site_sections',
+  'media_assets', 'content_revisions', 'admin_audit_logs',
 ] as const;
 function isSafeObjectPath(value: unknown): value is string {
   if (typeof value !== 'string' || !value || value.length > 500) return false;
@@ -100,6 +103,14 @@ function validateBackupPayload(body: Record<string, unknown>): string | null {
       (metadata.thumbnail_url !== undefined && !validPublicUrl(metadata.thumbnail_url));
   })) return 'Backup media_assets mengandung object_path, URL, atau thumbnail yang tidak valid.';
 
+  const announcements = body.announcements as Record<string, unknown>[];
+  const announcementError = validateAnnouncementBackupRows(announcements);
+  if (announcementError) return announcementError;
+
+  const agendaEvents = body.agenda_events as Record<string, unknown>[];
+  const agendaError = validateAgendaBackupRows(agendaEvents);
+  if (agendaError) return agendaError;
+
   const revisions = body.content_revisions as Record<string, unknown>[];
   if (revisions.some((row) => {
     if (row.page_slug === 'site-settings') return !isPlainRecord(row.content) || !isValidSiteSettingsUrls(row.content);
@@ -123,7 +134,7 @@ export const GET: APIRoute = async ({ request }) => {
 
   const { data, error } = await db.rpc('export_tkj_cms_backup');
   if (error || !isPlainRecord(data)) {
-    return Response.json({ error: 'Ekspor backup gagal. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.' }, { status: 503 });
+    return Response.json({ error: 'Ekspor backup gagal. Periksa fungsi backup pada project Supabase yang terhubung.' }, { status: 503 });
   }
 
   const serialized = JSON.stringify(data, null, 2);
@@ -137,7 +148,7 @@ export const GET: APIRoute = async ({ request }) => {
     status: 200,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Content-Disposition': `attachment; filename="tkj-xi9-cms-${new Date().toISOString().slice(0, 10)}.json"`,
+      'Content-Disposition': `attachment; filename="tkj-xii9-cms-${new Date().toISOString().slice(0, 10)}.json"`,
       'Content-Length': String(size),
       'Cache-Control': 'no-store',
     },
@@ -157,16 +168,18 @@ export const POST: APIRoute = async ({ request }) => {
   catch { return Response.json({ error: 'File backup bukan JSON valid.' }, { status: 400 }); }
   if (!isPlainRecord(body)) return Response.json({ error: 'Format backup tidak valid.' }, { status: 400 });
 
-  const validationError = validateBackupPayload(body);
+  // v1 backup lama tidak memiliki dua collection ini; normalisasi tanpa menghapus data aktif.
+  const normalizedBody = normalizeBackupSections(body);
+  const validationError = validateBackupPayload(normalizedBody);
   if (validationError) return Response.json({ error: validationError }, { status: 400 });
 
   // Satu panggilan RPC = satu transaksi PostgreSQL. Jika satu upsert gagal, semuanya rollback.
-  const { data, error } = await db.rpc('restore_tkj_cms_backup', { p_bundle: body });
+  const { data, error } = await db.rpc('restore_tkj_cms_backup', { p_bundle: normalizedBody });
   if (error) {
     return Response.json({
       error: 'Pemulihan backup gagal dan seluruh perubahan database dibatalkan.',
-      detail: error.message,
     }, { status: 500 });
   }
+  await purgePublicSiteCache();
   return Response.json(data || { ok: true }, { headers: { 'Cache-Control': 'no-store' } });
 };

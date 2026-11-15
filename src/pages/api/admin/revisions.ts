@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
-import { cleanText, readRequestBytes } from '../../../lib/cms-admin';
+import { cleanText, purgePublicSiteCache, readRequestBytes } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 
 export const prerender = false;
@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
   const slug = cleanText(url.searchParams.get('slug') || 'site-settings', 100);
   const { data, error } = await db.from('content_revisions').select('id,page_slug,version,seo,created_at').eq('page_slug', slug).order('version', { ascending: false }).limit(30);
-  if (error) return Response.json({ error: 'Riwayat versi belum tersedia. Jalankan supabase/migrations/20261106000100_baseline.sql.' }, { status: 500 });
+  if (error) return Response.json({ error: 'Riwayat versi belum tersedia. Periksa tabel revisi dan migration CMS pada project yang terhubung.' }, { status: 500 });
   return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
@@ -34,7 +34,8 @@ export const POST: APIRoute = async ({ request }) => {
   const { data, error } = await db.rpc('restore_tkj_cms_revision', { p_id: id });
   if (error) {
     const status = error.code === 'P0002' ? 404 : error.code === '22023' ? 400 : 500;
-    return Response.json({ error: 'Versi gagal dipulihkan. Perubahan database dibatalkan.', detail: error.message }, { status });
+    return Response.json({ error: 'Versi gagal dipulihkan. Perubahan database dibatalkan.' }, { status });
   }
+  await purgePublicSiteCache();
   return Response.json({ ok: true, data, message: 'Versi dipulihkan; keadaan sebelumnya disimpan sebagai snapshot baru.' }, { headers: { 'Cache-Control': 'no-store' } });
 };

@@ -17,3 +17,11 @@ Aturan berikut dipakai saat menambah endpoint, komponen, atau field CMS. Status 
 - Penulisan CMS dilakukan melalui server Astro dengan service-role key yang hanya tersedia di lingkungan server.
 - Jangan menaruh secret, session token, kredensial, atau data operasional internal pada HTML, JSON publik, JavaScript browser, maupun log publik.
 - Periksa ulang kebijakan RLS, privilege tabel/kolom, serta policy Storage setiap kali modul atau tabel baru ditambahkan.
+
+## Backup, publikasi dan siklus hidup
+
+- Export CMS dapat memuat identitas internal, member records, draft, revisions, dan audit. Perlakukan file sebagai data privat: enkripsi saat disimpan/dikirim, batasi akses, jangan commit ke repository.
+- `media_assets` adalah metadata/index referensi; byte asli, audio, foto, dokumen dan thumbnail tersimpan terpisah pada Supabase Storage. Backup DB/CMS JSON saja tidak memulihkan file yang terhapus.
+- NIS merupakan identifier internal (termasuk bila dipakai sebagai unique key admin); jangan pernah tampilkan pada HTML/JSON publik atau dokumentasi. Jalur publik memakai kolom eksplisit dan `SHOW_MEMBER_NIS = false`.
+- Foto, audio, social links dan karya siswa memerlukan persetujuan pengelola/ pemilik data. Prosedur pencabutan dan retensi per cohort belum diputuskan dalam source ini; minta keputusan pengelola sebelum implementasi penghapusan/retensi otomatis.
+- Untuk prosedur backup/restore dan batas setiap artefak lihat `docs/BACKUP-RESTORE-RUNBOOK.md`.

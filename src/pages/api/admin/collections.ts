@@ -13,7 +13,7 @@ export const GET: APIRoute = async ({ request, url }) => {
   if (!['guru', 'skills'].includes(kind)) return Response.json({ error: 'Jenis koleksi tidak dikenal.' }, { status: 400 });
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
-  const { data, error } = await db.from(tableFor(kind)).select('*').order('urutan');
+  const { data, error } = await db.from(tableFor(kind)).select('*').order('urutan').limit(100);
   if (error) return Response.json({ error: 'Koleksi gagal dibaca.' }, { status: 500 });
   return Response.json({ data: data || [], snapshot: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };

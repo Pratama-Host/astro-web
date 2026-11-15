@@ -9,7 +9,7 @@
 
 ## Konvensi
 
-- Format mengikuti `.editorconfig` dan `.prettierrc.json`.
+- Format mengikuti `.editorconfig` dan konvensi yang sudah digunakan source code.
 - Pesan commit: `jenis: ringkasan` (contoh: `fix: perbaiki urutan section beranda`).
 - Perubahan database ditulis sebagai migrasi baru di `supabase/migrations/` dengan nama
   `YYYYMMDDHHMMSS_deskripsi.sql`, bersifat aditif dan idempotent. Jangan mengubah migrasi lama.
@@ -17,4 +17,4 @@
 
 ## Struktur singkat
 
-Lihat bagian "Struktur Proyek" pada `README.md`.
+Lihat bagian "Struktur Repository" pada `README.md`.

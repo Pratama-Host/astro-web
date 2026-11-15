@@ -1,8 +1,7 @@
--- Run ONLY after supabase/migrations/20261106000100_baseline.sql is deployed.
--- Entire smoke test is rollback-only. It temporarily writes test-shaped values to
--- the existing /tkj page, its draft, site settings, revision history and audit log,
--- then rolls everything back. Do not remove the final ROLLBACK.
-
+-- DISPOSABLE PROJECT ONLY: apply the fully reconciled migration chain first.
+-- Never run against production or a shared database: the transaction temporarily
+-- updates /tkj, its draft, site settings, revisions, audit, announcements and agenda.
+-- The entire test is rollback-only; do not remove the final ROLLBACK.
 BEGIN;
 DO $test$
 DECLARE
@@ -11,6 +10,9 @@ DECLARE
   v_revision_id uuid;
   v_first_version integer;
   v_second_version integer;
+  v_announcement_id uuid := gen_random_uuid();
+  v_agenda_id uuid := gen_random_uuid();
+  v_legacy_bundle jsonb;
 BEGIN
   -- Export contract and all expected sections.
   v_bundle := public.export_tkj_cms_backup();
@@ -20,6 +22,8 @@ BEGIN
   IF jsonb_typeof(v_bundle->'site_settings') <> 'array'
      OR jsonb_typeof(v_bundle->'anggota') <> 'array'
      OR jsonb_typeof(v_bundle->'galeri') <> 'array'
+     OR jsonb_typeof(v_bundle->'announcements') <> 'array'
+     OR jsonb_typeof(v_bundle->'agenda_events') <> 'array'
      OR jsonb_typeof(v_bundle->'content_revisions') <> 'array'
      OR jsonb_typeof(v_bundle->'admin_audit_logs') <> 'array' THEN
     RAISE EXCEPTION 'export sections missing';
@@ -56,16 +60,70 @@ BEGIN
   IF v_result->'data'->>'title' <> 'RPC draft smoke' THEN RAISE EXCEPTION 'draft publish mismatch'; END IF;
   IF EXISTS (SELECT 1 FROM public.site_page_drafts WHERE slug = '/tkj') THEN RAISE EXCEPTION 'published draft was not removed'; END IF;
 
-  -- Backup restore is upsert-only and must run in the same transaction.
+  -- Backup round-trip covers announcements and agenda using synthetic IDs only.
+  INSERT INTO public.announcements (id, title, body, category, status, pinned)
+  VALUES (v_announcement_id, 'RPC smoke announcement', 'synthetic', 'Kelas', 'draft', false);
+  INSERT INTO public.agenda_events (id, title, description, category, status, starts_at)
+  VALUES (v_agenda_id, 'RPC smoke agenda', 'synthetic', 'Kelas', 'draft', now() + interval '1 day');
+
   v_bundle := public.export_tkj_cms_backup();
+  IF NOT EXISTS (SELECT 1 FROM jsonb_array_elements(v_bundle->'announcements') item WHERE item->>'id' = v_announcement_id::text)
+     OR NOT EXISTS (SELECT 1 FROM jsonb_array_elements(v_bundle->'agenda_events') item WHERE item->>'id' = v_agenda_id::text) THEN
+    RAISE EXCEPTION 'backup export omitted announcements or agenda';
+  END IF;
+
+  DELETE FROM public.announcements WHERE id = v_announcement_id;
+  DELETE FROM public.agenda_events WHERE id = v_agenda_id;
   v_bundle := jsonb_set(v_bundle, '{confirm}', 'true'::jsonb, true);
   v_result := public.restore_tkj_cms_backup(v_bundle);
-  IF v_result->>'ok' <> 'true' THEN RAISE EXCEPTION 'backup restore mismatch'; END IF;
+  IF v_result->>'ok' <> 'true'
+     OR NOT EXISTS (SELECT 1 FROM public.announcements WHERE id = v_announcement_id)
+     OR NOT EXISTS (SELECT 1 FROM public.agenda_events WHERE id = v_agenda_id) THEN
+    RAISE EXCEPTION 'announcements/agenda backup round-trip mismatch';
+  END IF;
+
+  -- Legacy v1 files omit the two newer sections. Import accepts them and is upsert-only.
+  v_legacy_bundle := (v_bundle - 'announcements' - 'agenda_events');
+  v_result := public.restore_tkj_cms_backup(v_legacy_bundle);
+  IF v_result->>'ok' <> 'true'
+     OR NOT EXISTS (SELECT 1 FROM public.announcements WHERE id = v_announcement_id)
+     OR NOT EXISTS (SELECT 1 FROM public.agenda_events WHERE id = v_agenda_id) THEN
+    RAISE EXCEPTION 'legacy backup compatibility or upsert-only contract failed';
+  END IF;
 
   -- Confirm backend-only execution privileges.
   IF has_function_privilege('anon', 'public.export_tkj_cms_backup()', 'EXECUTE')
      OR has_function_privilege('authenticated', 'public.export_tkj_cms_backup()', 'EXECUTE') THEN
     RAISE EXCEPTION 'backup RPC is exposed to anon/authenticated';
+  END IF;
+
+  IF (SELECT count(*) FROM pg_policies
+       WHERE schemaname = 'public' AND tablename = 'site_sections'
+         AND cmd = 'SELECT' AND roles && ARRAY['anon','authenticated']::name[]) > 1 THEN
+    RAISE EXCEPTION 'duplicate permissive site_sections SELECT policies remain';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.admin_login_attempts'::regclass AND contype = 'p'
+  ) THEN
+    RAISE EXCEPTION 'admin_login_attempts primary key is missing';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) acl
+    WHERE d.defaclnamespace = 'public'::regnamespace
+      AND d.defaclobjtype IN ('r', 'S')
+      AND acl.grantee IN ('anon'::regrole, 'authenticated'::regrole)
+  ) OR EXISTS (
+    SELECT 1 FROM pg_default_acl d
+    CROSS JOIN LATERAL aclexplode(d.defaclacl) acl
+    WHERE d.defaclobjtype = 'f'
+      AND (d.defaclnamespace = 0 OR d.defaclnamespace = 'public'::regnamespace)
+      AND acl.grantee IN (0, 'anon'::regrole, 'authenticated'::regrole)
+      AND acl.privilege_type = 'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'future public object defaults grant access to public roles';
   END IF;
 END;
 $test$;

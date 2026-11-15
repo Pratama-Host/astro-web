@@ -9,7 +9,7 @@ export const GET: APIRoute = async ({ request }) => {
   if (!isAdminRequest(request)) return unauthorizedResponse();
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
-  const { data, error } = await db.from('galeri').select('*').order('urutan');
+  const { data, error } = await db.from('galeri').select('*').order('urutan').limit(500);
   if (error) return Response.json({ error: 'Data galeri gagal dibaca. Periksa koneksi Supabase dan struktur tabel galeri.' }, { status: 500 });
   const storage = db.storage.from(getStorageBucket());
   const items = (data || []).map((row) => {

@@ -32,6 +32,7 @@ describe('social and internal links', () => {
   });
   it('blocks administrative or external internal paths', () => {
     expect(validInternalHref('/anggota')).toBe('/anggota');
+    expect(validInternalHref('/pengumuman')).toBe('/pengumuman');
     expect(validInternalHref('//evil.example')).toBeNull();
     expect(validInternalHref('/pengembang/admin')).toBeNull();
     expect(validInternalHref('/api/admin/login')).toBeNull();

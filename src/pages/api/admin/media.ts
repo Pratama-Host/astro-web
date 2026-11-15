@@ -227,7 +227,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
     if (error) {
       await storage.remove([objectPath, ...(thumbnailPath ? [thumbnailPath] : [])]);
-      return Response.json({ error: 'Aset terunggah, tetapi pengaturan global gagal diperbarui secara transaksional. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.' }, { status: 500 });
+      return Response.json({ error: 'Aset gagal dipasang sebagai media global; file yang baru diunggah sudah dibersihkan dari Storage. Periksa pengaturan CMS terkait.' }, { status: 500 });
     }
   }
 

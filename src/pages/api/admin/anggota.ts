@@ -46,8 +46,8 @@ export const GET: APIRoute = async ({ request }) => {
   if (!isAdminRequest(request)) return unauthorizedResponse();
   const supabase = getSupabaseAdmin();
   if (!supabase) return unavailable();
-  const { data, error } = await supabase.from('anggota').select('*').order('urutan', { ascending: true }).order('nama', { ascending: true });
-  if (error) return Response.json({ error: error.message }, { status: 500 });
+  const { data, error } = await supabase.from('anggota').select('*').order('urutan', { ascending: true }).order('nama', { ascending: true }).limit(500);
+  if (error) return Response.json({ error: 'Data anggota gagal dimuat.' }, { status: 500 });
   return Response.json({ data }, { headers: { 'Cache-Control': 'no-store' } });
 };
 
@@ -70,8 +70,8 @@ export const POST: APIRoute = async ({ request }) => {
   const member = cleanMember(body);
   if (!member.nis || !member.nama) return Response.json({ error: 'Nama dan NIS wajib diisi.' }, { status: 400 });
   const { data, error } = await supabase.from('anggota').upsert(member, { onConflict: 'nis' }).select().single();
-  if (error) return Response.json({ error: error.message }, { status: 400 });
-  await logCmsAction(supabase, 'create', 'anggota', member.nis, `Anggota ${member.nama} disimpan`);
+  if (error) return Response.json({ error: 'Perubahan data anggota gagal disimpan.' }, { status: 400 });
+  await logCmsAction(supabase, 'create', 'anggota', null, 'Data anggota dibuat.');
   return Response.json({ data }, { status: 201 });
 };
 
@@ -99,8 +99,8 @@ export const PUT: APIRoute = async ({ request }) => {
     if (collision) return Response.json({ error: 'NIS baru sudah digunakan anggota lain.' }, { status: 409 });
   }
   const { data, error } = await supabase.from('anggota').update(member).eq('nis', originalNis).select().single();
-  if (error) return Response.json({ error: error.message }, { status: 400 });
-  await logCmsAction(supabase, 'update', 'anggota', member.nis, `Anggota ${member.nama} diperbarui`);
+  if (error) return Response.json({ error: 'Perubahan data anggota gagal disimpan.' }, { status: 400 });
+  await logCmsAction(supabase, 'update', 'anggota', null, 'Data anggota diperbarui.');
   return Response.json({ data });
 };
 
@@ -115,7 +115,7 @@ export const DELETE: APIRoute = async ({ request }) => {
   const nis = String(body.nis || '').trim();
   if (!nis || body.confirm !== true) return Response.json({ error: 'NIS dan konfirmasi penghapusan wajib diisi.' }, { status: 400 });
   const { error } = await supabase.from('anggota').delete().eq('nis', nis);
-  if (error) return Response.json({ error: error.message }, { status: 400 });
-  await logCmsAction(supabase, 'delete', 'anggota', nis, `Anggota dengan NIS ${nis} dihapus`);
+  if (error) return Response.json({ error: 'Perubahan data anggota gagal disimpan.' }, { status: 400 });
+  await logCmsAction(supabase, 'delete', 'anggota', null, 'Data anggota dihapus.');
   return Response.json({ ok: true });
 };

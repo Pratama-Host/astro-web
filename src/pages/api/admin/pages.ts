@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
-import { cleanText, isPlainRecord, isValidOptionalMediaRef, readRequestBytes, validMediaRef } from '../../../lib/cms-admin';
+import { cleanText, isPlainRecord, isValidOptionalMediaRef, purgePublicSiteCache, readRequestBytes, validMediaRef } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 import { DEVELOPER_DEFAULTS } from '../../../data/developer-defaults';
 import { DEVELOPER_LEGACY_STORIES, DEVELOPER_LEGACY_TIMELINE } from '../../../data/developer-legacy-stories';
@@ -12,8 +12,8 @@ export const GET: APIRoute = async ({ request }) => {
   if (!isAdminRequest(request)) return unauthorizedResponse();
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
-  const { data, error } = await db.from('site_pages').select('*').order('slug');
-  if (error) return Response.json({ error: 'Metadata halaman gagal dibaca. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.' }, { status: 500 });
+  const { data, error } = await db.from('site_pages').select('*').order('slug').limit(100);
+  if (error) return Response.json({ error: 'Metadata halaman gagal dibaca. Periksa tabel dan migration CMS pada project yang terhubung.' }, { status: 500 });
   const pages = [...(data || [])];
   const existingIndex = pages.findIndex((page) => page.slug === '/pengembang');
   const fallbackDeveloper = {
@@ -84,6 +84,7 @@ export const PUT: APIRoute = async ({ request }) => {
     p_noindex: body.noindex === true,
     p_content: content,
   });
-  if (error) return Response.json({ error: 'Metadata halaman gagal disimpan secara konsisten. Pastikan supabase/migrations/20261106000100_baseline.sql sudah diterapkan.', detail: error.message }, { status: 500 });
+  if (error) return Response.json({ error: 'Metadata halaman gagal disimpan secara konsisten. Periksa status layanan CMS dan migration yang diperlukan.' }, { status: 500 });
+  await purgePublicSiteCache();
   return Response.json({ ok: true, data: data?.data || data, revision_version: data?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
 };

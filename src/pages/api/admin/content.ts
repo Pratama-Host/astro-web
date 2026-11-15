@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAdminRequest, unauthorizedResponse } from '../../../lib/admin-auth';
-import { cleanText, isHexColor, isPlainRecord, isValidSiteSettingsUrls, readRequestBytes, validInternalHref } from '../../../lib/cms-admin';
+import { cleanText, isHexColor, isPlainRecord, isValidSiteSettingsUrls, purgePublicSiteCache, readRequestBytes, validInternalHref } from '../../../lib/cms-admin';
 import { getSupabaseAdmin } from '../../../lib/supabase';
 import { getSettings } from '../../../lib/data';
 
@@ -101,6 +101,7 @@ export const PUT: APIRoute = async ({ request }) => {
     return Response.json({ ok: true, data: current, updated_at: currentRow?.updated_at || null, unchanged: true }, { headers: { 'Cache-Control': 'no-store' } });
   }
   const { data: saved, error } = await db.rpc('patch_tkj_cms_site_settings', { p_patch: touched });
-  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Pastikan supabase/migrations/20261106000100_baseline.sql sudah dijalankan.', detail: error.message }, { status: 500 });
+  if (error) return Response.json({ error: 'Konten gagal disimpan secara konsisten. Periksa status layanan CMS dan migration yang diperlukan.' }, { status: 500 });
+  await purgePublicSiteCache();
   return Response.json({ ok: true, data: saved?.data || touched, updated_at: saved?.updated_at || new Date().toISOString(), revision_version: saved?.revision_version }, { headers: { 'Cache-Control': 'no-store' } });
 };

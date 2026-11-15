@@ -170,6 +170,7 @@ function initLogoLightbox() {
   if (!logo || !lightbox || !closeBtn) return;
 
   const open = () => {
+    lightbox.inert = false;
     lightbox.classList.add("terbuka");
     lightbox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -179,6 +180,7 @@ function initLogoLightbox() {
   const close = () => {
     lightbox.classList.remove("terbuka");
     lightbox.setAttribute("aria-hidden", "true");
+    lightbox.inert = true;
     document.body.style.overflow = "";
     disableFocusTrap();
   };

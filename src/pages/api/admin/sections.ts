@@ -16,8 +16,8 @@ export const GET: APIRoute = async ({ request }) => {
   if (!isAdminRequest(request)) return unauthorizedResponse();
   const db = getSupabaseAdmin();
   if (!db) return Response.json({ error: 'Supabase belum tersedia.' }, { status: 503 });
-  const { data, error } = await db.from('site_sections').select('*').order('page_slug').order('sort_order');
-  if (error) return Response.json({ error: 'Section gagal dibaca. Jalankan supabase/migrations/20261106000100_baseline.sql.' }, { status: 500 });
+  const { data, error } = await db.from('site_sections').select('*').order('page_slug').order('sort_order').limit(100);
+  if (error) return Response.json({ error: 'Section gagal dibaca. Periksa tabel section dan migration CMS pada project yang terhubung.' }, { status: 500 });
   return Response.json({ data: data || [] }, { headers: { 'Cache-Control': 'no-store' } });
 };
 

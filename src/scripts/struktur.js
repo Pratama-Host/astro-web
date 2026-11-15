@@ -79,6 +79,7 @@ function initStructureLightbox() {
       captionDiv.appendChild(profilElement);
     }
 
+    lightbox.inert = false;
     lightbox.classList.add("terbuka");
     lightbox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -88,6 +89,7 @@ function initStructureLightbox() {
   function tutupLightbox() {
     lightbox.classList.remove("terbuka");
     lightbox.setAttribute("aria-hidden", "true");
+    lightbox.inert = true;
     img.hidden = false;
     img.removeAttribute("src");
     placeholder.hidden = true;

@@ -17,9 +17,7 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci --no-audit --no-fund
       - run: npm audit --audit-level=high
-      - run: npm run check
-      - run: npm test
-      - run: npm run build
+      - run: npm run validate
         env:
           SUPABASE_URL: https://example.supabase.co
           SUPABASE_ANON_KEY: ci-placeholder-anon-key

@@ -10,7 +10,6 @@ SMK Muhammadiyah Belitang · Indonesia
   <a href="https://github.com/Pratama-Host/astro-web"><img src="https://img.shields.io/badge/Astro-7.4.5-BC52EE?style=for-the-badge&logo=astro&logoColor=white" alt="Astro 7.4.5"></a>
   <a href="https://github.com/Pratama-Host/astro-web"><img src="https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare Workers"></a>
   <a href="https://github.com/Pratama-Host/astro-web"><img src="https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20Storage-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"></a>
-  <a href="https://github.com/Pratama-Host/astro-web"><img src="https://img.shields.io/badge/Status-Operational-16A34A?style=for-the-badge" alt="Operational status"></a>
 </p>
 
 <p>
@@ -50,7 +49,6 @@ SMK Muhammadiyah Belitang · Indonesia
 - [Operasional dan Pemeliharaan](#-operasional-dan-pemeliharaan)
 - [Troubleshooting](#-troubleshooting)
 - [Panduan Kontribusi](#-panduan-kontribusi)
-- [Roadmap Teknis](#-roadmap-teknis)
 - [Status Proyek](#-status-proyek)
 - [Lisensi dan Kredit](#-lisensi-dan-kredit)
 
@@ -74,7 +72,7 @@ Aplikasi dirancang dengan beberapa lapisan yang saling melengkapi:
 | Resilience | Data fallback lokal, cache terkontrol, halaman offline, dan service worker. |
 
 > [!NOTE]
-> Dokumentasi ini mengikuti struktur proyek pada paket `astro-web-main-v3` yang diperiksa pada **6 November 2026**. Nilai konfigurasi, jumlah data, dan detail deployment dapat berubah ketika repository berkembang. Selalu cocokkan dokumentasi ini dengan source code dan konfigurasi environment yang sedang digunakan.
+> README ini menjelaskan source code dan konfigurasi yang ada di repository, bukan bukti bahwa Worker atau database hosted sedang sehat saat ini. Versi dependency mengacu pada `package-lock.json`, konfigurasi runtime pada `wrangler.json`, dan status verifikasi bertanggal pada folder [`docs/`](docs/). Jangan menganggap status migration lokal sama dengan histori migration Supabase tanpa rekonsiliasi.
 
 ## 🎯 Filosofi dan Tujuan
 
@@ -140,6 +138,7 @@ Prinsip implementasi yang diprioritaskan adalah keterbacaan kode, validasi input
 | Struktur | `/struktur` | Struktur organisasi dan pembagian peran. |
 | Keahlian | `/keahlian` | Daftar kompetensi dan keterampilan. |
 | Galeri | `/galeri` | Dokumentasi foto dan media kelas. |
+| Pengumuman | `/pengumuman` | Informasi dan pengumuman kelas yang dipublikasikan. |
 | TKJ | `/tkj` | Informasi bidang Teknik Komputer dan Jaringan. |
 | Pengembang | `/pengembang` | Profil pengembangan dan cerita proyek. |
 | Admin CMS | `/pengembang/admin` | Panel pengelolaan website. |
@@ -280,7 +279,7 @@ Fallback membantu menjaga sebagian halaman tetap memiliki konten dasar, tetapi *
 
 - Versi yang diminta oleh `engines`: **Node.js `>=22.23.4`**.
 - Versi yang dipatok pada `.nvmrc`: **`24.22.1`**.
-- Package manager metadata: **npm `10.9.2`**.
+- Package manager yang dipatok di `package.json`: **npm `10.9.2`**.
 
 Gunakan versi Node yang sesuai sebelum memasang dependency. Versi runtime lokal yang berbeda dapat menghasilkan dependency tree atau perilaku build yang berbeda.
 
@@ -299,12 +298,20 @@ astro-web/
 │   └── AUDIT.md                   # Laporan audit database dan keamanan
 ├── supabase/
 │   ├── config.toml                # Konfigurasi Supabase CLI
-│   ├── migrations/                # Skema + policy (berstempel waktu, urut)
+│   ├── migrations/                # Perubahan schema/policy; cek status sebelum apply
 │   │   ├── 20261106000100_baseline.sql
 │   │   ├── 20261106000200_home_section_controls.sql
 │   │   ├── 20261106000300_public_read_only_rls.sql
 │   │   ├── 20261106000400_gallery_metadata_from_caption.sql
-│   │   └── 20261106000500_public_section_visibility_metadata.sql
+│   │   ├── 20261106000500_public_section_visibility_metadata.sql
+│   │   ├── 20261113130442_archive_tkj_cms_before_access_hardening.sql
+│   │   ├── 20261113130505_restrict_anon_anggota_columns.sql
+│   │   ├── 20261113130520_harden_grants_and_storage_limits.sql
+│   │   ├── 20261113130543_announcements_and_agenda.sql
+│   │   ├── 20261113211300_add_announcements_navigation.sql
+│   │   ├── 20261114150000_cms_backup_announcements_agenda.sql
+│   │   ├── 20261114150100_harden_public_default_privileges.sql
+│   │   └── 20261114150200_cms_schema_advisor_cleanup.sql
 │   ├── seed/                      # Hasil `npm run migrate:data` (ditinjau manual)
 │   └── smoke/
 │       └── cms-rpc-smoke.sql      # Smoke test RPC (rollback-only)
@@ -347,6 +354,7 @@ astro-web/
 │   │   ├── keahlian.astro
 │   │   ├── tkj.astro
 │   │   ├── pengembang.astro
+│   │   ├── pengumuman.astro
 │   │   ├── sitemap.xml.ts
 │   │   ├── robots.txt.ts
 │   │   ├── offline.astro
@@ -358,11 +366,7 @@ astro-web/
 │   ├── env.d.ts
 │   └── middleware.ts              # Security headers + cache policy
 ├── tests/
-│   ├── admin-auth.test.ts
-│   ├── cms-admin.test.ts
-│   ├── cms-admin-helpers.test.ts
-│   ├── data-mappers.test.ts
-│   └── media-validation.test.ts
+│   └── *.test.ts                 # Unit dan regression tests Vitest
 ├── .editorconfig
 ├── .env.example
 ├── .gitattributes
@@ -400,6 +404,7 @@ astro-web/
 | `/struktur` | Publik | Struktur organisasi kelas. |
 | `/keahlian` | Publik | Kompetensi dan daftar keterampilan. |
 | `/galeri` | Publik | Galeri dokumentasi. |
+| `/pengumuman` | Publik | Pengumuman kelas yang telah dipublikasikan. |
 | `/tkj` | Publik | Informasi jurusan TKJ. |
 | `/pengembang` | Publik | Profil pengembang dan catatan proyek. |
 | `/pengembang/admin` | Privat | Panel administrator CMS. |
@@ -697,11 +702,15 @@ npm --version
 
 Pastikan Node memenuhi `engines` di `package.json`.
 
-### 3. Pasang dependency
+### 3. Pasang dependency (pengembangan lokal)
+
+Bila lingkungan lokal mendukung Node.js yang dipatok repository, gunakan lockfile: 
 
 ```bash
-npm install
+npm ci
 ```
+
+Instalasi lokal bersifat opsional untuk alur kerja berbasis Git dan build/deploy terkelola. Jangan menganggap pemeriksaan lokal berhasil bila perintah ini tidak dijalankan.
 
 ### 4. Siapkan environment lokal
 
@@ -796,19 +805,9 @@ Astro dikonfigurasi dengan `output: 'server'`, adapter Cloudflare, `imageService
 2. Pastikan variable dan secret Cloudflare sudah tersedia.
 3. Pastikan `SUPABASE_URL` dan `SUPABASE_ANON_KEY` menunjuk project Supabase yang benar.
 4. Pastikan `SUPABASE_SERVICE_KEY`, `ADMIN_PASSWORD`, dan `ADMIN_SESSION_SECRET` tersimpan sebagai secret.
-5. Jalankan validasi lokal:
-
-   ```bash
-   npm run validate
-   ```
-
-6. Deploy:
-
-   ```bash
-   npm run deploy
-   ```
-
-7. Tunggu status deployment selesai pada Cloudflare Dashboard atau output Wrangler.
+5. Jalankan workflow CI pada GitHub dan periksa hasilnya untuk commit yang akan dirilis. Bila tersedia lingkungan lokal yang sesuai, `npm run validate` dapat digunakan sebagai pemeriksaan tambahan.
+6. Jalankan deployment melalui integrasi Git/Cloudflare yang dikonfigurasi pada project, atau gunakan `npm run deploy` dari lingkungan lokal yang sudah disiapkan.
+7. Periksa log build dan status deployment pada Cloudflare Dashboard; jangan menganggap push Git saja sebagai bukti deployment berhasil.
 8. Lakukan smoke test publik dan admin setelah deployment.
 
 ### Smoke test setelah deploy
@@ -857,7 +856,11 @@ Semua file migrasi SQL berada di `supabase/migrations/`; seed dan manifest hasil
 | `supabase/migrations/20261113130442_archive_tkj_cms_before_access_hardening.sql` | Menyimpan snapshot JSON CMS ke skema privat. | Bukan dump PostgreSQL eksternal atau backup object Storage. |
 | `supabase/migrations/20261113130505_restrict_anon_anggota_columns.sql` | Membatasi grant baca tabel anggota ke kolom yang diperlukan halaman. | Diterapkan pada lingkungan pengembangan/pengujian aktif pada 13 November 2026. |
 | `supabase/migrations/20261113130520_harden_grants_and_storage_limits.sql` | Mencabut hak mutasi publik dan membatasi upload bucket. | Maksimum 20 MiB dan MIME allowlist. |
-| `supabase/migrations/20261113130543_announcements_and_agenda.sql` | Membuat tabel dan RLS untuk pengumuman serta agenda. | Publik hanya membaca item dengan status terbit sesuai policy. |
+| `supabase/migrations/20261113130543_announcements_and_agenda.sql` | Membuat tabel dan RLS untuk pengumuman serta agenda. | Tercantum pada histori remote yang diperiksa 14 November 2026. |
+| `supabase/migrations/20261113211300_add_announcements_navigation.sql` | Menambahkan tautan Pengumuman ke navigasi bila belum ada. | Source ZIP memakai timestamp ini; histori remote pada snapshot 14 November mencatat `20261113143902_add_announcements_navigation`. Jangan menjalankan ulang sebelum isi dan status target direkonsiliasi. |
+| `supabase/migrations/20261114150000_cms_backup_announcements_agenda.sql` | Memperluas export/restore backup CMS untuk pengumuman dan agenda. | Disiapkan di source; belum diterapkan pada snapshot 14 November 2026. |
+| `supabase/migrations/20261114150100_harden_public_default_privileges.sql` | Memperketat default privileges objek baru di schema `public`. | Disiapkan di source; belum diterapkan pada snapshot 14 November 2026. |
+| `supabase/migrations/20261114150200_cms_schema_advisor_cleanup.sql` | Menambahkan primary key ledger login dan menghapus policy redundant. | Disiapkan di source; belum diterapkan pada snapshot 14 November 2026. |
 
 ### Aturan migrasi
 
@@ -1259,7 +1262,7 @@ Alasan umum: halaman admin menggunakan service-role client, sedangkan halaman pu
 ### 8. Deployment gagal
 
 - Cocokkan versi Node dengan `.nvmrc`.
-- Jalankan `npm install` dan `npm run validate`.
+- Jika menguji secara lokal, jalankan `npm ci` lalu `npm run validate`; untuk build terkelola, periksa log build Cloudflare dan CI.
 - Periksa pesan error build yang pertama, bukan hanya error lanjutan.
 - Periksa konfigurasi `wrangler.json` dan compatibility flags.
 - Pastikan tidak ada secret yang secara tidak sengaja ditulis ke log.
@@ -1268,94 +1271,23 @@ Alasan umum: halaman admin menggunakan service-role client, sedangkan halaman pu
 
 ## 🤝 Panduan Kontribusi
 
-Perubahan yang terstruktur lebih mudah diaudit dan dipulihkan.
-
-### Alur kontribusi
-
-1. Fork atau buat branch kerja.
-2. Buat perubahan yang fokus pada satu tujuan.
-3. Hindari refactor luas bila perbaikan dapat dilakukan secara terlokalisasi.
-4. Tambahkan atau perbarui test untuk perilaku baru.
-5. Jalankan check, tests, dan build.
-6. Perbarui README atau dokumentasi bila konfigurasi, API, data model, atau cara deployment berubah.
-7. Buat pull request dengan ringkasan, alasan, risiko, dan langkah pengujian.
-
-### Konvensi commit yang disarankan
-
-```text
-feat: add gallery filtering
-fix: resolve public storage references
-security: tighten admin request validation
-docs: expand deployment guide
-refactor: simplify data mapping
-test: cover media reference validation
-chore: update runtime dependencies
-```
-
-### Checklist pull request
-
-- [ ] Scope perubahan dijelaskan.
-- [ ] Tidak ada secret atau file `.env` di commit.
-- [ ] Tidak ada perubahan database produksi yang tidak terdokumentasi.
-- [ ] Input server-side tetap divalidasi.
-- [ ] Hak akses publik/admin tidak melebar tanpa alasan.
-- [ ] Test diperbarui atau alasan tidak menambah test dicantumkan.
-- [ ] `npm run check` berhasil.
-- [ ] `npm test` berhasil.
-- [ ] `npm run build` berhasil.
-- [ ] Dokumentasi dan migration diperbarui bila diperlukan.
-- [ ] Dampak terhadap ponsel dan desktop diperiksa.
-
----
-
-## 🗺️ Roadmap Teknis
-
-Roadmap berikut merupakan area pengembangan yang dapat diprioritaskan. Ini bukan janji fitur yang sudah tersedia.
-
-| Area | Arah peningkatan | Kriteria selesai |
-| --- | --- | --- |
-| Database lifecycle | Uji baseline pada project disposable dan dokumentasikan provisioning dari nol. | Fresh setup berhasil dan dapat direproduksi. |
-| Backup | Otomasi backup database dan Storage dengan retensi serta checksum. | Restore test berhasil di project terpisah. |
-| Observability | Dashboard/alert untuk error Worker, Supabase, dan media. | Insiden penting terdeteksi dan memiliki jejak diagnosis. |
-| CMS workflow | Preview, validasi, dan publish yang lebih eksplisit. | Draft tidak tampil publik sebelum dipublikasikan. |
-| Media governance | Validasi ukuran/tipe, metadata konsisten, dan orphan detection. | Tidak ada media orphan yang terhapus tanpa review. |
-| Test coverage | Menambah integrasi test untuk alur data kritis. | Jalur public-read, admin mutation, dan backup teruji. |
-| Accessibility | Audit keyboard, kontras, label, dan focus state. | Temuan prioritas tinggi ditangani. |
-| Performance | Profiling query dan payload berdasarkan pengukuran. | Optimasi terbukti tanpa mengubah hasil data. |
+Alur branch, konvensi commit, aturan perubahan database, dan checklist pull request dipusatkan di [`CONTRIBUTING.md`](CONTRIBUTING.md). Template pull request tersedia di [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
 
 ---
 
 ## ✅ Status Proyek
 
-<details open>
-<summary><strong>Status operasional terakhir yang dikonfirmasi</strong></summary>
+Paket source ini memuat aplikasi Astro SSR, CMS, migration SQL, tes, dan workflow CI. Namun, keberadaan file tersebut tidak membuktikan bahwa build, test, browser smoke test, atau deployment terbaru sudah berhasil.
 
-Pada **6 November 2026**, pemeriksaan manual maintainer melaporkan:
+Snapshot Supabase terakhir yang disertakan dalam paket bertanggal **14 November 2026** dan bersifat read-only. Snapshot itu mencatat 21 migration pada histori remote serta perbedaan antara sebagian nama migration lokal dan remote. Tiga migration bertanggal 14 November 2026 yang disiapkan dalam source belum diterapkan pada snapshot tersebut. Rincian dan batas bukti ada di [`docs/DATABASE-STATE.md`](docs/DATABASE-STATE.md).
 
-- Halaman publik berjalan normal.
-- Halaman admin berjalan normal.
-- Gambar anggota tampil.
-- Galeri tampil.
-- Logo tampil.
-- Audio tampil.
-- Tidak ada log merah yang dilaporkan pada Supabase maupun Cloudflare.
-
-Status ini adalah konfirmasi operasional manual pada waktu tersebut, bukan pengganti hasil CI permanen atau jaminan bahwa tidak akan ada regresi.
-
-</details>
-
-<details>
-<summary><strong>Catatan verifikasi repository</strong></summary>
-
-Repository berisi unit test, konfigurasi CI, migration SQL, dan konfigurasi build. Status aktual setiap commit harus dilihat pada GitHub Actions. Jangan menafsirkan keberadaan file test sebagai bukti bahwa test telah dijalankan atau lulus.
-
-</details>
+Untuk status source cleanup dan pekerjaan yang belum diverifikasi melalui runtime/browser/deploy, lihat [`docs/EXECUTION-REPORT-2026-11-14.md`](docs/EXECUTION-REPORT-2026-11-14.md). Periksa GitHub Actions dan Cloudflare Dashboard untuk status commit/deployment yang sedang berjalan.
 
 ---
 
 ## 📄 Lisensi dan Kredit
 
-Metadata `package.json` mencantumkan lisensi `ISC`. Jika repository dipublikasikan untuk penggunaan pihak lain, sertakan file `LICENSE` yang memuat teks lisensi yang sesuai agar ketentuan distribusi jelas.
+Metadata `package.json` mencantumkan lisensi `ISC`, dan teks lisensinya tersedia pada file [`LICENSE`](LICENSE) di root repository.
 
 Teknologi pihak ketiga tetap tunduk pada lisensi masing-masing, termasuk Astro, Cloudflare, Supabase, TypeScript, dan dependency npm lainnya.
 
@@ -1375,7 +1307,3 @@ _Dibangun untuk mendokumentasikan perjalanan, bukan sekadar menampilkan halaman.
 
 </div>
 
-
-### Navigasi pengumuman
-
-Halaman `/pengumuman` ditambahkan ke navigasi publik. `getNavigation()` menyertakan tautan default apabila belum ada baris navigasi dengan href `/pengumuman`; menu yang sudah ada dan sengaja dinonaktifkan tetap dihormati. Untuk menyimpan tautan sebagai item yang dapat dikelola dari CMS, terapkan migrasi `supabase/migrations/20261113211300_add_announcements_navigation.sql`.

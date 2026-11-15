@@ -16,7 +16,7 @@ $("export-backup").addEventListener("click", async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `tkj-xi9-cms-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `tkj-xii9-cms-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
     setStatus("backup-status", "Backup JSON berhasil dibuat.", true);
@@ -34,7 +34,7 @@ $("import-backup-file").addEventListener("change", async () => {
     const bundle = JSON.parse(await file.text());
     if (
       !confirm(
-        "Impor data dari backup? Baris yang cocok akan diperbarui, baris yang tidak ada tetap dipertahankan. Seluruh impor dibatalkan otomatis bila satu bagian gagal.",
+        "Impor data CMS termasuk pengumuman dan agenda? Baris yang cocok akan diperbarui; baris yang tidak ada dalam file tetap dipertahankan. Ini bukan restore penuh PostgreSQL atau file Storage. Seluruh impor dibatalkan otomatis bila satu bagian gagal.",
       )
     )
       return;
