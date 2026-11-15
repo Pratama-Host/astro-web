@@ -386,19 +386,6 @@ iframe {
   padding: 36px 14px 14px;
 }
 
-.org-wrap {
-  padding-block: clamp(24px, 4vw, 44px);
-}
-.org-row {
-  gap: clamp(14px, 2.4vw, 28px);
-}
-.org-card {
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.09);
-}
-.org-card::before {
-  border-radius: 22px;
-}
 .skill-card {
   border-radius: 18px;
 }
@@ -446,16 +433,6 @@ iframe {
   .member-card {
     width: 168px;
     min-width: 168px;
-  }
-  .org-row {
-    gap: 12px;
-  }
-  .org-card {
-    width: min(42vw, 178px);
-    padding: 18px 12px;
-  }
-  .org-card.is-wali {
-    width: min(62vw, 220px);
   }
 }
 
@@ -544,7 +521,6 @@ main[id="main-content"] > .halaman-anggota {
 .wali-card,
 .skill-card,
 .tkj-card,
-.org-card,
 .item-galeri {
   border-color: var(--ui-border-soft);
   box-shadow: var(--ui-shadow-card);
@@ -825,17 +801,6 @@ main[id="main-content"] > .halaman-anggota {
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
-.org-card {
-  cursor: pointer;
-  min-height: 190px;
-}
-.org-card:focus-visible {
-  outline: 3px solid var(--ui-outline);
-  outline-offset: 5px;
-}
-.org-card::before {
-  animation-duration: 18s;
-}
 .skill-card {
   padding: clamp(16px, 2vw, 22px);
 }
@@ -893,9 +858,6 @@ main[id="main-content"] > .halaman-anggota {
   .org-row {
     align-items: stretch;
   }
-  .org-card {
-    min-height: 168px;
-  }
   #member-modal .member-modal-content {
     width: 100%;
     max-height: 88dvh;
@@ -923,9 +885,6 @@ main[id="main-content"] > .halaman-anggota {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .org-card::before {
-    animation: none !important;
   }
 }
 

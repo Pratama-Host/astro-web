@@ -16,6 +16,8 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/).
 - Menambahkan dokumentasi rekonsiliasi database, backup/restore, dan status implementasi bertanggal.
 
 ### Changed
+- Halaman dalam: breadcrumb tidak lagi tertimbun header fixed (`margin-top: var(--top-h)`), ruang atas judul dirapikan, label seksi/judul/deskripsi sama-sama di tengah, nama brand rata kiri.
+- Kartu struktur organisasi didesain ulang: permukaan bergradasi, tepi gradien 1px, cahaya aksen di atas, bayangan berlapis, avatar bercincin, kartu sebaris sama tinggi; animasi border tak berujung dihapus. Aturan kartu disatukan di `struktur.css` (23 `!important` di `animasi.css` dan beberapa override di `ui.css` dihapus; total `!important` 325 → 299).
 - Logo header kini `<button>` sungguhan; label tombol menu berganti Buka/Tutup; animasi kanvas berhenti saat tab tersembunyi.
 - `<head>`: hapus `X-UA-Compatible`; `og:image`/`twitter:image` hanya dirender bila ada gambar.
 - Reformasi UI/UX: teks beraksen memakai `--accent-text`; teks di atas isian aksen memakai `--on-accent`; ukuran font minimum 12px (65 deklarasi di bawahnya dinaikkan); target sentuh kontrol header 44px; header ponsel sempit dirapatkan; `color-scheme` mengikuti tema; dukungan `prefers-contrast`.

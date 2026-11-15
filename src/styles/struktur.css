@@ -1,6 +1,7 @@
 /* ================================================================
-   halaman/struktur/gaya.css — TKJ XI-9 | Structure Page
-   AESTHETICS: Premium, Dynamic, Platform-Native
+   halaman/struktur/gaya.css — TKJ XII-9 | Struktur Organisasi
+   Kartu berlapis: permukaan bergradasi, tepi gradien 1px, cahaya aksen
+   di atas, bayangan berlapis. Tanpa animasi tak berujung.
    ================================================================ */
 
 /* ── LAYOUT & WRAPPER ─────────────────────────────────────────── */
@@ -9,7 +10,9 @@
   flex-direction: column;
   align-items: center;
   gap: 0;
-  padding: 40px 0;
+  /* padding-inline memberi ruang agar bayangan kartu tidak terpotong overflow. */
+  box-sizing: border-box;
+  padding: clamp(12px, 3vw, 28px) 14px 40px;
   overflow-x: auto;
   min-width: 100%;
   scrollbar-width: thin;
@@ -19,87 +22,139 @@
 .org-row {
   display: flex;
   justify-content: center;
-  gap: clamp(16px, 4vw, 40px);
+  align-items: stretch; /* kartu sebaris sama tinggi */
+  gap: clamp(12px, 4vw, 36px);
   position: relative;
   z-index: 2;
   flex-wrap: wrap;
-  padding: 16px 0;
+  padding: 14px 0;
   width: 100%;
 }
 
 /* ── ORGANIZATION CARD ────────────────────────────────────────── */
 .org-card {
+  --org-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 16px 32px -14px rgba(0, 0, 0, 0.85),
+    0 0 44px -20px rgba(var(--accent-rgb), 0.55);
+  --org-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.5),
+    0 24px 44px -14px rgba(0, 0, 0, 0.9),
+    0 0 56px -12px rgba(var(--accent-rgb), 0.7);
   width: clamp(150px, 40vw, 190px);
-  padding: 24px 16px;
+  min-height: 176px;
+  padding: 24px 14px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: var(--surface);
-  border-radius: var(--radius-m);
-  border-left: 3px solid var(--accent) !important; /* Visual indicator */
-  transition: all 0.4s var(--ease-spring);
   position: relative;
-  overflow: visible !important;
-  contain: layout style;
-  transform: translateZ(0);
+  isolation: isolate;
+  border-radius: var(--radius-m);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(var(--accent-rgb), 0.2), transparent 70%),
+    linear-gradient(165deg, var(--surface-3), var(--surface) 55%, var(--bg-2));
+  box-shadow: var(--org-shadow);
+  cursor: pointer;
+  transition:
+    transform 0.35s var(--ease-out),
+    box-shadow 0.35s var(--ease-out);
 }
 
-/* SNAKE BORDER ANIMATION (Premium Element) */
+/* Tepi gradien 1px: terang di sudut kiri-atas, memudar ke bawah. */
 .org-card::before {
   content: "";
   position: absolute;
-  inset: -3px;
-  border-radius: 14px;
-  padding: 3px;
-  background: linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(
-        90deg,
-        var(--accent) 0%,
-        var(--accent-2) 33%,
-        var(--accent) 66%,
-        var(--accent-2) 100%
-      )
-      border-box;
-  background-size: auto, 200% 100%;
-  background-position: 0 0, 0% 0%;
-  animation: snakeBorderSlide 10s linear infinite;
-  pointer-events: none;
+  inset: 0;
   z-index: -1;
-  border: 3px solid transparent;
-  will-change: background-position;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    rgba(var(--accent-rgb), 0.95),
+    rgba(var(--accent-rgb), 0.18) 40%,
+    rgba(255, 255, 255, 0.07) 70%,
+    rgba(var(--accent-rgb), 0.35)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+/* Garis cahaya aksen di tepi atas kartu. */
+.org-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22%;
+  right: 22%;
+  height: 2px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.65);
+  pointer-events: none;
 }
 
 .org-card.is-wali {
-  width: clamp(200px, 50vw, 240px);
-  background: linear-gradient(to bottom, var(--surface), var(--bg-2));
+  width: clamp(200px, 56vw, 240px);
+  padding-top: 28px;
+  background:
+    radial-gradient(130% 80% at 50% 0%, rgba(var(--accent-rgb), 0.3), transparent 72%),
+    linear-gradient(165deg, var(--surface-3), var(--surface) 60%, var(--bg-2));
 }
-
-.org-card.is-wali::before {
-  background: linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(
-        90deg,
-        var(--accent-2) 0%,
-        var(--accent) 25%,
-        var(--accent-2) 50%,
-        var(--accent) 75%,
-        var(--accent-2) 100%
-      )
-      border-box;
-  background-size: auto, 200% 100%;
-}
-
-@keyframes snakeBorderSlide {
-  0% { background-position: 0 0, 0% 0%; }
-  100% { background-position: 0 0, 200% 0%; }
+.org-card.is-wali::after {
+  left: 12%;
+  right: 12%;
+  height: 3px;
 }
 
 @media (hover: hover) {
   .org-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 12px 32px rgba(var(--accent-rgb), 0.25);
-    z-index: 10;
+    transform: translateY(-5px);
+    box-shadow: var(--org-shadow-hover);
   }
+}
+.org-card:active {
+  transform: scale(0.98);
+}
+.org-card:focus-visible {
+  outline: 2px solid var(--accent-text, var(--accent));
+  outline-offset: 4px;
+}
+
+[data-theme="light"] .org-card {
+  --org-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 14px 28px -12px rgba(15, 23, 42, 0.22);
+  --org-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 4px rgba(15, 23, 42, 0.1),
+    0 22px 40px -14px rgba(15, 23, 42, 0.3);
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(var(--accent-rgb), 0.12), transparent 70%),
+    linear-gradient(180deg, #ffffff, var(--surface-3));
+}
+
+/* Avatar: cincin ganda + bayangan, tanpa denyut. */
+.org-card .avatar.lg {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 4px;
+  border: 0;
+  animation: none;
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 5px rgba(var(--accent-rgb), 0.6),
+    0 12px 22px -6px rgba(0, 0, 0, 0.6);
+}
+.org-card.is-wali .avatar.lg {
+  width: 88px;
+  height: 88px;
+  font-size: 2.1rem;
 }
 
 /* ── CARD CONTENT ────────────────────────────────────────────── */
@@ -123,8 +178,8 @@
   margin-top: 8px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(var(--accent-rgb), 0.08);
-  border: 1px solid rgba(var(--accent-rgb), 0.15);
+  background: rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
   border-radius: 20px;
   padding: 3px 12px;
   display: inline-block;
@@ -132,23 +187,19 @@
 }
 
 [data-theme="light"] .org-card-pos {
-  background: rgba(var(--accent-rgb), 0.05);
-  border-color: rgba(var(--accent-rgb), 0.1);
-}
-
-.org-card .avatar {
-  margin-bottom: 4px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.22);
 }
 
 /* ── CONNECTOR & HIERARCHY ───────────────────────────────────── */
 .org-connector {
   width: 2px;
-  height: 40px;
+  height: 36px;
   background: linear-gradient(to bottom, var(--accent), var(--border-mid));
   margin: 0 auto;
   position: relative;
   z-index: 1;
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.35);
 }
 
 .org-connector::after {
@@ -173,11 +224,20 @@
 @keyframes cardSlideInScale {
   from {
     opacity: 0;
-    transform: scale(0.9) translateY(20px);
+    transform: scale(0.92) translateY(18px);
   }
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .org-card.reveal {
+    animation: none;
+  }
+  .org-card {
+    transition: none;
   }
 }
 
@@ -188,31 +248,39 @@
     padding: 10px 0;
   }
   .org-card {
-    width: 140px;
-    padding: 16px 10px;
+    width: min(170px, calc(50% - 6px));
+    padding: 20px 10px 16px;
   }
   .org-card.is-wali {
-    width: 180px;
+    width: min(220px, 100%);
   }
   .org-card-name {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    /* Dua baris nama tetap menyisakan ruang sama, agar label jabatan sebaris sejajar. */
+    min-height: 2.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-wrap: balance;
   }
   .org-card-pos {
-    font-size: var(--text-xs);
-    padding: 2px 8px;
+    padding: 2px 10px;
   }
   .org-connector {
-    height: 30px;
+    height: 28px;
   }
 }
 
 /* ── EXTENDED DATA (PROFIL & SOSMED) ────────────────────────── */
 .org-card-desc {
+  width: 100%;
   font-size: 0.75rem;
   color: var(--text-2);
   margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
   line-height: 1.4;
-  opacity: 0.85;
+  opacity: 0.9;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
@@ -247,4 +315,3 @@
   color: var(--accent-text, var(--accent));
   transform: translateY(-2px) scale(1.1);
 }
-

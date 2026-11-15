@@ -13,8 +13,7 @@ const styles = readdirSync(stylesDir)
  * turunkan angkanya di sini supaya kemajuan tidak mundur lagi.
  */
 const IMPORTANT_BASELINE: Record<string, number> = {
-  'admin.css': 7, 'anggota.css': 49, 'animasi.css': 56, 'dasar.css': 19, 'developer-portfolio.css': 31,
-  'formulir.css': 21, 'modal.css': 5, 'struktur.css': 2, 'tata-letak.css': 21, 'tombol.css': 53, 'ui.css': 61,
+  'admin.css': 7, 'anggota.css': 49, 'animasi.css': 33, 'dasar.css': 19, 'developer-portfolio.css': 31, 'formulir.css': 21, 'modal.css': 5, 'tata-letak.css': 21, 'tombol.css': 53, 'ui.css': 60,
 };
 
 describe('css quality guardrails', () => {
@@ -59,6 +58,21 @@ describe('ui structure guardrails', () => {
     expect(layout).toContain('--accent-text:');
     expect(layout).toContain('--on-accent:');
     expect(layout).toContain('--btn-end:');
+  });
+
+  it('keeps the breadcrumb clear of the fixed header', () => {
+    const layout = stripComments(read('../src/styles/tata-letak.css'));
+    const rule = layout.slice(layout.indexOf('.jejak-navigasi {'), layout.indexOf('}', layout.indexOf('.jejak-navigasi {')));
+    expect(rule).toContain('margin-top: var(--top-h)');
+    expect(layout).toContain('.jejak-navigasi ~ #main-content');
+  });
+
+  it('styles org cards from a single source without endless border animation', () => {
+    const struktur = read('../src/styles/struktur.css');
+    expect(struktur).not.toContain('snakeBorderSlide');
+    for (const file of ['animasi.css', 'ui.css']) {
+      expect(stripComments(read(`../src/styles/${file}`))).not.toContain('.org-card {');
+    }
   });
 
   it('renders the header logo as a real button, not an image with a button role', () => {
